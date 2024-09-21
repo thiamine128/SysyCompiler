@@ -19,8 +19,7 @@ protected:
 public:
     Compiler(std::string const& source);
     void lexer();
-    std::vector<Token> const& getTokens() const { return tokens_; }
-    std::vector<Token> const& getErrorTokens() const { return errorTokens_; }
+    void printTokens();
 };
 
 } // thm

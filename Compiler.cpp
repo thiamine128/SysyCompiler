@@ -27,4 +27,22 @@ namespace thm {
         }
         file.close();
     }
+
+    void Compiler::printTokens() {
+        if (errorTokens_.empty()) {
+            std::ofstream lexerfile;
+            lexerfile.open("lexer.txt");
+            for (auto token : tokens_) {
+                lexerfile << thm::tokenTypeToString(token.type) << " " << token.content << std::endl;
+            }
+            lexerfile.close();
+        } else {
+            std::ofstream errorfile;
+            errorfile.open("error.txt");
+            for (auto token : errorTokens_) {
+                errorfile << token.lineno << " a" << std::endl;
+            }
+            errorfile.close();
+        }
+    }
 } // thm

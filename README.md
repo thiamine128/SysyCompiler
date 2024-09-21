@@ -7,3 +7,8 @@ Token相关的设计有TokenType和Token,TokenType结合X-Macro实现了enum到s
 ## Lexer
 词法分析器
 - `next(Token&)`:获取字符流中的下一个token，这部分使用了有限状态机来实现。
+
+## Compiler
+一次编译过程
+- `Compiler(std::string const&)`:创建一个编译过程
+- 
