@@ -8,8 +8,8 @@ add_executable(Compiler main.cpp
         lexer/Token.h
         lexer/Lexer.cpp
         lexer/Lexer.h
-        Compiler.cpp
-        Compiler.h
+        core/Compiler.cpp
+        core/Compiler.h
 )
 
 add_definitions(-DPRINT_LEXER)

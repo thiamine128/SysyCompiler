@@ -2,9 +2,7 @@
 #include <fstream>
 #include <vector>
 
-#include "Compiler.h"
-#include "lexer/Lexer.h"
-#include "lexer/Token.h"
+#include "core/Compiler.h"
 
 int main() {
     thm::Compiler compiler("testfile.txt");

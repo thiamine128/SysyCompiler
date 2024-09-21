@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "lexer/Lexer.h"
+#include "../lexer/Lexer.h"
 
 namespace thm {
 

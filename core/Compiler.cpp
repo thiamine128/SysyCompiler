@@ -3,7 +3,6 @@
 //
 
 #include "Compiler.h"
-
 #include <fstream>
 
 namespace thm {
