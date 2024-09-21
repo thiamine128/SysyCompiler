@@ -1,18 +1,21 @@
-# 编译器
-- 词法分析
-# 项目结构
+# 编译器结构
+- `Lexer`: 词法分析
+- `Compiler`: 一次编译过程
+# 文件组织
 - `lexer`: 词法分析相关
 - `CMakeLists.txt`: 编译文件，并通过`add_definitions`来控制debug输出与每次作业的输出
 - `core`: 核心部分，例如编译过程的抽象
 - `main.cpp`: 程序入口
-# 模块
+# 接口设计
 ## Token
 Token相关的设计有TokenType和Token,TokenType结合X-Macro实现了enum到string的快速转换； Token存储了TokenType,原内容和行数。
-
+- `Token()`: 创建空的Token
+- `Token(TokenType, std::string const&, int)`:创建初始化的Token
 - `tokenTypeToString`:将TokenType转换为字符串值。
 - `reserve`:使用了哈希表实现关键字查询。
 ## Lexer
 词法分析器
+- `Lexer(std::istream&)`:使用输入流创建词法分析器
 - `next(Token&)`:获取字符流中的下一个token，这部分使用了有限状态机来实现。
 
 ## Compiler
