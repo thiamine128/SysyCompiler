@@ -1,0 +1,6 @@
+/.idea
+/cmake-build-debug/
+/lexer.txt
+/myoutput.txt
+/output.txt
+/testfile.txt
