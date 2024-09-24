@@ -5,6 +5,8 @@
 #include "Compiler.h"
 #include <fstream>
 
+#include "../error/CompilerException.h"
+
 namespace thm {
     Compiler::Compiler(std::string const &source) : source_(source) {
 
@@ -15,9 +17,11 @@ namespace thm {
         file.open(source_);
         Lexer lexer = Lexer(file);
         for (;;) {
-            thm::Token token;
-            if (lexer.next(token)) {
-                errorTokens_.push_back(token);
+            Token token;
+            try {
+                lexer.next(token);
+            } catch (CompilerException& err) {
+                errors_.push_back(err);
             }
             if (token.type == thm::TK_EOF) {
                 break;
@@ -28,7 +32,7 @@ namespace thm {
     }
 
     void Compiler::printTokens() {
-        if (errorTokens_.empty()) {
+        if (errors_.empty()) {
             std::ofstream lexerfile;
             lexerfile.open("lexer.txt");
             for (auto token : tokens_) {
@@ -38,8 +42,8 @@ namespace thm {
         } else {
             std::ofstream errorfile;
             errorfile.open("error.txt");
-            for (auto token : errorTokens_) {
-                errorfile << token.lineno << " a" << std::endl;
+            for (auto error : errors_) {
+                errorfile << error.line << " " << getErrorCode(error.errorType) << std::endl;
             }
             errorfile.close();
         }

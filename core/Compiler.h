@@ -8,14 +8,15 @@
 #include <vector>
 
 #include "../lexer/Lexer.h"
+#include "../error/CompilerException.h"
 
 namespace thm {
 
-class Compiler {
+    class Compiler {
 protected:
     std::string source_;
     std::vector<Token> tokens_;
-    std::vector<Token> errorTokens_;
+    std::vector<CompilerException> errors_;
 public:
     Compiler(std::string const& source);
     void lexer();

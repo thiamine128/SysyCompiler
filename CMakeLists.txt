@@ -10,6 +10,8 @@ add_executable(Compiler main.cpp
         lexer/Lexer.h
         core/Compiler.cpp
         core/Compiler.h
+        error/CompilerException.cpp
+        error/CompilerException.h
 )
 
 add_definitions(-DPRINT_LEXER)

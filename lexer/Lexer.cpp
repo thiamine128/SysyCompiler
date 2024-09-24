@@ -6,8 +6,10 @@
 
 #include <iostream>
 
+#include "../error/CompilerException.h"
+
 namespace thm {
-    int Lexer::next(Token &token) {
+    void Lexer::next(Token &token) {
         char ch;
         std::string content;
         ch = input_.get();
@@ -90,7 +92,7 @@ namespace thm {
                             currentLine += 1;
                         } else if (ch == '/') {
                             next(token);
-                            return 0;
+                            return;
                         }
                     } while (ch == '*');
                 }
@@ -105,10 +107,10 @@ namespace thm {
                     token.content = content;
                     token.lineno = currentLine;
                     token.type = TK_EOF;
-                    return 0;
+                    return;
                 }
                 next(token);
-                return 0;
+                return;
             }
             input_.unget();
             token.content = content;
@@ -122,7 +124,7 @@ namespace thm {
                 token.content = content;
                 token.type = AND;
                 token.lineno = currentLine;
-                return 1;
+                throw CompilerException(SYMBOL_ERROR, currentLine);
             }
             content += ch;
             token.content = content;
@@ -136,7 +138,7 @@ namespace thm {
                 token.content = content;
                 token.type = OR;
                 token.lineno = currentLine;
-                return 1;
+                throw CompilerException(SYMBOL_ERROR, currentLine);;
             }
             content += ch;
             token.content = content;
@@ -264,10 +266,9 @@ namespace thm {
             token.type = TK_EOF;
             token.lineno = currentLine;
         } else {
-            return -1;
+            throw CompilerException(ILLEGAL_CHARACTER, currentLine);
         }
 
-        return 0;
     }
 
 } // thm

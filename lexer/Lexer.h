@@ -17,7 +17,7 @@ protected:
 public:
     explicit Lexer(std::istream& in) : input_(in) {};
 
-    int next(Token& token);
+    void next(Token& token);
 };
 
 } // thm
