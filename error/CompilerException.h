@@ -8,7 +8,7 @@
 
 #define ERROR_TYPES \
     X(ILLEGAL_CHARACTER, '-') \
-    X(SYMBOL_ERROR, 'a')
+    X(ILLEGAL_SYMBOL, 'a')
 
 namespace thm {
 

@@ -46,14 +46,18 @@ Token相关的设计有TokenType和Token,TokenType结合X-Macro实现了enum到s
 ## Lexer
 词法分析器
 - `Lexer(std::istream&)`:使用输入流创建词法分析器
-- `next(Token&)`:获取字符流中的下一个token，这部分使用了有限状态机来实现。
+- `next(Token&)`:获取字符流中的下一个token，这部分使用了有限状态机来实现。在词法分析中，如果出现了a类异常，则抛出CompilerException(ILLEGAL_SYMBOL)，如果是无法识别的字符，则抛出CompilerException(ILLEGAL_CHARACTER)
 
 ## Compiler
 一次编译过程
 - `Compiler(std::string const&)`:创建一个编译过程
 - `lexer()`:进行词法分析，存储解析的token
-- `printTokens()`:输出解析的token,用于第一次作业
+- `printTokens()`:输出解析的token,用于第一次作业，如果有错误则输出错误
 
+## CompilerException
+编译过程中的异常
+- `errorType`: 异常类型
+- `line`: 异常行数
 #  词法分析
 
 编码前设计：通过某个方法对字符流进行逐字符处理，使用有限状态机来解析token，最后存储到token表中。同时，单独存储错误的token, 方便后续输出
