@@ -47,7 +47,7 @@ namespace thm {
                 errorReporter_.error(CompilerException(MISSING_RBRACK, token_.lineno));
                 nextToken();
             } else {
-                
+
             }
         } else {
             nextToken();
@@ -100,7 +100,7 @@ namespace thm {
             }
             hasFuncDef = false;
         }
-        parseMainFuncDef();
+        //parseMainFuncDef();
         finish("CompUnit");
         outfile.close();
     }
