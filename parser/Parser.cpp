@@ -14,14 +14,16 @@ namespace thm {
     }
 
     void Parser::nextToken() {
-        if (token_.type != TK_EOF)
+        if (token_.type != DEFAULT) {
             tokens_.push_back(token_);
+        }
         token_ = tokenStream_.next();
     }
 
     void Parser::ungetToken() {
         token_ = tokenStream_.unget();
-        tokens_.pop_back();
+        if (!tokens_.empty())
+            tokens_.pop_back();
     }
 
     bool Parser::tryMatch(TokenType expectedType) {
@@ -46,8 +48,6 @@ namespace thm {
                 ungetToken();
                 errorReporter_.error(CompilerException(MISSING_RBRACK, token_.lineno));
                 nextToken();
-            } else {
-
             }
         } else {
             nextToken();
@@ -85,7 +85,7 @@ namespace thm {
             }
             hasDecl = false;
         }
-        /*while (hasFuncDef) {
+        while (hasFuncDef) {
             if (token_.type == VOIDTK || token_.type == INTTK || token_.type == CHARTK) {
                 nextToken();
                 if (tryMatch(IDENFR)) {
@@ -99,8 +99,8 @@ namespace thm {
                 ungetToken();
             }
             hasFuncDef = false;
-        }*/
-        //parseMainFuncDef();
+        }
+        parseMainFuncDef();
         finish("CompUnit");
         outfile.close();
     }

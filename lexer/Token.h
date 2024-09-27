@@ -9,6 +9,7 @@
 #include <string>
 
 #define TOKEN_TYPES \
+    X(DEFAULT, "DEFAULT") \
     X(IDENFR, "IDENFR") \
     X(INTCON, "INTCON") \
     X(STRCON, "STRCON") \
@@ -65,7 +66,7 @@ namespace thm {
         std::string content;
         int lineno{};
 
-        Token() : type(TokenType::TK_EOF) {};
+        Token() : type(TokenType::DEFAULT) {};
         Token(TokenType type, std::string const& content, int lineno) : type(type), content(content), lineno(lineno) {}
     };
     std::string tokenTypeToString(TokenType t);
