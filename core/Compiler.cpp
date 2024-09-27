@@ -48,7 +48,7 @@ namespace thm {
             lexerErrors.printErrors(errorfile);
         }
         if (parser_.errorReporter().hasErrors()) {
-            parser_.errorReporter().printErrors(errorfile);
+            //parser_.errorReporter().printErrors(errorfile);
         }
         errorfile.close();
 
