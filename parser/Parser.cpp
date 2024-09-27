@@ -47,7 +47,7 @@ namespace thm {
                 errorReporter_.error(CompilerException(MISSING_RBRACK, token_.lineno));
                 nextToken();
             } else {
-                errorReporter_.error(CompilerException(UNEXPECTED_TOKEN, token_.lineno));
+                while (true) {}
             }
         } else {
             nextToken();
