@@ -85,7 +85,7 @@ namespace thm {
             }
             hasDecl = false;
         }
-        while (hasFuncDef) {
+        /*while (hasFuncDef) {
             if (token_.type == VOIDTK || token_.type == INTTK || token_.type == CHARTK) {
                 nextToken();
                 if (tryMatch(IDENFR)) {
@@ -99,7 +99,7 @@ namespace thm {
                 ungetToken();
             }
             hasFuncDef = false;
-        }
+        }*/
         //parseMainFuncDef();
         finish("CompUnit");
         outfile.close();
