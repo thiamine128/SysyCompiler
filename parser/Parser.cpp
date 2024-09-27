@@ -59,7 +59,7 @@ namespace thm {
             outfile << tokenTypeToString(token.type) << " " << token.content << std::endl;
         }
         tokens_.clear();
-        //outfile << "<" << str << ">" << std::endl;
+        outfile << "<" << str << ">" << std::endl;
     }
 
 
