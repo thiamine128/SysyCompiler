@@ -124,7 +124,8 @@ namespace thm {
                 token.content = content;
                 token.type = AND;
                 token.lineno = currentLine;
-                throw CompilerException(ILLEGAL_SYMBOL, currentLine);
+                errorReporter_.error(CompilerException(ILLEGAL_TOKEN, currentLine));
+                return;
             }
             content += ch;
             token.content = content;
@@ -138,7 +139,8 @@ namespace thm {
                 token.content = content;
                 token.type = OR;
                 token.lineno = currentLine;
-                throw CompilerException(ILLEGAL_SYMBOL, currentLine);;
+                errorReporter_.error(CompilerException(ILLEGAL_TOKEN, currentLine));
+                return;
             }
             content += ch;
             token.content = content;
@@ -266,7 +268,7 @@ namespace thm {
             token.type = TK_EOF;
             token.lineno = currentLine;
         } else {
-            throw CompilerException(ILLEGAL_CHARACTER, currentLine);
+            errorReporter_.error(CompilerException(ILLEGAL_CHARACTER, currentLine));
         }
 
     }

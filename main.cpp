@@ -8,9 +8,9 @@ int main() {
     thm::Compiler compiler("testfile.txt");
 
     compiler.lexer();
-
+    compiler.parse();
 #ifdef PRINT_LEXER
-    compiler.printTokens();
+    compiler.printInfo();
 #endif
     return 0;
 }

@@ -7,18 +7,21 @@
 #include <istream>
 
 #include "Token.h"
+#include "../error/ErrorReporter.h"
 
 namespace thm {
 
-class Lexer {
-protected:
-    std::istream& input_;
-    int currentLine = 1;
-public:
-    explicit Lexer(std::istream& in) : input_(in) {};
+    class Lexer {
+    protected:
+        std::istream& input_;
+        int currentLine = 1;
+        ErrorReporter errorReporter_;
+    public:
+        explicit Lexer(std::istream& in) : input_(in) {};
 
-    void next(Token& token);
-};
+        void next(Token& token);
+        ErrorReporter& errorReporter() { return errorReporter_; }
+    };
 
 } // thm
 
