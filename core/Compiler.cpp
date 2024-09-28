@@ -3,6 +3,8 @@
 //
 
 #include "Compiler.h"
+
+#include <algorithm>
 #include <fstream>
 
 #include "../error/CompilerException.h"
@@ -44,11 +46,14 @@ namespace thm {
                 lexerfile << thm::tokenTypeToString(token.type) << " " << token.content << std::endl;
             }
             lexerfile.close();
-        } else {
-            lexerErrors.printErrors(errorfile);
         }
-        if (parser_.errorReporter().hasErrors()) {
-            //parser_.errorReporter().printErrors(errorfile);
+        std::vector<CompilerException> exceptions = lexerErrors.getErrors();
+        exceptions.insert(exceptions.end(), parser_.errorReporter().getErrors().begin(), parser_.errorReporter().getErrors().end());
+        std::sort(exceptions.begin(), exceptions.end(), [](CompilerException const &a, CompilerException const &b) {
+            return a.line < b.line;
+        });
+        for (auto exception : exceptions) {
+            errorfile << exception.line << " " << getErrorCode(exception.errorType) << std::endl;
         }
         errorfile.close();
 
