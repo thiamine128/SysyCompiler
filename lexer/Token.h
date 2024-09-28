@@ -55,22 +55,21 @@
 
 
 namespace thm {
-    enum TokenType {
-    #define X(a, b) a,
-        TOKEN_TYPES
-    #undef X
-    };
 
     struct Token {
-        TokenType type;
+        enum TokenType {
+#define X(a, b) a,
+            TOKEN_TYPES
+#undef X
+        } type;
         std::string content;
         int lineno{};
 
         Token() : type(TokenType::DEFAULT) {};
         Token(TokenType type, std::string const& content, int lineno) : type(type), content(content), lineno(lineno) {}
     };
-    std::string tokenTypeToString(TokenType t);
-    TokenType reserve(std::string const& content);
+    std::string tokenTypeToString(Token::TokenType t);
+    Token::TokenType reserve(std::string const& content);
 } // thm
 
 #endif //TOKEN_H

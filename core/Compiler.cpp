@@ -19,7 +19,7 @@ namespace thm {
         for (;;) {
             Token token;
             lexer.next(token);
-            if (token.type == thm::TK_EOF) {
+            if (token.type == Token::TK_EOF) {
                 break;
             }
             tokens_.push_back(token);
@@ -30,7 +30,7 @@ namespace thm {
 
     void Compiler::parse() {
         parser_.nextToken();
-        parser_.parseCompUnit();
+        auto ptr = parser_.parseCompUnit();
     }
 
     void Compiler::printInfo() {

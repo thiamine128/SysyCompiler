@@ -7,28 +7,28 @@
 #include <unordered_map>
 
 namespace thm {
-    std::unordered_map<std::string, TokenType> reserved = {
-        {"main", MAINTK},
-        {"const", CONSTTK},
-        {"int", INTTK},
-        {"char", CHARTK},
-        {"break", BREAKTK},
-        {"continue", CONTINUETK},
-        {"if", IFTK},
-        {"else", ELSETK},
-        {"for", FORTK},
-        {"getint", GETINTTK},
-        {"getchar", GETCHARTK},
-        {"printf", PRINTFTK},
-        {"return", RETURNTK},
-        {"void", VOIDTK}
+    std::unordered_map<std::string, Token::TokenType> reserved = {
+        {"main", Token::MAINTK},
+        {"const", Token::CONSTTK},
+        {"int", Token::INTTK},
+        {"char", Token::CHARTK},
+        {"break", Token::BREAKTK},
+        {"continue", Token::CONTINUETK},
+        {"if", Token::IFTK},
+        {"else", Token::ELSETK},
+        {"for", Token::FORTK},
+        {"getint", Token::GETINTTK},
+        {"getchar", Token::GETCHARTK},
+        {"printf", Token::PRINTFTK},
+        {"return", Token::RETURNTK},
+        {"void", Token::VOIDTK}
     };
 
-    std::string tokenTypeToString(TokenType type) {
+    std::string tokenTypeToString(Token::TokenType type) {
 
         switch (type) {
 #define X(a, b) \
-    case TokenType::a: \
+    case Token::a: \
         return b;
             TOKEN_TYPES
             default:
@@ -37,11 +37,11 @@ namespace thm {
 #undef X
     }
 
-    TokenType reserve(const std::string& content) {
+    Token::TokenType reserve(const std::string& content) {
         if (reserved.contains(content)) {
             return reserved[content];
         }
-        return IDENFR;
+        return Token::IDENFR;
     }
 
 } // thm

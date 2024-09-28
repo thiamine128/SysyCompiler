@@ -4,6 +4,9 @@
 
 #ifndef PARSER_H
 #define PARSER_H
+
+#include <fstream>
+
 #include "AbstractSyntaxTree.h"
 #include "../error/ErrorReporter.h"
 #include "../lexer/TokenStream.h"
@@ -16,14 +19,22 @@ namespace thm {
         Token token_;
         ErrorReporter errorReporter_;
         std::vector<Token> tokens_;
+        std::ofstream os;
     public:
         Parser(const TokenStream& tokenStream);
 
         ErrorReporter& errorReporter() { return errorReporter_; }
         void nextToken();
         void ungetToken();
-        bool tryMatch(TokenType expectedType);
-        void matchToken(TokenType expectedType);
+        bool tryMatch(Token::TokenType expectedType);
+        void matchToken(Token::TokenType expectedType);
+        template <typename T> void submit(T& ptr) {
+            for (auto token : tokens_) {
+                os << tokenTypeToString(token.type) << " " << token.content << std::endl;
+            }
+            tokens_.clear();
+            os << *ptr;
+        }
         std::unique_ptr<CompUnit> parseCompUnit();
         std::unique_ptr<Decl> parseDecl();
         std::unique_ptr<ConstDecl> parseConstDecl();

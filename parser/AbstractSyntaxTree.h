@@ -8,101 +8,89 @@
 #include <variant>
 #include <vector>
 
-namespace thm {
-    struct Token;
-    class LAndExp;
-    class RelExp;
-    class MulExp;
-    class UnaryExp;
-    class PrimaryExp;
-    class CompUnit;
-    class FuncFParams;
-    class EqExp;
-    class FuncRParam;
-    class UnaryOp;
-    class FuncRParams;
-    class Character;
-    class Number;
-    class LOrExp;
-    class AddExp;
-    class ForStmt;
-    class Cond;
-    class LVal;
-    class Stmt;
-    class BlockItem;
-    class FuncFParam;
-    class Block;
-    class FuncType;
-    class Exp;
-    class InitVal;
-    class VarDef;
-    class ConstExp;
-    class ConstInitVal;
-    class ConstDef;
-    class BType;
-    class VarDecl;
-    class ConstDecl;
-    class MainFuncDef;
-    class FuncDef;
-    class Decl;
+#include "../lexer/Token.h"
 
-    std::ostream& operator<<(std::ostream& os, const CompUnit& a);
-    std::ostream& operator<<(std::ostream& os, const Decl& a);
-    std::ostream& operator<<(std::ostream& os, const ConstDecl& a);
-    std::ostream& operator<<(std::ostream& os, const BType& a);
-    std::ostream& operator<<(std::ostream& os, const ConstDef& a);
-    std::ostream& operator<<(std::ostream& os, const ConstInitVal& a);
-    std::ostream& operator<<(std::ostream& os, const VarDecl& a);
-    std::ostream& operator<<(std::ostream& os, const VarDef& a);
-    std::ostream& operator<<(std::ostream& os, const InitVal& a);
-    std::ostream& operator<<(std::ostream& os, const FuncDef& a);
-    std::ostream& operator<<(std::ostream& os, const MainFuncDef& a);
-    std::ostream& operator<<(std::ostream& os, const FuncType& a);
-    std::ostream& operator<<(std::ostream& os, const FuncFParams& a);
-    std::ostream& operator<<(std::ostream& os, const FuncFParam& a);
-    std::ostream& operator<<(std::ostream& os, const Block& a);
-    std::ostream& operator<<(std::ostream& os, const BlockItem& a);
-    std::ostream& operator<<(std::ostream& os, const Stmt& a);
-    std::ostream& operator<<(std::ostream& os, const ForStmt& a);
-    std::ostream& operator<<(std::ostream& os, const Cond& a);
-    std::ostream& operator<<(std::ostream& os, const LVal& a);
-    std::ostream& operator<<(std::ostream& os, const Exp& a);
-    std::ostream& operator<<(std::ostream& os, const PrimaryExp& a);
-    std::ostream& operator<<(std::ostream& os, const Number& a);
-    std::ostream& operator<<(std::ostream& os, const Character& a);
-    std::ostream& operator<<(std::ostream& os, const UnaryExp& a);
-    std::ostream& operator<<(std::ostream& os, const UnaryOp& a);
-    std::ostream& operator<<(std::ostream& os, const FuncRParams& a);
-    std::ostream& operator<<(std::ostream& os, const MulExp& a);
-    std::ostream& operator<<(std::ostream& os, const AddExp& a);
-    std::ostream& operator<<(std::ostream& os, const RelExp& a);
-    std::ostream& operator<<(std::ostream& os, const EqExp& a);
-    std::ostream& operator<<(std::ostream& os, const LAndExp& a);
-    std::ostream& operator<<(std::ostream& os, const LOrExp& a);
-    std::ostream& operator<<(std::ostream& os, const ConstExp& a);
+#define ASTNODES \
+    X(Default, "Default", DEFAULT) \
+    X(LAndExp, "LAndExp", LANDEXP) \
+    X(RelExp, "RelExp", RELEXP) \
+    X(MulExp, "MulExp", MULEXP) \
+    X(UnaryExp, "UnaryExp", UNARYEXP) \
+    X(PrimaryExp, "PrimaryExp", PRIMARYEXP) \
+    X(CompUnit, "CompUnit", COMPUNIT) \
+    X(FuncFParams, "FuncFParams", FUNCFPARAMS) \
+    X(EqExp, "EqExp", EQEXP) \
+    X(UnaryOp, "UnaryOp", UNARYOP) \
+    X(FuncRParams, "FuncRParams", FUNCRPARAMS) \
+    X(Character, "Character", CHARACTER) \
+    X(Number, "Number", NUMBER) \
+    X(LOrExp, "LOrExp", LOREXP) \
+    X(AddExp, "AddExp", ADDEXP) \
+    X(ForStmt, "ForStmt", FORSTMT) \
+    X(Cond, "Cond", COND) \
+    X(LVal, "LVal", LVAL) \
+    X(Stmt, "Stmt", STMT) \
+    X(BlockItem, "BlockItem", BLOCKITEM) \
+    X(FuncFParam, "FuncFParam", FUNCFPARAM) \
+    X(Block, "Block", BLOCK) \
+    X(FuncType, "FuncType", FUNCTYPE) \
+    X(Exp, "Exp", EXP) \
+    X(InitVal, "InitVal", INITVAL) \
+    X(VarDef, "VarDef", VARDEF) \
+    X(ConstExp, "ConstExp", CONSTEXP) \
+    X(ConstInitVal, "ConstInitVal", CONSTINITVAL) \
+    X(ConstDef, "ConstDef", CONSTDEF) \
+    X(BType, "BType", BTYPE) \
+    X(VarDecl, "VarDecl", VARDECL) \
+    X(ConstDecl, "ConstDecl", CONSTDECL) \
+    X(MainFuncDef, "MainFuncDef", MAINFUNCDEF) \
+    X(FuncDef, "FuncDef", FUNCDEF) \
+    X(Decl, "Decl", DECL) \
+
+namespace thm {
+
+#define X(a, b, c) class a;
+    ASTNODES
+#undef X
 
     class ASTNode {
     public:
+        enum ASTNodeType {
+#define X(a, b, c) c,
+            ASTNODES
+#undef X
+        };
         int lineno;
         std::vector<Token> tokens;
 
         void consume(std::vector<Token>& tokens);
+        virtual ASTNodeType nodeType() const { return ASTNode::DEFAULT; }
         virtual ~ASTNode() = default;
     };
+
+    std::ostream& operator<<(std::ostream& os, const ASTNode& node);
+
+    std::string nodeTypeToString(ASTNode::ASTNodeType type);
+
     class CompUnit : public ASTNode {
     public:
         std::vector<std::unique_ptr<Decl>> decls;
         std::vector<std::unique_ptr<FuncDef>> funcDefs;
         std::unique_ptr<MainFuncDef> mainFuncDef;
+
+        ASTNodeType nodeType() const override {return ASTNode::COMPUNIT;}
     };
     class Decl : public ASTNode {
     public:
         std::variant<std::unique_ptr<ConstDecl>, std::unique_ptr<VarDecl>> decl;
+
+        ASTNodeType nodeType() const override {return ASTNode::DECL;}
     };
     class ConstDecl : public ASTNode {
     public:
         std::unique_ptr<BType> bType;
         std::vector<std::unique_ptr<ConstDef>> constDefs;
+        ASTNodeType nodeType() const override {return ASTNode::CONSTDECL;}
     };
     class BType : public ASTNode {
     public:
@@ -110,6 +98,7 @@ namespace thm {
             INT,
             CHAR
         } type;
+        ASTNodeType nodeType() const override {return ASTNode::BTYPE;}
     };
     class ConstDef : public ASTNode {
     public:
@@ -122,6 +111,7 @@ namespace thm {
         };
         std::variant<ConstDefBasic, ConstDefArray> def;
         std::unique_ptr<ConstInitVal> val;
+        ASTNodeType nodeType() const override {return ASTNode::CONSTDEF;}
     };
     class ConstInitVal : public ASTNode {
     public:
@@ -132,11 +122,13 @@ namespace thm {
             std::vector<std::unique_ptr<ConstExp>> exps;
         };
         std::variant<ConstInitValBasic, ConstInitValArray, std::string> val;
+        ASTNodeType nodeType() const override {return ASTNode::CONSTINITVAL;}
     };
     class VarDecl : public ASTNode {
     public:
         std::unique_ptr<BType> bType;
         std::vector<std::unique_ptr<VarDef>> varDefs;
+        ASTNodeType nodeType() const override {return ASTNode::VARDECL;}
     };
     class VarDef : public ASTNode {
     public:
@@ -149,6 +141,7 @@ namespace thm {
         };
         std::variant<VarDefBasic, VarDefArray> def;
         std::unique_ptr<InitVal> val;
+        ASTNodeType nodeType() const override {return ASTNode::VARDEF;}
     };
     class InitVal : public ASTNode {
     public:
@@ -159,6 +152,7 @@ namespace thm {
             std::vector<std::unique_ptr<Exp>> exps;
         };
         std::variant<InitValBasic, InitValArray, std::string> val;
+        ASTNodeType nodeType() const override {return ASTNode::INITVAL;}
     };
     class FuncDef : public ASTNode {
     public:
@@ -166,34 +160,41 @@ namespace thm {
         std::string ident;
         std::unique_ptr<FuncFParams> params;
         std::unique_ptr<Block> block;
+        ASTNodeType nodeType() const override {return ASTNode::FUNCDEF;}
     };
     class MainFuncDef : public ASTNode {
     public:
         std::unique_ptr<Block> block;
+        ASTNodeType nodeType() const override {return ASTNode::MAINFUNCDEF;}
     };
     class FuncType : public ASTNode {
     public:
         enum Type {
             VOID, INT, CHAR
         } type;
+        ASTNodeType nodeType() const override {return ASTNode::FUNCTYPE;}
     };
     class FuncFParams : public ASTNode {
     public:
         std::vector<std::unique_ptr<FuncFParam>> params;
+        ASTNodeType nodeType() const override {return ASTNode::FUNCFPARAMS;}
     };
     class FuncFParam : public ASTNode {
     public:
         std::unique_ptr<BType> bType;
         std::string ident;
         bool isArray;
+        ASTNodeType nodeType() const override {return ASTNode::FUNCFPARAM;}
     };
     class Block : public ASTNode {
     public:
         std::vector<std::unique_ptr<BlockItem>> items;
+        ASTNodeType nodeType() const override {return ASTNode::BLOCK;}
     };
     class BlockItem : public ASTNode {
     public:
         std::variant<std::unique_ptr<Decl>, std::unique_ptr<Stmt>> item;
+        ASTNodeType nodeType() const override {return ASTNode::BLOCKITEM;}
     };
     class Stmt : public ASTNode {
     public:
@@ -241,36 +242,44 @@ namespace thm {
             StmtReturn,
             StmtRead,
             StmtPrintf> stmt;
+        ASTNodeType nodeType() const override { return ASTNodeType::STMT; }
     };
     class ForStmt : public ASTNode {
     public:
         std::unique_ptr<LVal> lVal;
         std::unique_ptr<Exp> exp;
+        ASTNodeType nodeType() const override { return ASTNodeType::FORSTMT; }
     };
     class Exp : public ASTNode {
     public:
         std::unique_ptr<AddExp> addExp;
+        ASTNodeType nodeType() const override { return ASTNode::EXP; }
     };
     class Cond : public ASTNode {
     public:
         std::unique_ptr<LOrExp> lOrExp;
+        ASTNodeType nodeType() const override { return ASTNode::COND; }
     };
     class LVal : public ASTNode {
     public:
         std::string ident;
         std::unique_ptr<Exp> exp;
+        ASTNodeType nodeType() const override { return ASTNode::LVAL; }
     };
     class PrimaryExp : public ASTNode {
     public:
         std::variant<std::unique_ptr<Exp>, std::unique_ptr<LVal>, std::unique_ptr<Number>, std::unique_ptr<Character>> primaryExp;
+        ASTNodeType nodeType() const override { return ASTNode::PRIMARYEXP; }
     };
     class Number : public ASTNode {
     public:
         int num;
+        ASTNodeType nodeType() const override { return ASTNode::NUMBER; }
     };
     class Character : public ASTNode {
     public:
         char ch;
+        ASTNodeType nodeType() const override { return ASTNode::CHARACTER; }
     };
     class UnaryExp : public ASTNode {
     public:
@@ -283,16 +292,19 @@ namespace thm {
             std::unique_ptr<UnaryExp> exp;
         };
         std::variant<std::unique_ptr<PrimaryExp>, FuncExp, OpExp> exp;
+        ASTNodeType nodeType() const override { return ASTNode::UNARYEXP; }
     };
     class UnaryOp : public ASTNode {
     public:
         enum Type {
             PLUS, MINUS, NOT
         } type;
+        ASTNodeType nodeType() const override { return ASTNode::UNARYOP; }
     };
     class FuncRParams : public ASTNode {
     public:
         std::vector<std::unique_ptr<Exp>> params;
+        ASTNodeType nodeType() const override { return ASTNode::FUNCRPARAMS; }
     };
     class MulExp : public ASTNode {
     public:
@@ -304,6 +316,7 @@ namespace thm {
             std::unique_ptr<UnaryExp> unaryExp;
         };
         std::variant<std::unique_ptr<UnaryExp>, OpExp> exp;
+        ASTNodeType nodeType() const override { return ASTNode::MULEXP; }
     };
     class AddExp : public ASTNode {
     public:
@@ -315,6 +328,7 @@ namespace thm {
             std::unique_ptr<MulExp> mulExp;
         };
         std::variant<std::unique_ptr<MulExp>, OpExp> exp;
+        ASTNodeType nodeType() const override { return ASTNode::ADDEXP; }
     };
     class RelExp : public ASTNode {
     public:
@@ -326,6 +340,7 @@ namespace thm {
             std::unique_ptr<AddExp> addExp;
         };
         std::variant<std::unique_ptr<AddExp>, OpExp> exp;
+        ASTNodeType nodeType() const override { return ASTNode::RELEXP; }
     };
     class EqExp : public ASTNode {
     public:
@@ -337,6 +352,7 @@ namespace thm {
             std::unique_ptr<RelExp> relExp;
         };
         std::variant<std::unique_ptr<RelExp>, OpExp> exp;
+        ASTNodeType nodeType() const override { return ASTNode::EQEXP; }
     };
     class LAndExp : public ASTNode {
     public:
@@ -345,6 +361,7 @@ namespace thm {
             std::unique_ptr<EqExp> eqExp;
         };
         std::variant<std::unique_ptr<EqExp>, OpExp> exp;
+        ASTNodeType nodeType() const override { return ASTNode::LANDEXP; }
     };
     class LOrExp : public ASTNode {
     public:
@@ -353,10 +370,12 @@ namespace thm {
             std::unique_ptr<LAndExp> lAndExp;
         };
         std::variant<std::unique_ptr<LAndExp>, OpExp> exp;
+        ASTNodeType nodeType() const override { return ASTNode::LOREXP; }
     };
     class ConstExp : public ASTNode {
     public:
         std::unique_ptr<AddExp> addExp;
+        ASTNodeType nodeType() const override { return ASTNode::CONSTEXP; }
     };
     class AbstractSyntaxTree {
 

@@ -40,7 +40,7 @@ namespace thm {
             }
             input_.unget();
 
-            token.type = INTCON;
+            token.type = Token::INTCON;
             token.content = content;
             token.lineno = currentLine;
         } else if (ch == '\'') {
@@ -56,7 +56,7 @@ namespace thm {
                 content += ch;
             }
             token.content = content;
-            token.type = CHRCON;
+            token.type = Token::CHRCON;
             token.lineno = currentLine;
         } else if (ch == '\"') {
             content += ch;
@@ -73,7 +73,7 @@ namespace thm {
             }
             content += ch;
             token.content = content;
-            token.type = STRCON;
+            token.type = Token::STRCON;
             token.lineno = currentLine;
         } else if (ch == '/') {
             content += ch;
@@ -106,7 +106,7 @@ namespace thm {
                     content += ch;
                     token.content = content;
                     token.lineno = currentLine;
-                    token.type = TK_EOF;
+                    token.type = Token::TK_EOF;
                     return;
                 }
                 next(token);
@@ -114,7 +114,7 @@ namespace thm {
             }
             input_.unget();
             token.content = content;
-            token.type = DIV;
+            token.type = Token::DIV;
             token.lineno = currentLine;
         } else if (ch == '&') {
             content += ch;
@@ -122,14 +122,14 @@ namespace thm {
             if (ch != '&') {
                 input_.unget();
                 token.content = content;
-                token.type = AND;
+                token.type = Token::AND;
                 token.lineno = currentLine;
                 errorReporter_.error(CompilerException(ILLEGAL_TOKEN, currentLine));
                 return;
             }
             content += ch;
             token.content = content;
-            token.type = AND;
+            token.type = Token::AND;
             token.lineno = currentLine;
         } else if (ch == '|') {
             content += ch;
@@ -137,14 +137,14 @@ namespace thm {
             if (ch != '|') {
                 input_.unget();
                 token.content = content;
-                token.type = OR;
+                token.type = Token::OR;
                 token.lineno = currentLine;
                 errorReporter_.error(CompilerException(ILLEGAL_TOKEN, currentLine));
                 return;
             }
             content += ch;
             token.content = content;
-            token.type = OR;
+            token.type = Token::OR;
             token.lineno = currentLine;
         } else if (ch == '>') {
             content += ch;
@@ -152,12 +152,12 @@ namespace thm {
             if (ch == '=') {
                 content += ch;
                 token.content = content;
-                token.type = GEQ;
+                token.type = Token::GEQ;
                 token.lineno = currentLine;
             } else {
                 input_.unget();
                 token.content = content;
-                token.type = GRE;
+                token.type = Token::GRE;
                 token.lineno = currentLine;
             }
         } else if (ch == '<') {
@@ -166,12 +166,12 @@ namespace thm {
             if (ch == '=') {
                 content += ch;
                 token.content = content;
-                token.type = LEQ;
+                token.type = Token::LEQ;
                 token.lineno = currentLine;
             } else {
                 input_.unget();
                 token.content = content;
-                token.type = LSS;
+                token.type = Token::LSS;
                 token.lineno = currentLine;
             }
         } else if (ch == '!') {
@@ -180,12 +180,12 @@ namespace thm {
             if (ch == '=') {
                 content += ch;
                 token.content = content;
-                token.type = NEQ;
+                token.type = Token::NEQ;
                 token.lineno = currentLine;
             } else {
                 input_.unget();
                 token.content = content;
-                token.type = NOT;
+                token.type = Token::NOT;
                 token.lineno = currentLine;
             }
         } else if (ch == '=') {
@@ -194,78 +194,78 @@ namespace thm {
             if (ch == '=') {
                 content += ch;
                 token.content = content;
-                token.type = EQL;
+                token.type = Token::EQL;
                 token.lineno = currentLine;
             } else {
                 input_.unget();
                 token.content = content;
-                token.type = ASSIGN;
+                token.type = Token::ASSIGN;
                 token.lineno = currentLine;
             }
         } else if (ch == '+') {
             content += ch;
             token.content = content;
-            token.type = PLUS;
+            token.type = Token::PLUS;
             token.lineno = currentLine;
         } else if (ch == '-') {
             content += ch;
             token.content = content;
-            token.type = MINU;
+            token.type = Token::MINU;
             token.lineno = currentLine;
         } else if (ch == '*') {
             content += ch;
             token.content = content;
-            token.type = MULT;
+            token.type = Token::MULT;
             token.lineno = currentLine;
         } else if (ch == '%') {
             content += ch;
             token.content = content;
-            token.type = MOD;
+            token.type = Token::MOD;
             token.lineno = currentLine;
         } else if (ch == ';') {
             content += ch;
             token.content = content;
-            token.type = SEMICN;
+            token.type = Token::SEMICN;
             token.lineno = currentLine;
         } else if (ch == ',') {
             content += ch;
             token.content = content;
-            token.type = COMMA;
+            token.type = Token::COMMA;
             token.lineno = currentLine;
         } else if (ch == '(') {
             content += ch;
             token.content = content;
-            token.type = LPARENT;
+            token.type = Token::LPARENT;
             token.lineno = currentLine;
         } else if (ch == ')') {
             content += ch;
             token.content = content;
-            token.type = RPARENT;
+            token.type = Token::RPARENT;
             token.lineno = currentLine;
         } else if (ch == '{') {
             content += ch;
             token.content = content;
-            token.type = LBRACE;
+            token.type = Token::LBRACE;
             token.lineno = currentLine;
         } else if (ch == '}') {
             content += ch;
             token.content = content;
-            token.type = RBRACE;
+            token.type = Token::RBRACE;
             token.lineno = currentLine;
         } else if (ch == '[') {
             content += ch;
             token.content = content;
-            token.type = LBRACK;
+            token.type = Token::LBRACK;
             token.lineno = currentLine;
         } else if (ch == ']') {
             content += ch;
             token.content = content;
-            token.type = RBRACK;
+            token.type = Token::RBRACK;
             token.lineno = currentLine;
         } else if (ch == EOF) {
             content += ch;
             token.content = content;
-            token.type = TK_EOF;
+            token.type = Token::TK_EOF;
             token.lineno = currentLine;
         } else {
             errorReporter_.error(CompilerException(ILLEGAL_CHARACTER, currentLine));
