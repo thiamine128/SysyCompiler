@@ -20,6 +20,7 @@ namespace thm {
         ErrorReporter errorReporter_;
         std::vector<Token> tokens_;
         std::ofstream os;
+        int currentLine_;
     public:
         Parser(const TokenStream& tokenStream);
 
@@ -33,6 +34,7 @@ namespace thm {
                 os << tokenTypeToString(token.type) << " " << token.content << std::endl;
             }
             tokens_.clear();
+            currentLine_ = ptr->lineno;
             os << *ptr;
         }
         std::unique_ptr<CompUnit> parseCompUnit();

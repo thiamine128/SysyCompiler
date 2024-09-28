@@ -38,15 +38,15 @@ namespace thm {
         if (token_.type != expectedType) {
             if (expectedType == Token::SEMICN) {
                 ungetToken();
-                errorReporter_.error(CompilerException(MISSING_SEMICOLON, token_.lineno));
+                errorReporter_.error(CompilerException(MISSING_SEMICOLON, currentLine_));
                 nextToken();
             } else if (expectedType == Token::RPARENT) {
                 ungetToken();
-                errorReporter_.error(CompilerException(MISSING_RPARENT, token_.lineno));
+                errorReporter_.error(CompilerException(MISSING_RPARENT, currentLine_));
                 nextToken();
             } else if (expectedType == Token::RBRACK) {
                 ungetToken();
-                errorReporter_.error(CompilerException(MISSING_RBRACK, token_.lineno));
+                errorReporter_.error(CompilerException(MISSING_RBRACK, currentLine_));
                 nextToken();
             } else {
             }
@@ -443,7 +443,7 @@ namespace thm {
             } else {
                 int step = 0;
                 bool assign = false;
-                while (token_.type != Token::SEMICN) {
+                while (token_.type != Token::SEMICN && token_.type != Token::TK_EOF) {
                     nextToken();
                     step++;
                     if (token_.type == Token::ASSIGN) {

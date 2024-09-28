@@ -19,10 +19,10 @@ namespace thm {
         for (;;) {
             Token token;
             lexer.next(token);
+            tokens_.push_back(token);
             if (token.type == Token::TK_EOF) {
                 break;
             }
-            tokens_.push_back(token);
         }
         file.close();
         lexerErrors = lexer.errorReporter();
@@ -40,6 +40,7 @@ namespace thm {
             std::ofstream lexerfile;
             lexerfile.open("lexer.txt");
             for (auto token : tokens_) {
+                if (token.type == Token::TK_EOF) break;
                 lexerfile << thm::tokenTypeToString(token.type) << " " << token.content << std::endl;
             }
             lexerfile.close();
