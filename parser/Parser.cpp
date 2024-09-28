@@ -129,7 +129,6 @@ namespace thm {
         if (token_.type == Token::INTTK || token_.type == Token::CHARTK) {
             ptr->type = token_.type == Token::INTTK ? BType::INT : BType::CHAR;
         } else {
-            errorReporter_.error(CompilerException(UNEXPECTED_TOKEN, token_.lineno));
         }
         nextToken();
         submit(ptr);
@@ -184,7 +183,6 @@ namespace thm {
             ptr->val = token_.content;
             matchToken(Token::STRCON);
         } else {
-            errorReporter_.error(CompilerException(UNEXPECTED_TOKEN, token_.lineno));
         }
         submit(ptr);
         return ptr;
