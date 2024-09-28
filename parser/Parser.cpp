@@ -183,6 +183,7 @@ namespace thm {
             ptr->val = token_.content;
             matchToken(Token::STRCON);
         } else {
+
         }
         submit(ptr);
         return ptr;
