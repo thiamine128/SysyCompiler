@@ -37,6 +37,10 @@ namespace thm {
         }
     }
 
+    bool TokenStream::empty() const {
+        return tokens_.empty();
+    }
+
     void TokenStream::peekForward(std::function<bool(Token const&)> visit) {
         int current = 0;
         while (current < tokens_.size() && visit(tokens_[current])) {

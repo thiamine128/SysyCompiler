@@ -277,12 +277,13 @@ namespace thm {
         for (;;) {
             Token token;
             next(token);
+
+            if (token.type == Token::TK_EOF) {
+                break;
+            }
             tokenStream.put(token);
             if (logger_) {
                 logger_->stream() << token;
-            }
-            if (token.type == Token::TK_EOF) {
-                break;
             }
         }
     }

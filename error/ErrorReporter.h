@@ -16,10 +16,9 @@ namespace thm {
 
     class ErrorReporter {
     private:
-        std::priority_queue<CompilerException> errors;
+        std::priority_queue<CompilerException, std::vector<CompilerException>, std::greater<CompilerException>> errors;
     public:
         void error(CompilerException const& error);
-        std::priority_queue<CompilerException> const& getErrors() const;
         bool hasErrors() const;
         void printErrors(std::shared_ptr<Logger> logger);
     };

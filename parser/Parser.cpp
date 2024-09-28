@@ -291,10 +291,12 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
         match(Token::LBRACE);
 
-        while (!tokenStream_.peekType(Token::RBRACE)) {
-            ptr->items.push_back(std::move(parseBlockItem()));
+        if (!tryMatch(Token::RBRACE)) {
+            while (!tokenStream_.peekType(Token::RBRACE) && !tokenStream_.empty()) {
+                ptr->items.push_back(std::move(parseBlockItem()));
+            }
+            match(Token::RBRACE);
         }
-        match(Token::RBRACE);
         submit(ptr);
         return ptr;
     }

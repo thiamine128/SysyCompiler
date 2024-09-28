@@ -24,6 +24,7 @@ namespace thm {
         bool peekType(int offset, Token::TokenType expectedType) const;
         bool peekType(int offset, std::vector<Token::TokenType> candidates) const;
         void peekForward(std::function<bool(Token::TokenType)> visit);
+        bool empty() const;
 
         void peekForward(std::function<bool(Token const &)> visit);
 

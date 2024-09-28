@@ -16,9 +16,6 @@ namespace thm {
     bool ErrorReporter::hasErrors() const {
         return !errors.empty();
     }
-    std::priority_queue<CompilerException> const& ErrorReporter::getErrors() const {
-        return errors;
-    }
     void ErrorReporter::printErrors(std::shared_ptr<Logger> logger) {
         while (!errors.empty()) {
             auto error = errors.top();
