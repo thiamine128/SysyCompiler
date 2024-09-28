@@ -6,8 +6,10 @@
 #define PARSER_H
 
 #include <fstream>
+#include <optional>
 
 #include "AbstractSyntaxTree.h"
+#include "../core/Logger.h"
 #include "../error/ErrorReporter.h"
 #include "../lexer/TokenStream.h"
 
@@ -16,12 +18,12 @@ namespace thm {
     class Parser {
     private:
         TokenStream& tokenStream_;
-        ErrorReporter errorReporter_;
+        ErrorReporter& errorReporter_;
         std::vector<Token> tokens_;
-        std::ofstream os;
+        std::shared_ptr<Logger> logger_;
         int currentLine_;
     public:
-        Parser(TokenStream& tokenStream);
+        Parser(TokenStream& tokenStream, ErrorReporter& errorReporter);
 
         ErrorReporter& errorReporter() { return errorReporter_; }
         Token const& currentToken() const { return tokenStream_.peek(); }
@@ -30,7 +32,9 @@ namespace thm {
         bool match(Token::TokenType expectedType);
         template <typename T> void submit(T& ptr) {
             ptr->lineno = currentLine_;
-            os << *ptr;
+            if (logger_) {
+                logger_->stream() << *ptr;
+            }
         }
         std::unique_ptr<CompUnit> parseCompUnit();
         std::unique_ptr<Decl> parseDecl();
@@ -66,6 +70,8 @@ namespace thm {
         std::unique_ptr<LAndExp> parseLAndExp();
         std::unique_ptr<LOrExp> parseLOrExp();
         std::unique_ptr<ConstExp> parseConstExp();
+
+        void setLogger(const std::shared_ptr<Logger> & shared) {logger_ = shared;}
     };
 
 } // thm

@@ -10,51 +10,35 @@
 #include "../error/CompilerException.h"
 
 namespace thm {
-    Compiler::Compiler(std::string const &source) : source_(source), parser_(tokenStream_) {
+    Compiler::Compiler(std::string const &source) : source_(source) {
 
     }
 
     void Compiler::lexer() {
         std::ifstream file;
         file.open(source_);
-        Lexer lexer = Lexer(file);
-        for (;;) {
-            Token token;
-            lexer.next(token);
-            tokenStream_.put(token);
-            if (token.type == Token::TK_EOF) {
-                break;
-            }
-        }
+        lexer_ = std::make_unique<Lexer>(file, errorReporter_);
+#ifdef PRINT_LEXER
+        std::shared_ptr<Logger> logger = std::make_shared<Logger>("lexer.txt");
+        lexer_->setLogger(logger);
+#endif
+        lexer_->tokenize(tokenStream_);
         file.close();
-        lexerErrors = lexer.errorReporter();
     }
 
     void Compiler::parse() {
-        auto ptr = parser_.parseCompUnit();
+        parser_ = std::make_unique<Parser>(tokenStream_, errorReporter_);
+#ifdef PRINT_PARSER
+        std::shared_ptr<Logger> logger = std::make_shared<Logger>("parser.txt");
+        parser_->setLogger(logger);
+#endif
+        parser_->parseCompUnit();
     }
 
-    void Compiler::printInfo() {
-        std::ofstream errorfile;
-        errorfile.open("error.txt");
-        if (!lexerErrors.hasErrors()) {
-            std::ofstream lexerfile;
-            lexerfile.open("lexer.txt");
-            tokenStream_.peekForward([&lexerfile](Token const& token) {
-                lexerfile << token;
-                return true;
-            });
-            lexerfile.close();
-        }
-        std::vector<CompilerException> exceptions = lexerErrors.getErrors();
-        exceptions.insert(exceptions.end(), parser_.errorReporter().getErrors().begin(), parser_.errorReporter().getErrors().end());
-        std::sort(exceptions.begin(), exceptions.end(), [](CompilerException const &a, CompilerException const &b) {
-            return a.line < b.line;
-        });
-        for (auto exception : exceptions) {
-            errorfile << exception.line << " " << getErrorCode(exception.errorType) << std::endl;
-        }
-        errorfile.close();
-
+    void Compiler::printErrors() {
+#ifdef PRINT_ERROR
+        std::shared_ptr<Logger> logger = std::make_shared<Logger>("error.txt");
+        errorReporter_.printErrors(logger);
+#endif
     }
 } // thm

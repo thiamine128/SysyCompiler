@@ -273,4 +273,17 @@ namespace thm {
 
     }
 
+    void Lexer::tokenize(TokenStream &tokenStream) {
+        for (;;) {
+            Token token;
+            next(token);
+            tokenStream.put(token);
+            if (logger_) {
+                logger_->stream() << token;
+            }
+            if (token.type == Token::TK_EOF) {
+                break;
+            }
+        }
+    }
 } // thm

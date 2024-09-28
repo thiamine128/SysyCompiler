@@ -20,7 +20,10 @@ add_executable(Compiler main.cpp
         lexer/TokenStream.h
         parser/AbstractSyntaxTree.cpp
         parser/AbstractSyntaxTree.h
+        core/Logger.cpp
+        core/Logger.h
 )
 
 add_definitions(-DPRINT_LEXER)
 add_definitions(-DPRINT_PARSER)
+add_definitions(-DPRINT_ERROR)

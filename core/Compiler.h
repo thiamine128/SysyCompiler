@@ -19,13 +19,14 @@ namespace thm {
     protected:
         std::string source_;
         TokenStream tokenStream_;
-        Parser parser_;
-        ErrorReporter lexerErrors;
+        ErrorReporter errorReporter_;
+        std::unique_ptr<Lexer> lexer_;
+        std::unique_ptr<Parser> parser_;
     public:
         Compiler(std::string const& source);
         void lexer();
         void parse();
-        void printInfo();
+        void printErrors();
     };
 
 } // thm

@@ -4,22 +4,27 @@
 
 #include "ErrorReporter.h"
 
+#include <memory>
 #include <ostream>
+#include "../core/Logger.h"
 
 namespace thm {
+
     void ErrorReporter::error(CompilerException const &error) {
-        errors.push_back(error);
+        errors.push(error);
     }
     bool ErrorReporter::hasErrors() const {
         return !errors.empty();
     }
-    std::vector<CompilerException> const& ErrorReporter::getErrors() const {
+    std::priority_queue<CompilerException> const& ErrorReporter::getErrors() const {
         return errors;
     }
-    void ErrorReporter::printErrors(std::ostream& out) const {
-        for (auto error : errors) {
+    void ErrorReporter::printErrors(std::shared_ptr<Logger> logger) {
+        while (!errors.empty()) {
+            auto error = errors.top();
+            errors.pop();
             if (getErrorCode(error.errorType) != '-')
-                out << error.line << " " << getErrorCode(error.errorType) << std::endl;
+                logger->stream() << error.line << " " << getErrorCode(error.errorType) << std::endl;
         }
     }
 

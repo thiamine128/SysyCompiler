@@ -9,8 +9,6 @@ int main() {
 
     compiler.lexer();
     compiler.parse();
-#ifdef PRINT_LEXER
-    compiler.printInfo();
-#endif
+    compiler.printErrors();
     return 0;
 }

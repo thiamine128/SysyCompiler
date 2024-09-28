@@ -28,6 +28,9 @@ namespace thm {
         int line;
 
         CompilerException(ErrorType errorType, int line) : errorType(errorType), line(line) {}
+        bool operator<(const CompilerException &other) const {
+            return line < other.line;
+        }
     };
 
     char getErrorCode(ErrorType errorType);

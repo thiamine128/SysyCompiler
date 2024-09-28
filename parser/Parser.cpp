@@ -9,15 +9,17 @@
 #include <fstream>
 
 namespace thm {
-    Parser::Parser(TokenStream &tokenStream): currentLine_(0), tokenStream_(tokenStream) {
-        os.open("parser.txt");
+    Parser::Parser(TokenStream &tokenStream, ErrorReporter& errorReporter): currentLine_(0), tokenStream_(tokenStream), errorReporter_(errorReporter) {
+
     }
 
 
     void Parser::nextToken() {
         Token const& token = currentToken();
         currentLine_ = token.lineno;
-        os << token;
+        if (logger_) {
+            logger_->stream() << token;
+        }
         tokenStream_.next();
     }
 

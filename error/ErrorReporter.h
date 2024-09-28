@@ -4,21 +4,24 @@
 
 #ifndef ERRORREPORTER_H
 #define ERRORREPORTER_H
+#include <memory>
+#include <queue>
 #include <string>
 #include <vector>
 
 #include "CompilerException.h"
 
 namespace thm {
+    class Logger;
 
     class ErrorReporter {
     private:
-        std::vector<CompilerException> errors;
+        std::priority_queue<CompilerException> errors;
     public:
         void error(CompilerException const& error);
-        std::vector<CompilerException> const& getErrors() const;
+        std::priority_queue<CompilerException> const& getErrors() const;
         bool hasErrors() const;
-        void printErrors(std::ostream& out) const;
+        void printErrors(std::shared_ptr<Logger> logger);
     };
 
 } // thm
