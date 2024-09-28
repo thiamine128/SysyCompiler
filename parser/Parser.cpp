@@ -17,11 +17,13 @@ namespace thm {
         if (token_.type != Token::DEFAULT) {
             tokens_.push_back(token_);
         }
+        currentLine_ = token_.lineno;
         token_ = tokenStream_.next();
     }
 
     void Parser::ungetToken() {
         token_ = tokenStream_.unget();
+        currentLine_ = token_.lineno;
         if (!tokens_.empty())
             tokens_.pop_back();
     }
@@ -37,18 +39,13 @@ namespace thm {
     void Parser::matchToken(Token::TokenType expectedType) {
         if (token_.type != expectedType) {
             if (expectedType == Token::SEMICN) {
-                ungetToken();
                 errorReporter_.error(CompilerException(MISSING_SEMICOLON, currentLine_));
-                nextToken();
             } else if (expectedType == Token::RPARENT) {
-                ungetToken();
                 errorReporter_.error(CompilerException(MISSING_RPARENT, currentLine_));
-                nextToken();
             } else if (expectedType == Token::RBRACK) {
-                ungetToken();
                 errorReporter_.error(CompilerException(MISSING_RBRACK, currentLine_));
-                nextToken();
             } else {
+
             }
         } else {
             nextToken();

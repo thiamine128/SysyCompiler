@@ -34,7 +34,7 @@ namespace thm {
                 os << tokenTypeToString(token.type) << " " << token.content << std::endl;
             }
             tokens_.clear();
-            currentLine_ = ptr->lineno;
+            ptr->lineno = currentLine_;
             os << *ptr;
         }
         std::unique_ptr<CompUnit> parseCompUnit();
