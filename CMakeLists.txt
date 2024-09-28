@@ -16,10 +16,10 @@ add_executable(Compiler main.cpp
         error/ErrorReporter.h
         parser/Parser.cpp
         parser/Parser.h
-        parser/ParseTree.cpp
-        parser/ParseTree.h
         lexer/TokenStream.cpp
         lexer/TokenStream.h
+        parser/AbstractSyntaxTree.cpp
+        parser/AbstractSyntaxTree.h
 )
 
 add_definitions(-DPRINT_LEXER)
