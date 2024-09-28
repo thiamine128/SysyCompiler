@@ -7,20 +7,57 @@
 #include <iostream>
 
 namespace thm {
-    TokenStream::TokenStream(std::vector<Token> &tokens) : tokens_(tokens) {
-        offset = -1;
+    Token TokenStream::emptyToken_ = Token(Token::TK_EOF, "", -1);
+
+    void TokenStream::put(Token const &token) {
+        tokens_.push_back(token);
     }
 
-    Token const& TokenStream::next() {
-        if (offset + 1 < tokens_.size()) {
-            offset++;
+    bool TokenStream::peekType(Token::TokenType expectedType) const {
+        return peekType(0, expectedType);
+    }
+
+    bool TokenStream::peekType(int offset, Token::TokenType expectedType) const {
+        return peek(offset).type == expectedType;
+    }
+
+    bool TokenStream::peekType(int offset, std::vector<Token::TokenType> candidates) const {
+        for (auto type : candidates) {
+            if (peek(offset).type == type) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void TokenStream::peekForward(std::function<bool(Token::TokenType)> visit) {
+        int current = 0;
+        while (current < tokens_.size() && visit(tokens_[current].type)) {
+            current ++;
+        }
+    }
+
+    void TokenStream::peekForward(std::function<bool(Token const&)> visit) {
+        int current = 0;
+        while (current < tokens_.size() && visit(tokens_[current])) {
+            current ++;
+        }
+    }
+
+    Token const & TokenStream::peek() const {
+        return peek(0);
+    }
+
+    Token const & TokenStream::peek(int offset) const {
+        if (offset >= tokens_.size()) {
+            return emptyToken_;
         }
         return tokens_[offset];
     }
 
-    Token const& TokenStream::unget() {
-        if (offset >= 0)
-            --offset;
-        return tokens_[offset < 0 ? 0 : offset];
+    Token TokenStream::next() {
+        Token token = tokens_.front();
+        tokens_.pop_front();
+        return token;
     }
 } // thm

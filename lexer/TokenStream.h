@@ -4,6 +4,8 @@
 
 #ifndef TOKENSTREAM_H
 #define TOKENSTREAM_H
+#include <deque>
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -13,13 +15,21 @@ namespace thm {
 
     class TokenStream {
     private:
-        std::vector<Token>& tokens_;
-        int offset;
-    public:
-        TokenStream(std::vector<Token>& tokens);
+        std::deque<Token> tokens_;
 
-        Token const& next();
-        Token const& unget();
+        static Token emptyToken_;
+    public:
+        void put(Token const& token);
+        bool peekType(Token::TokenType expectedType) const;
+        bool peekType(int offset, Token::TokenType expectedType) const;
+        bool peekType(int offset, std::vector<Token::TokenType> candidates) const;
+        void peekForward(std::function<bool(Token::TokenType)> visit);
+
+        void peekForward(std::function<bool(Token const &)> visit);
+
+        Token const& peek() const;
+        Token const& peek(int offset) const;
+        Token next();
     };
 
 } // thm

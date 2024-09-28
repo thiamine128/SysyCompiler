@@ -10,7 +10,7 @@
 #include "../error/CompilerException.h"
 
 namespace thm {
-    Compiler::Compiler(std::string const &source) : source_(source), parser_(TokenStream(tokens_)) {
+    Compiler::Compiler(std::string const &source) : source_(source), parser_(tokenStream_) {
 
     }
 
@@ -21,7 +21,7 @@ namespace thm {
         for (;;) {
             Token token;
             lexer.next(token);
-            tokens_.push_back(token);
+            tokenStream_.put(token);
             if (token.type == Token::TK_EOF) {
                 break;
             }
@@ -31,7 +31,6 @@ namespace thm {
     }
 
     void Compiler::parse() {
-        parser_.nextToken();
         auto ptr = parser_.parseCompUnit();
     }
 
@@ -41,10 +40,10 @@ namespace thm {
         if (!lexerErrors.hasErrors()) {
             std::ofstream lexerfile;
             lexerfile.open("lexer.txt");
-            for (auto token : tokens_) {
-                if (token.type == Token::TK_EOF) break;
-                lexerfile << thm::tokenTypeToString(token.type) << " " << token.content << std::endl;
-            }
+            tokenStream_.peekForward([&lexerfile](Token const& token) {
+                lexerfile << token;
+                return true;
+            });
             lexerfile.close();
         }
         std::vector<CompilerException> exceptions = lexerErrors.getErrors();

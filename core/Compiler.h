@@ -18,7 +18,7 @@ namespace thm {
     class Compiler {
     protected:
         std::string source_;
-        std::vector<Token> tokens_;
+        TokenStream tokenStream_;
         Parser parser_;
         ErrorReporter lexerErrors;
     public:

@@ -70,6 +70,8 @@ namespace thm {
     };
     std::string tokenTypeToString(Token::TokenType t);
     Token::TokenType reserve(std::string const& content);
+
+    std::ostream& operator<<(std::ostream& os, Token const& t);
 } // thm
 
 #endif //TOKEN_H

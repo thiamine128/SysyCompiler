@@ -15,25 +15,20 @@ namespace thm {
 
     class Parser {
     private:
-        TokenStream tokenStream_;
-        Token token_;
+        TokenStream& tokenStream_;
         ErrorReporter errorReporter_;
         std::vector<Token> tokens_;
         std::ofstream os;
         int currentLine_;
     public:
-        Parser(const TokenStream& tokenStream);
+        Parser(TokenStream& tokenStream);
 
         ErrorReporter& errorReporter() { return errorReporter_; }
+        Token const& currentToken() const { return tokenStream_.peek(); }
         void nextToken();
-        void ungetToken();
         bool tryMatch(Token::TokenType expectedType);
-        void matchToken(Token::TokenType expectedType);
+        bool match(Token::TokenType expectedType);
         template <typename T> void submit(T& ptr) {
-            for (auto token : tokens_) {
-                os << tokenTypeToString(token.type) << " " << token.content << std::endl;
-            }
-            tokens_.clear();
             ptr->lineno = currentLine_;
             os << *ptr;
         }

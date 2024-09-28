@@ -4,6 +4,7 @@
 
 #include "Token.h"
 
+#include <ostream>
 #include <unordered_map>
 
 namespace thm {
@@ -44,4 +45,7 @@ namespace thm {
         return Token::IDENFR;
     }
 
+    std::ostream & operator<<(std::ostream &os, Token const &t) {
+        return os << tokenTypeToString(t.type) << " " << t.content << std::endl;
+    }
 } // thm
