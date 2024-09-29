@@ -14,7 +14,6 @@
 #include "../parser/Parser.h"
 
 namespace thm {
-
     class Compiler {
     protected:
         std::string source_;
@@ -22,13 +21,16 @@ namespace thm {
         ErrorReporter errorReporter_;
         std::unique_ptr<Lexer> lexer_;
         std::unique_ptr<Parser> parser_;
+
     public:
-        Compiler(std::string const& source);
+        Compiler(std::string const &source);
+
         void lexer();
+
         void parse();
+
         void printErrors();
     };
-
 } // thm
 
 #endif //COMPILER_H

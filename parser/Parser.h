@@ -25,7 +25,6 @@ namespace thm {
     public:
         Parser(TokenStream& tokenStream, ErrorReporter& errorReporter);
 
-        ErrorReporter& errorReporter() { return errorReporter_; }
         Token const& currentToken() const { return tokenStream_.peek(); }
         void nextToken();
         bool tryMatch(Token::TokenType expectedType);

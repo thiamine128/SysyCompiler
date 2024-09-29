@@ -63,7 +63,7 @@ namespace thm {
 #undef X
         } type;
         std::string content;
-        int lineno{};
+        int lineno = 0;
 
         Token() : type(TokenType::DEFAULT) {};
         Token(TokenType type, std::string const& content, int lineno) : type(type), content(content), lineno(lineno) {}
