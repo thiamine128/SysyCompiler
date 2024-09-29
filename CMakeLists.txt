@@ -26,4 +26,4 @@ add_executable(Compiler main.cpp
 
 add_definitions(-DPRINT_LEXER)
 add_definitions(-DPRINT_PARSER)
-#add_definitions(-DPRINT_ERROR)
+add_definitions(-DPRINT_ERROR)
