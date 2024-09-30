@@ -11,7 +11,7 @@
     X(ILLEGAL_TOKEN, 'a') \
     X(UNEXPECTED_TOKEN, '-') \
     X(MISSING_SEMICOLON, 'i') \
-    X(MISSING_RPARENT, 'j') \
+    X(MISSING_RPARENT, '-') \
     X(MISSING_RBRACK, 'k')
 
 namespace thm {
