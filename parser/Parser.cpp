@@ -294,9 +294,9 @@ namespace thm {
         match(Token::LBRACE);
 
         if (!tryMatch(Token::RBRACE)) {
-            /*while (!tokenStream_.peekType(Token::RBRACE) && !tokenStream_.empty()) {
+            while (!tokenStream_.peekType(Token::RBRACE) && !tokenStream_.empty()) {
                 ptr->items.push_back(std::move(parseBlockItem()));
-            }*/
+            }
             match(Token::RBRACE);
         }
         submit(ptr);
