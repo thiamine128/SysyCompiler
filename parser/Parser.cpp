@@ -370,10 +370,11 @@ namespace thm {
             match(Token::STRCON);
             std::vector<std::unique_ptr<Exp>> args;
             // TLE HERE
-            int t = 1000;
+            int st = tokenStream_.size();
             while (tryMatch(Token::COMMA) && t > 0) {
                 args.push_back(std::move(parseExp()));
-                --t;
+                if (st == tokenStream_.size())
+                    break;
             }
             match(Token::RPARENT);
             match(Token::SEMICN);
