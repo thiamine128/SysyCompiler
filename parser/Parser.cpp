@@ -199,9 +199,9 @@ namespace thm {
             std::vector<std::unique_ptr<Exp> > exps;
             if (tokenStream_.peekType(0, {Token::PLUS, Token::MINU, Token::NOT, Token::IDENFR, Token::LPARENT, Token::INTCON, Token::CHRCON})) {
                 exps.push_back(std::move(parseExp()));
-                /*while (tryMatch(Token::COMMA)) {
+                while (tryMatch(Token::COMMA)) {
                     exps.push_back(std::move(parseExp()));
-                }*/
+                }
             }
             ptr->val = InitVal::InitValArray(std::move(exps));
             match(Token::RBRACE);
@@ -266,9 +266,9 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
 
         ptr->params.push_back(parseFuncFParam());
-        /*while (tryMatch(Token::COMMA)) {
+        while (tryMatch(Token::COMMA)) {
             ptr->params.push_back(parseFuncFParam());
-        }*/
+        }
         submit(ptr);
         return ptr;
     }
@@ -294,9 +294,9 @@ namespace thm {
         match(Token::LBRACE);
 
         if (!tryMatch(Token::RBRACE)) {
-            /*while (!tokenStream_.peekType(Token::RBRACE) && !tokenStream_.empty()) {
+            while (!tokenStream_.peekType(Token::RBRACE) && !tokenStream_.empty()) {
                 ptr->items.push_back(std::move(parseBlockItem()));
-            }*/
+            }
             match(Token::RBRACE);
         }
         submit(ptr);
