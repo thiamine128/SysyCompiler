@@ -294,9 +294,9 @@ namespace thm {
         match(Token::LBRACE);
 
         if (!tryMatch(Token::RBRACE)) {
-            while (!tokenStream_.peekType(Token::RBRACE) && !tokenStream_.empty()) {
+            /*while (!tokenStream_.peekType(Token::RBRACE) && !tokenStream_.empty()) {
                 ptr->items.push_back(std::move(parseBlockItem()));
-            }
+            }*/
             match(Token::RBRACE);
         }
         submit(ptr);
@@ -369,9 +369,9 @@ namespace thm {
             std::string fmt = currentToken().content;
             match(Token::STRCON);
             std::vector<std::unique_ptr<Exp>> args;
-            while (tryMatch(Token::COMMA)) {
+            /*while (tryMatch(Token::COMMA)) {
                 args.push_back(std::move(parseExp()));
-            }
+            }*/
             match(Token::RPARENT);
             match(Token::SEMICN);
             ptr->stmt = Stmt::StmtPrintf(std::move(fmt), std::move(args));
