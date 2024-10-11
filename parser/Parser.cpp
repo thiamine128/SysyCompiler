@@ -371,7 +371,7 @@ namespace thm {
             std::vector<std::unique_ptr<Exp>> args;
             // TLE HERE
             int st = tokenStream_.size();
-            while (tryMatch(Token::COMMA) && t > 0) {
+            while (tryMatch(Token::COMMA)) {
                 args.push_back(std::move(parseExp()));
                 if (st == tokenStream_.size())
                     break;
