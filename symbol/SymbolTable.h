@@ -18,7 +18,7 @@ private:
     std::unordered_map<std::string, std::shared_ptr<Symbol>> symbols_;
     std::shared_ptr<SymbolTable> parent_;
 public:
-    SymbolTable(int scopeId) : scopeId_(scopeId) {}
+    SymbolTable(int scopeId, std::shared_ptr<SymbolTable> parent) : scopeId_(scopeId), parent_(parent) {}
 
     bool hasSymbolInScope(const std::string& ident) const;
     std::shared_ptr<Symbol> findSymbol(const std::string& ident) const;
