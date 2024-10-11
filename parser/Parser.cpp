@@ -531,7 +531,7 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
         ptr->exp = std::move(parseUnaryExp());
         submit(ptr);
-        while (tokenStream_.peekType(0, {Token::MULT, Token::DIV, Token::MOD})) {
+        /*while (tokenStream_.peekType(0, {Token::MULT, Token::DIV, Token::MOD})) {
             auto mul = std::make_unique<MulExp>();
             MulExp::OpExp::Op op = MulExp::OpExp::MUL;
             switch (currentToken().type) {
@@ -550,7 +550,7 @@ namespace thm {
             mul->exp = MulExp::OpExp(std::move(ptr), op, std::move(parseUnaryExp()));
             ptr = std::move(mul);
             submit(ptr);
-        }
+        }*/
         return ptr;
     }
 
