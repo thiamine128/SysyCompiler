@@ -27,6 +27,7 @@ public:
     void popScope();
     void submitSymbol(std::shared_ptr<Symbol> symbol);
     bool tryAccessSymbol(Token const& ident) const;
+    bool isArray(std::string const& ident) const;
     void visitConstDecl(std::unique_ptr<ConstDecl> &constDecl) override;
     void visitVarDecl(std::unique_ptr<VarDecl> &varDecl) override;
     void visitFuncDef(std::unique_ptr<FuncDef> &funcDef) override;
