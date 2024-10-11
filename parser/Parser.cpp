@@ -369,9 +369,9 @@ namespace thm {
             std::string fmt = currentToken().content;
             match(Token::STRCON);
             std::vector<std::unique_ptr<Exp>> args;
-            /*while (tryMatch(Token::COMMA)) {
+            while (tryMatch(Token::COMMA)) {
                 args.push_back(std::move(parseExp()));
-            }*/
+            }
             match(Token::RPARENT);
             match(Token::SEMICN);
             ptr->stmt = Stmt::StmtPrintf(std::move(fmt), std::move(args));
@@ -519,9 +519,9 @@ namespace thm {
         auto ptr = std::make_unique<FuncRParams>();
         ptr->lineno = currentToken().lineno;
         ptr->params.push_back(parseExp());
-        /*while (tryMatch(Token::COMMA)) {
+        while (tryMatch(Token::COMMA)) {
             ptr->params.push_back(parseExp());
-        }*/
+        }
         submit(ptr);
         return ptr;
     }
@@ -531,7 +531,7 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
         ptr->exp = std::move(parseUnaryExp());
         submit(ptr);
-        /*while (tokenStream_.peekType(0, {Token::MULT, Token::DIV, Token::MOD})) {
+        while (tokenStream_.peekType(0, {Token::MULT, Token::DIV, Token::MOD})) {
             auto mul = std::make_unique<MulExp>();
             MulExp::OpExp::Op op = MulExp::OpExp::MUL;
             switch (currentToken().type) {
@@ -550,7 +550,7 @@ namespace thm {
             mul->exp = MulExp::OpExp(std::move(ptr), op, std::move(parseUnaryExp()));
             ptr = std::move(mul);
             submit(ptr);
-        }*/
+        }
         return ptr;
     }
 
