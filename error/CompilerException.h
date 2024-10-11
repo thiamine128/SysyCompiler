@@ -12,7 +12,10 @@
     X(UNEXPECTED_TOKEN, '-') \
     X(MISSING_SEMICOLON, 'i') \
     X(MISSING_RPARENT, 'j') \
-    X(MISSING_RBRACK, 'k')
+    X(MISSING_RBRACK, 'k') \
+    X(REDEFINITION, 'b') \
+    X(UNDEFINED_IDENTIFIER, 'c') \
+    X(MISMATCHED_PARAMS, 'd')
 
 namespace thm {
 

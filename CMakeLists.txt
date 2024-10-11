@@ -22,8 +22,18 @@ add_executable(Compiler main.cpp
         parser/AbstractSyntaxTree.h
         core/Logger.cpp
         core/Logger.h
+        parser/ASTVisitor.cpp
+        parser/ASTVisitor.h
+        util/overloaded.h
+        symbol/Symbol.cpp
+        symbol/Symbol.h
+        symbol/SymbolTable.cpp
+        symbol/SymbolTable.h
+        symbol/SymbolTableBuilder.cpp
+        symbol/SymbolTableBuilder.h
 )
 
 add_definitions(-DPRINT_LEXER)
 add_definitions(-DPRINT_PARSER)
+add_definitions(-DPRINT_SYMBOL)
 add_definitions(-DPRINT_ERROR)

@@ -6,8 +6,10 @@
 
 #include <algorithm>
 #include <fstream>
+#include <iostream>
 
 #include "../error/CompilerException.h"
+#include "../symbol/SymbolTableBuilder.h"
 
 namespace thm {
     Compiler::Compiler(std::string const &source) : source_(source) {
@@ -32,9 +34,19 @@ namespace thm {
         std::shared_ptr<Logger> logger = std::make_shared<Logger>("parser.txt");
         parser_->setLogger(logger);
 #endif
-        parser_->parseCompUnit();
+        compUnit_ = parser_->parseCompUnit();
     }
 
+    void Compiler::buildSymbolTables() {
+        std::shared_ptr<SymbolTableBuilder> builder = std::make_shared<SymbolTableBuilder>(errorReporter_);
+        builder->visitCompUnit(compUnit_);
+#ifdef PRINT_SYMBOL
+        std::shared_ptr<Logger> logger = std::make_shared<Logger>("symbol.txt");
+        for (auto& symbolTable : builder->symbolTables) {
+            symbolTable->print(logger->stream());
+        }
+    }
+#endif
     void Compiler::printErrors() {
 #ifdef PRINT_ERROR
         std::shared_ptr<Logger> logger = std::make_shared<Logger>("error.txt");

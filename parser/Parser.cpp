@@ -97,7 +97,7 @@ namespace thm {
     std::unique_ptr<BType> Parser::parseBType() {
         auto ptr = std::make_unique<BType>();
         ptr->lineno = currentToken().lineno;
-        ptr->type = currentToken().type == Token::INTTK ? BType::INT : BType::CHAR;
+        ptr->type = currentToken().type == Token::INTTK ? VariableType::INT : VariableType::CHAR;
         nextToken();
         submit(ptr);
         return ptr;
@@ -107,7 +107,7 @@ namespace thm {
     std::unique_ptr<ConstDef> Parser::parseConstDef() {
         auto ptr = std::make_unique<ConstDef>();
         ptr->lineno = currentToken().lineno;
-        std::string ident = currentToken().content;
+        Token ident = currentToken();
         match(Token::IDENFR);
         if (tryMatch(Token::LBRACK)) {
             std::unique_ptr<ConstExp> len;
@@ -167,7 +167,7 @@ namespace thm {
         auto ptr = std::make_unique<VarDef>();
         ptr->lineno = currentToken().lineno;
 
-        std::string ident = currentToken().content;
+        Token ident = currentToken();
         match(Token::IDENFR);
 
         if (tryMatch(Token::LBRACK)) {
@@ -218,11 +218,13 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
 
         ptr->funcType = std::move(parseFuncType());
-        ptr->ident = currentToken().content;
+        ptr->ident = currentToken();
         match(Token::IDENFR);
         match(Token::LPARENT);
         if (tokenStream_.peekType(0, {Token::INTTK, Token::CHARTK})) {
             ptr->params = std::move(parseFuncFParams());
+        } else {
+            ptr->params = std::unique_ptr<FuncFParams>();
         }
         match(Token::RPARENT);
         ptr->block = std::move(parseBlock());
@@ -247,12 +249,12 @@ namespace thm {
         auto ptr = std::make_unique<FuncType>();
         ptr->lineno = currentToken().lineno;
 
-        if (tokenStream_.peekType(Token::IDENFR)) {
-            ptr->type = FuncType::INT;
+        if (tokenStream_.peekType(Token::INTTK)) {
+            ptr->type = FunctionSymbol::INT;
         } else if (tokenStream_.peekType(Token::CHARTK)) {
-            ptr->type = FuncType::CHAR;
+            ptr->type = FunctionSymbol::CHAR;
         } else {
-            ptr->type = FuncType::VOID;
+            ptr->type = FunctionSymbol::VOID;
         }
         nextToken();
         submit(ptr);
@@ -274,9 +276,9 @@ namespace thm {
     std::unique_ptr<FuncFParam> Parser::parseFuncFParam() {
         auto ptr = std::make_unique<FuncFParam>();
         ptr->lineno = currentToken().lineno;
-
         ptr->bType = std::move(parseBType());
         ptr->isArray = false;
+        ptr->ident = currentToken();
         match(Token::IDENFR);
         if (tryMatch(Token::LBRACK)) {
             match(Token::RBRACK);
@@ -400,6 +402,8 @@ namespace thm {
                     ptr->stmt = std::move(parseExp());
                 }
                 match(Token::SEMICN);
+            } else {
+                ptr->stmt = std::unique_ptr<Exp>();
             }
         }
         submit(ptr);
@@ -439,7 +443,7 @@ namespace thm {
         auto ptr = std::make_unique<LVal>();
         ptr->lineno = currentToken().lineno;
 
-        ptr->ident = currentToken().content;
+        ptr->ident = currentToken();
         match(Token::IDENFR);
         if (tryMatch(Token::LBRACK)) {
             ptr->exp = parseExp();
@@ -490,11 +494,13 @@ namespace thm {
         auto ptr = std::make_unique<UnaryExp>();
         ptr->lineno = currentToken().lineno;
         if (tokenStream_.peekType(Token::IDENFR) && tokenStream_.peekType(1, Token::LPARENT)) {
-            std::string ident = currentToken().content;
+            Token ident = currentToken();
             nextToken();
             nextToken();
             if (!tokenStream_.peekType(Token::RPARENT)) {
                 ptr->exp = UnaryExp::FuncExp(ident, std::move(parseFuncRParams()));
+            } else {
+                ptr->exp = UnaryExp::FuncExp(ident, nullptr);
             }
             match(Token::RPARENT);
             submit(ptr);

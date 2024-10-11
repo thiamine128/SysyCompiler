@@ -9,6 +9,8 @@ int main() {
 
     compiler.lexer();
     compiler.parse();
-    compiler.printErrors();
+    compiler.buildSymbolTables();
+    //compiler.printErrors();
+
     return 0;
 }
