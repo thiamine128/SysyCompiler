@@ -366,15 +366,12 @@ namespace thm {
             ptr->stmt = Stmt::StmtReturn(std::move(returnExp));
         } else if (tryMatch(Token::PRINTFTK)) {
             bool r = false;
-            if (!tryMatch(Token::LPARENT)) {
-                r = true;
-            }
-            //match(Token::LPARENT);
+            match(Token::LPARENT);
             std::string fmt = currentToken().content;
-            if (!tryMatch(Token::STRCON)) {
+            if (tokenStream_.peek().type != Token::STRCON) {
                 r = true;
             }
-            //match(Token::STRCON);
+            match(Token::STRCON);
             std::vector<std::unique_ptr<Exp>> args;
             // TLE HERE
             while (tryMatch(Token::COMMA)) {
