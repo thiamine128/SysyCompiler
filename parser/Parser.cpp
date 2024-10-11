@@ -519,9 +519,9 @@ namespace thm {
         auto ptr = std::make_unique<FuncRParams>();
         ptr->lineno = currentToken().lineno;
         ptr->params.push_back(parseExp());
-        while (tryMatch(Token::COMMA)) {
+        /*while (tryMatch(Token::COMMA)) {
             ptr->params.push_back(parseExp());
-        }
+        }*/
         submit(ptr);
         return ptr;
     }
