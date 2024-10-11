@@ -199,9 +199,9 @@ namespace thm {
             std::vector<std::unique_ptr<Exp> > exps;
             if (tokenStream_.peekType(0, {Token::PLUS, Token::MINU, Token::NOT, Token::IDENFR, Token::LPARENT, Token::INTCON, Token::CHRCON})) {
                 exps.push_back(std::move(parseExp()));
-                while (tryMatch(Token::COMMA)) {
+                /*while (tryMatch(Token::COMMA)) {
                     exps.push_back(std::move(parseExp()));
-                }
+                }*/
             }
             ptr->val = InitVal::InitValArray(std::move(exps));
             match(Token::RBRACE);
@@ -266,9 +266,9 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
 
         ptr->params.push_back(parseFuncFParam());
-        while (tryMatch(Token::COMMA)) {
+        /*while (tryMatch(Token::COMMA)) {
             ptr->params.push_back(parseFuncFParam());
-        }
+        }*/
         submit(ptr);
         return ptr;
     }
@@ -294,9 +294,9 @@ namespace thm {
         match(Token::LBRACE);
 
         if (!tryMatch(Token::RBRACE)) {
-            while (!tokenStream_.peekType(Token::RBRACE) && !tokenStream_.empty()) {
+            /*while (!tokenStream_.peekType(Token::RBRACE) && !tokenStream_.empty()) {
                 ptr->items.push_back(std::move(parseBlockItem()));
-            }
+            }*/
             match(Token::RBRACE);
         }
         submit(ptr);
@@ -369,9 +369,9 @@ namespace thm {
             std::string fmt = currentToken().content;
             match(Token::STRCON);
             std::vector<std::unique_ptr<Exp>> args;
-            while (tryMatch(Token::COMMA)) {
+            /*while (tryMatch(Token::COMMA)) {
                 args.push_back(std::move(parseExp()));
-            }
+            }*/
             match(Token::RPARENT);
             match(Token::SEMICN);
             ptr->stmt = Stmt::StmtPrintf(std::move(fmt), std::move(args));
@@ -519,9 +519,9 @@ namespace thm {
         auto ptr = std::make_unique<FuncRParams>();
         ptr->lineno = currentToken().lineno;
         ptr->params.push_back(parseExp());
-        while (tryMatch(Token::COMMA)) {
+        /*while (tryMatch(Token::COMMA)) {
             ptr->params.push_back(parseExp());
-        }
+        }*/
         submit(ptr);
         return ptr;
     }
@@ -531,7 +531,7 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
         ptr->exp = std::move(parseUnaryExp());
         submit(ptr);
-        while (tokenStream_.peekType(0, {Token::MULT, Token::DIV, Token::MOD})) {
+        /*while (tokenStream_.peekType(0, {Token::MULT, Token::DIV, Token::MOD})) {
             auto mul = std::make_unique<MulExp>();
             MulExp::OpExp::Op op = MulExp::OpExp::MUL;
             switch (currentToken().type) {
@@ -550,7 +550,7 @@ namespace thm {
             mul->exp = MulExp::OpExp(std::move(ptr), op, std::move(parseUnaryExp()));
             ptr = std::move(mul);
             submit(ptr);
-        }
+        }*/
         return ptr;
     }
 
@@ -559,7 +559,7 @@ namespace thm {
         ptr->exp = std::move(parseMulExp());
         ptr->lineno = currentToken().lineno;
         submit(ptr);
-        while (tokenStream_.peekType(0, {Token::PLUS, Token::MINU})) {
+        /*while (tokenStream_.peekType(0, {Token::PLUS, Token::MINU})) {
             auto add = std::make_unique<AddExp>();
             AddExp::OpExp::Op op;
             switch (currentToken().type) {
@@ -577,7 +577,7 @@ namespace thm {
             add->exp = AddExp::OpExp(std::move(ptr), op, std::move(parseMulExp()));
             ptr = std::move(add);
             submit(ptr);
-        }
+        }*/
         return ptr;
     }
 
@@ -618,7 +618,7 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
         ptr->exp = std::move(parseRelExp());
         submit(ptr);
-        while (tokenStream_.peekType(0, {Token::EQL, Token::NEQ})) {
+        /*while (tokenStream_.peekType(0, {Token::EQL, Token::NEQ})) {
             auto eq = std::make_unique<EqExp>();
             eq->lineno = ptr->lineno;
             Token::TokenType type = currentToken().type;
@@ -627,7 +627,7 @@ namespace thm {
                                    std::move(parseRelExp()));
             ptr = std::move(eq);
             submit(ptr);
-        }
+        }*/
         return ptr;
     }
 
@@ -636,13 +636,13 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
         ptr->exp = std::move(parseEqExp());
         submit(ptr);
-        while (tryMatch(Token::AND)) {
+        /*while (tryMatch(Token::AND)) {
             auto lAnd = std::make_unique<LAndExp>();
             lAnd->lineno = ptr->lineno;
             lAnd->exp = LAndExp::OpExp(std::move(ptr), std::move(parseEqExp()));
             ptr = std::move(lAnd);
             submit(ptr);
-        }
+        }*/
         return ptr;
     }
 
@@ -651,13 +651,13 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
         ptr->exp = std::move(parseLAndExp());
         submit(ptr);
-        while (tryMatch(Token::OR)) {
+        /*while (tryMatch(Token::OR)) {
             auto lOr = std::make_unique<LOrExp>();
             lOr->lineno = ptr->lineno;
             lOr->exp = LOrExp::OpExp(std::move(ptr), std::move(parseLAndExp()));
             ptr = std::move(lOr);
             submit(ptr);
-        }
+        }*/
         return ptr;
     }
 
