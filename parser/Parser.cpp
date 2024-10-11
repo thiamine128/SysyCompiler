@@ -365,16 +365,21 @@ namespace thm {
             }
             ptr->stmt = Stmt::StmtReturn(std::move(returnExp));
         } else if (tryMatch(Token::PRINTFTK)) {
-            match(Token::LPARENT);
+            bool r = false;
+            if (!tryMatch(Token::LPARENT)) {
+                r = true;
+            }
+            //match(Token::LPARENT);
             std::string fmt = currentToken().content;
-            match(Token::STRCON);
+            if (!tryMatch(Token::STRCON)) {
+                r = true;
+            }
+            //match(Token::STRCON);
             std::vector<std::unique_ptr<Exp>> args;
             // TLE HERE
-            int st = tokenStream_.size();
             while (tryMatch(Token::COMMA)) {
                 args.push_back(std::move(parseExp()));
-                if (st == tokenStream_.size())
-                    break;
+                if (r) break;
             }
             match(Token::RPARENT);
             match(Token::SEMICN);
