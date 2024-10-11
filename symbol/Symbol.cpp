@@ -7,8 +7,8 @@
 namespace thm {
     std::string VariableSymbol::typeString() const {
         std::string str = "";
-        if (symbolType.isConst) str += "Const";
-        switch (symbolType.type) {
+        if (type.isConst) str += "Const";
+        switch (type.type) {
             case VariableType::INT:
                 str += "Int";
             break;
@@ -16,7 +16,7 @@ namespace thm {
                 str += "Char";
             break;
         }
-        if (symbolType.isArray) str += "Array";
+        if (type.isArray) str += "Array";
         return str;
     }
 

@@ -45,16 +45,16 @@ namespace thm {
             std::shared_ptr<VariableSymbol> symbol = std::make_shared<VariableSymbol>();
             symbol->id = ++symbolNum;
             symbol->scopeId = symbolTable->getScopeId();
-            symbol->symbolType.isConst = true;
-            symbol->symbolType.type = constDecl->bType->type;
+            symbol->type.isConst = true;
+            symbol->type.type = constDecl->bType->type;
             std::visit(overloaded{
                 [&](ConstDef::ConstDefBasic& basic) {
                     symbol->ident = basic.ident;
-                    symbol->symbolType.isArray = false;
+                    symbol->type.isArray = false;
                 },
                 [&](ConstDef::ConstDefArray& array) {
                     symbol->ident = array.ident;
-                    symbol->symbolType.isArray = true;
+                    symbol->type.isArray = true;
                 }
             }, def->def);
             submitSymbol(symbol);
@@ -66,16 +66,16 @@ namespace thm {
             std::shared_ptr<VariableSymbol> symbol = std::make_shared<VariableSymbol>();
             symbol->id = ++symbolNum;
             symbol->scopeId = symbolTable->getScopeId();
-            symbol->symbolType.isConst = false;
-            symbol->symbolType.type = varDecl->bType->type;
+            symbol->type.isConst = false;
+            symbol->type.type = varDecl->bType->type;
             std::visit(overloaded{
                 [&](VarDef::VarDefBasic& basic) {
                     symbol->ident = basic.ident;
-                    symbol->symbolType.isArray = false;
+                    symbol->type.isArray = false;
                 },
                 [&](VarDef::VarDefArray& array) {
                     symbol->ident = array.ident;
-                    symbol->symbolType.isArray = true;
+                    symbol->type.isArray = true;
                 }
             }, def->def);
             submitSymbol(symbol);
@@ -103,9 +103,9 @@ namespace thm {
                 std::shared_ptr<VariableSymbol> paramSymbol = std::make_shared<VariableSymbol>();
                 paramSymbol->id = ++symbolNum;
                 paramSymbol->scopeId = symbolTable->getScopeId();
-                paramSymbol->symbolType.isConst = false;
-                paramSymbol->symbolType.type = param->bType->type;
-                paramSymbol->symbolType.isArray = param->isArray;
+                paramSymbol->type.isConst = false;
+                paramSymbol->type.type = param->bType->type;
+                paramSymbol->type.isArray = param->isArray;
                 paramSymbol->ident = param->ident;
 
                 submitSymbol(paramSymbol);
