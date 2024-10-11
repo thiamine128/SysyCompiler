@@ -10,7 +10,7 @@ int main() {
     compiler.lexer();
     compiler.parse();
     //compiler.buildSymbolTables();
-    //compiler.printErrors();
+    compiler.printErrors();
 
     return 0;
 }

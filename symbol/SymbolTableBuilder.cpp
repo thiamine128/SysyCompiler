@@ -40,9 +40,6 @@ namespace thm {
         return true;
     }
 
-    bool SymbolTableBuilder::isArray(std::string const &ident) const {
-
-    }
 
     void SymbolTableBuilder::visitConstDecl(std::unique_ptr<ConstDecl> &constDecl) {
         for (auto const& def : constDecl->constDefs) {
