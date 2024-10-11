@@ -223,8 +223,6 @@ namespace thm {
         match(Token::LPARENT);
         if (tokenStream_.peekType(0, {Token::INTTK, Token::CHARTK})) {
             ptr->params = std::move(parseFuncFParams());
-        } else {
-            ptr->params = std::unique_ptr<FuncFParams>();
         }
         match(Token::RPARENT);
         ptr->block = std::move(parseBlock());
@@ -249,7 +247,7 @@ namespace thm {
         auto ptr = std::make_unique<FuncType>();
         ptr->lineno = currentToken().lineno;
 
-        if (tokenStream_.peekType(Token::INTTK)) {
+        if (tokenStream_.peekType(Token::IDENFR)) {
             ptr->type = FunctionSymbol::INT;
         } else if (tokenStream_.peekType(Token::CHARTK)) {
             ptr->type = FunctionSymbol::CHAR;
@@ -276,9 +274,9 @@ namespace thm {
     std::unique_ptr<FuncFParam> Parser::parseFuncFParam() {
         auto ptr = std::make_unique<FuncFParam>();
         ptr->lineno = currentToken().lineno;
+
         ptr->bType = std::move(parseBType());
         ptr->isArray = false;
-        ptr->ident = currentToken();
         match(Token::IDENFR);
         if (tryMatch(Token::LBRACK)) {
             match(Token::RBRACK);
@@ -365,18 +363,12 @@ namespace thm {
             }
             ptr->stmt = Stmt::StmtReturn(std::move(returnExp));
         } else if (tryMatch(Token::PRINTFTK)) {
-            bool r = false;
             match(Token::LPARENT);
             std::string fmt = currentToken().content;
-            if (tokenStream_.peek().type != Token::STRCON) {
-                r = true;
-            }
             match(Token::STRCON);
             std::vector<std::unique_ptr<Exp>> args;
-            // TLE HERE
             while (tryMatch(Token::COMMA)) {
                 args.push_back(std::move(parseExp()));
-                if (r) break;
             }
             match(Token::RPARENT);
             match(Token::SEMICN);
@@ -408,8 +400,6 @@ namespace thm {
                     ptr->stmt = std::move(parseExp());
                 }
                 match(Token::SEMICN);
-            } else {
-                ptr->stmt = std::unique_ptr<Exp>();
             }
         }
         submit(ptr);
@@ -505,8 +495,6 @@ namespace thm {
             nextToken();
             if (!tokenStream_.peekType(Token::RPARENT)) {
                 ptr->exp = UnaryExp::FuncExp(ident, std::move(parseFuncRParams()));
-            } else {
-                ptr->exp = UnaryExp::FuncExp(ident, nullptr);
             }
             match(Token::RPARENT);
             submit(ptr);
