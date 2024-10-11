@@ -16,7 +16,8 @@ namespace thm {
 
     void SymbolTableBuilder::pushScope() {
         ++scopeNum;
-        symbolTableStack.push(std::make_shared<SymbolTable>(scopeNum));
+
+        symbolTableStack.push(std::make_shared<SymbolTable>(scopeNum, symbolTable));
         symbolTable = symbolTableStack.top();
         symbolTables.push_back(symbolTable);
     }
@@ -133,7 +134,7 @@ namespace thm {
     }
 
     void SymbolTableBuilder::visitUnaryExp(std::unique_ptr<UnaryExp> &unaryExp) {
-        std::visit(overloaded{
+        /*std::visit(overloaded{
             [&](std::unique_ptr<PrimaryExp>& exp) {
 
             },
@@ -158,7 +159,7 @@ namespace thm {
             [&](UnaryExp::OpExp& exp) {
 
             },
-        }, unaryExp->exp);
+        }, unaryExp->exp);*/
         ASTVisitor::visitUnaryExp(unaryExp);
     }
 } // thm
