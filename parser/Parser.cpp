@@ -395,10 +395,12 @@ namespace thm {
                         match(Token::RPARENT);
                         ptr->stmt = Stmt::StmtRead(std::move(lVal), type);
                     } else {
+                        int size = tokenStream_.size();
                         parseExp();
-                        while (currentToken().type != Token::SEMICN) {
-                            nextToken();
-                        }
+                        if (tokenStream_.size() == size)
+                            while (currentToken().type != Token::SEMICN) {
+                                nextToken();
+                            }
                         //ptr->stmt = Stmt::StmtAssign(std::move(lVal), std::move(parseExp()));
                     }
                 } else {
