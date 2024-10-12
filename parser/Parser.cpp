@@ -364,11 +364,7 @@ namespace thm {
             }
             ptr->stmt = Stmt::StmtReturn(std::move(returnExp));
         } else if (tryMatch(Token::PRINTFTK)) {
-            while (!tryMatch(Token::SEMICN)) {
-                nextToken();
-            }
-            match(Token::SEMICN);
-            /*match(Token::LPARENT);
+            match(Token::LPARENT);
             std::string fmt = currentToken().content;
             match(Token::STRCON);
             std::vector<std::unique_ptr<Exp>> args;
@@ -377,7 +373,7 @@ namespace thm {
             }
             match(Token::RPARENT);
             match(Token::SEMICN);
-            ptr->stmt = Stmt::StmtPrintf(std::move(fmt), std::move(args));*/
+            ptr->stmt = Stmt::StmtPrintf(std::move(fmt), std::move(args));
         } else {
             while (!tryMatch(Token::SEMICN)) {
                 nextToken();
