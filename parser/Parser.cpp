@@ -384,7 +384,11 @@ namespace thm {
                     return type != Token::SEMICN;
                 });
                 if (assign) {
-                    auto lVal = std::move(parseLVal());
+                    while (!tryMatch(Token::SEMICN)) {
+                        nextToken();
+                    }
+                    match(Token::SEMICN);
+                    /*auto lVal = parseLVal();
                     match(Token::ASSIGN);
                     if (tokenStream_.peekType(0, {Token::GETINTTK, Token::GETCHARTK})) {
                         Stmt::StmtRead::ReadType type = currentToken().type == Token::GETINTTK
@@ -396,7 +400,7 @@ namespace thm {
                         ptr->stmt = Stmt::StmtRead(std::move(lVal), type);
                     } else {
                         ptr->stmt = Stmt::StmtAssign(std::move(lVal), std::move(parseExp()));
-                    }
+                    }*/
                 } else {
                     ptr->stmt = std::move(parseExp());
                 }
