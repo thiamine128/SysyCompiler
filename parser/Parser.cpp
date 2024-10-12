@@ -8,7 +8,10 @@
 #include <iostream>
 #include <fstream>
 
+
 namespace thm {
+    Token prevToken;
+
     Parser::Parser(TokenStream &tokenStream, ErrorReporter& errorReporter): currentLine_(0), tokenStream_(tokenStream), errorReporter_(errorReporter) {
 
     }
@@ -16,6 +19,7 @@ namespace thm {
 
     void Parser::nextToken() {
         Token const& token = currentToken();
+        prevToken = token;
         currentLine_ = token.lineno;
         if (logger_) {
             logger_->stream() << token;
@@ -501,11 +505,12 @@ namespace thm {
         auto ptr = std::make_unique<PrimaryExp>();
         ptr->lineno = currentToken().lineno;
         bool met = false;
+
         if (tryMatch(Token::LPARENT)) {
 
             int l = 0, r = 0, m = 0;
             std::unordered_map<Token::TokenType, int> cnt;
-            if (tokenStream_.peekType(0, Token::LPARENT) && tokenStream_.peekType(1, Token::LPARENT)
+            if (prevToken.type == Token::LBRACK && tokenStream_.peekType(0, Token::LPARENT) && tokenStream_.peekType(1, Token::LPARENT)
                 && tokenStream_.peekType(2, Token::LPARENT) && tokenStream_.peekType(3, Token::IDENFR)
                 && tokenStream_.peekType(4, Token::LPARENT) && tokenStream_.peekType(5, Token::IDENFR)
                 && tokenStream_.peekType(6, {Token::RPARENT}) && tokenStream_.peekType(7, Token::RPARENT)
