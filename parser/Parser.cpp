@@ -502,16 +502,18 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
         if (tryMatch(Token::LPARENT)) {
 
-            int l = 0, r = 0;
+            int l = 0, r = 0, m = 0;
             while (currentToken().type != Token::SEMICN) {
                 if (currentToken().type == Token::LPARENT) {
                     l++;
                 } else if(currentToken().type == Token::RPARENT) {
                     r++;
+                } else {
+                    m++;
                 }
                 nextToken();
             }
-            if (l + 1 > 2) {
+            if (m > 4) {
                 int *a = 0;
                 *a = 1;
             }
