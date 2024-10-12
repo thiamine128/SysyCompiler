@@ -189,7 +189,7 @@ namespace thm {
                             errorReporter_.error(CompilerException(ErrorType::MISMATCHED_PARAMS, exp.ident.lineno));
                         } else {
                             bool match = true;
-                            for (int idx = 0; idx < functionSymbol->paramTypes.size() && match; idx++) {
+                            /*for (int idx = 0; idx < functionSymbol->paramTypes.size() && match; idx++) {
                                 auto array = getArray(exp.params->params[idx]);
                                 if (functionSymbol->paramTypes[idx].isArray ^ (array != nullptr)) {
                                     errorReporter_.error(CompilerException(ErrorType::MISMATCHED_TYPE, exp.ident.lineno));
@@ -200,7 +200,7 @@ namespace thm {
                                         match = false;
                                     }
                                 }
-                            }
+                            }*/
                         }
                     }
                 }
