@@ -501,7 +501,7 @@ namespace thm {
         auto ptr = std::make_unique<PrimaryExp>();
         ptr->lineno = currentToken().lineno;
         if (tryMatch(Token::LPARENT)) {
-            while (currentToken().type != Token::SEMICN) {
+            while (currentToken().type != Token::RPARENT) {
                 nextToken();
             }
             //ptr->primaryExp = std::move(parseExp());
