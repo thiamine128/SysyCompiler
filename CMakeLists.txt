@@ -31,6 +31,8 @@ add_executable(Compiler main.cpp
         symbol/SymbolTable.h
         symbol/SymbolTableBuilder.cpp
         symbol/SymbolTableBuilder.h
+        core/Scope.cpp
+        core/Scope.h
 )
 
 add_definitions(-DPRINT_LEXER)
