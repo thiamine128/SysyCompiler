@@ -15,7 +15,8 @@
     X(MISSING_RBRACK, 'k') \
     X(REDEFINITION, 'b') \
     X(UNDEFINED_IDENTIFIER, 'c') \
-    X(MISMATCHED_PARAMS, 'd')
+    X(MISMATCHED_PARAMS, 'd') \
+    X(MISMATCHED_TYPE, 'e')
 
 namespace thm {
 

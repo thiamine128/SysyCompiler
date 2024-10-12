@@ -41,6 +41,48 @@ namespace thm {
         return true;
     }
 
+    std::shared_ptr<VariableSymbol> SymbolTableBuilder::getArray(std::unique_ptr<Exp> &exp) const {
+        std::shared_ptr<VariableSymbol> result = nullptr;
+        std::get<std::unique_ptr<MulExp>>(exp->addExp->exp)->exp;
+        std::visit(overloaded{
+            [&](std::unique_ptr<MulExp>& mulExp) {
+                std::visit(overloaded{
+                    [&](std::unique_ptr<UnaryExp>& unaryExp) {
+                        std::visit(overloaded{
+                            [&](std::unique_ptr<PrimaryExp>& primaryExp) {
+                                std::visit(overloaded{
+                                    [&](std::unique_ptr<Exp>& exp) {
+
+                                    },
+                                    [&](std::unique_ptr<LVal>& lVal) {
+                                        std::shared_ptr<Symbol> symbol = symbolTable->findSymbol(lVal->ident.content);
+                                        if (lVal->exp == nullptr && symbol != nullptr && symbol->symbolType() == Symbol::VARIABLE) {
+                                            std::shared_ptr<VariableSymbol> variableSymbol = std::static_pointer_cast<VariableSymbol>(symbol);
+                                            if (variableSymbol->type.isArray) {
+                                                result = variableSymbol;
+                                            }
+                                        }
+                                    },
+                                    [&](std::unique_ptr<Number>& number) {
+
+                                    },
+                                    [&](std::unique_ptr<Character>& character) {
+
+                                    }
+                                }, primaryExp->primaryExp);
+                            },
+                            [&](UnaryExp::FuncExp& funcExp) {},
+                            [&](UnaryExp::OpExp& opExp) {},
+                        }, unaryExp->exp);
+                    },
+                    [&](MulExp::OpExp& opExp) {}
+                }, mulExp->exp);
+            },
+            [&](AddExp::OpExp& opExp) {}
+        }, exp->addExp->exp);
+        return result;
+    }
+
 
     void SymbolTableBuilder::visitConstDecl(std::unique_ptr<ConstDecl> &constDecl) {
         for (auto const& def : constDecl->constDefs) {
@@ -134,7 +176,7 @@ namespace thm {
     }
 
     void SymbolTableBuilder::visitUnaryExp(std::unique_ptr<UnaryExp> &unaryExp) {
-        /*std::visit(overloaded{
+        std::visit(overloaded{
             [&](std::unique_ptr<PrimaryExp>& exp) {
 
             },
@@ -148,8 +190,15 @@ namespace thm {
                         } else {
                             bool match = true;
                             for (int idx = 0; idx < functionSymbol->paramTypes.size() && match; idx++) {
-                                if (functionSymbol->paramTypes[idx].isArray) {
-
+                                auto array = getArray(exp.params->params[idx]);
+                                if (functionSymbol->paramTypes[idx].isArray ^ (array != nullptr)) {
+                                    errorReporter_.error(CompilerException(ErrorType::MISMATCHED_TYPE, functionSymbol->ident.lineno));
+                                    match = false;
+                                } else if (functionSymbol->paramTypes[idx].isArray) {
+                                    if (functionSymbol->paramTypes[idx].type != array->type.type) {
+                                        errorReporter_.error(CompilerException(ErrorType::MISMATCHED_TYPE, functionSymbol->ident.lineno));
+                                        match = false;
+                                    }
                                 }
                             }
                         }
@@ -159,7 +208,7 @@ namespace thm {
             [&](UnaryExp::OpExp& exp) {
 
             },
-        }, unaryExp->exp);*/
+        }, unaryExp->exp);
         ASTVisitor::visitUnaryExp(unaryExp);
     }
 } // thm
