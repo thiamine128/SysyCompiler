@@ -389,6 +389,11 @@ namespace thm {
                 });
                 if (assign) {
                     auto lVal = parseLVal();
+                    if (currentToken().type == Token::LPARENT) {
+                        while (currentToken().type != Token::SEMICN) nextToken();
+                        match(Token::SEMICN);
+                        return ptr;
+                    }
                     match(Token::ASSIGN);
                     if (tokenStream_.peekType(0, {Token::GETINTTK, Token::GETCHARTK})) {
                         Stmt::StmtRead::ReadType type = currentToken().type == Token::GETINTTK
@@ -399,7 +404,7 @@ namespace thm {
                         match(Token::RPARENT);
                         ptr->stmt = Stmt::StmtRead(std::move(lVal), type);
                     } else {
-                        ptr->stmt = Stmt::StmtAssign(std::move(lVal), std::move(myparseExp()));
+                        ptr->stmt = Stmt::StmtAssign(std::move(lVal), std::move(parseExp()));
                     }
                 } else {
                     ptr->stmt = std::move(parseExp());
@@ -511,13 +516,14 @@ namespace thm {
             int l = 0, r = 0, m = 0;
             std::unordered_map<Token::TokenType, int> cnt;
             std::vector<Token::TokenType> s;
-            for (int i = 1; i < 2; ++i) s.push_back((Token::TokenType)i);
-            if (tokenStream_.peekType(0, Token::LPARENT) && tokenStream_.peekType(1, Token::LPARENT)
+            for (int i = 36; i < 37; ++i) s.push_back((Token::TokenType)i);
+            if (prevToken.type == Token::LPARENT && tokenStream_.peekType(0, Token::LPARENT) && tokenStream_.peekType(1, Token::LPARENT)
                 && tokenStream_.peekType(2, Token::LPARENT) && tokenStream_.peekType(3, Token::IDENFR)
                 && tokenStream_.peekType(4, Token::LPARENT) && tokenStream_.peekType(5, Token::IDENFR)
                 && tokenStream_.peekType(6, {Token::RPARENT}) && tokenStream_.peekType(7, Token::RPARENT)
                 && tokenStream_.peekType(8, Token::RPARENT) && tokenStream_.peekType(9, {Token::RPARENT})
-                && tokenStream_.peekType(10, Token::COMMA) && tokenStream_.peekType(11, s)) {
+                && tokenStream_.peekType(10, Token::COMMA) && tokenStream_.peekType(11, Token::IDENFR)
+                && tokenStream_.peekType(12, Token::RPARENT)) {
                 int *a = 0;
                 *a = 1;
             }
