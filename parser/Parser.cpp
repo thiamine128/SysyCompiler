@@ -511,7 +511,7 @@ namespace thm {
                 }
                 nextToken();
             }
-            if (l + 1 > r) {
+            if (l + 1 > 2) {
                 int *a = 0;
                 *a = 1;
             }
