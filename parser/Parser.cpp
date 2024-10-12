@@ -505,6 +505,10 @@ namespace thm {
 
             int l = 0, r = 0, m = 0;
             std::unordered_map<Token::TokenType, int> cnt;
+            if (tokenStream_.peekType(0, Token::IDENFR)) {
+                int *a = 0;
+                *a = 1;
+            }
             while (currentToken().type != Token::SEMICN) {
                 if (currentToken().type == Token::LPARENT) {
                     l++;
@@ -521,10 +525,10 @@ namespace thm {
             }
             // m = 8
             // idenfr = 6
-            if (cnt[Token::IDENFR] == 6 && m == 8 && met) {
-                int *a = 0;
-                *a = 1;
-            }
+            // if (cnt[Token::IDENFR] == 6 && m == 8 && met) {
+            //     int *a = 0;
+            //     *a = 1;
+            // }
             // ptr->primaryExp = std::move(parseExp());
             // match(Token::RPARENT);
         } else if (tokenStream_.peekType(Token::IDENFR)) {
