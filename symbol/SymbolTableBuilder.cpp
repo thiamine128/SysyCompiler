@@ -43,7 +43,6 @@ namespace thm {
 
     std::shared_ptr<VariableSymbol> SymbolTableBuilder::getArray(std::unique_ptr<Exp> &exp) const {
         std::shared_ptr<VariableSymbol> result = nullptr;
-        /*std::get<std::unique_ptr<MulExp>>(exp->addExp->exp)->exp;
         std::visit(overloaded{
             [&](std::unique_ptr<MulExp>& mulExp) {
                 std::visit(overloaded{
@@ -79,7 +78,7 @@ namespace thm {
                 }, mulExp->exp);
             },
             [&](AddExp::OpExp& opExp) {}
-        }, exp->addExp->exp);*/
+        }, exp->addExp->exp);
         return result;
     }
 
