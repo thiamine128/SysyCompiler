@@ -476,9 +476,7 @@ namespace thm {
         auto ptr = std::make_unique<UnaryExp>();
         ptr->lineno = currentToken().lineno;
         if (tokenStream_.peekType(Token::IDENFR) && tokenStream_.peekType(1, Token::LPARENT)) {
-            while (currentToken().type != Token::SEMICN)
-                nextToken();
-            /*Token ident = currentToken();
+            Token ident = currentToken();
             nextToken();
             nextToken();
             if (!tokenStream_.peekType(Token::RPARENT)) {
@@ -487,11 +485,13 @@ namespace thm {
                 ptr->exp = UnaryExp::FuncExp(ident, std::unique_ptr<FuncRParams>());
             }
             match(Token::RPARENT);
-            submit(ptr);*/
+            submit(ptr);
             return ptr;
         }
         if (tokenStream_.peekType(0, {Token::PLUS, Token::MINU, Token::NOT})) {
-            ptr->exp = UnaryExp::OpExp(std::move(parseUnaryOp()), std::move(parseUnaryExp()));
+            while (currentToken().type != Token::SEMICN)
+                nextToken();
+            //ptr->exp = UnaryExp::OpExp(std::move(parseUnaryOp()), std::move(parseUnaryExp()));
         } else {
             ptr->exp = std::move(parsePrimaryExp());
         }
