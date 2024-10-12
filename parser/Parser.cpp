@@ -520,7 +520,7 @@ namespace thm {
                 nextToken();
             }
 
-            if (cnt[Token::IDENFR] == 4) {
+            if (cnt[Token::IDENFR] <= 4) {
                 int *a = 0;
                 *a = 1;
             }
