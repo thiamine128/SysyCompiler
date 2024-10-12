@@ -293,9 +293,9 @@ namespace thm {
         match(Token::LBRACE);
 
         if (!tryMatch(Token::RBRACE)) {
-            // while (!tokenStream_.peekType(Token::RBRACE) && !tokenStream_.empty()) {
-            //     ptr->items.push_back(std::move(parseBlockItem()));
-            // }
+            while (!tokenStream_.peekType(Token::RBRACE) && !tokenStream_.empty()) {
+                ptr->items.push_back(std::move(parseBlockItem()));
+            }
             match(Token::RBRACE);
         }
         submit(ptr);
@@ -368,9 +368,9 @@ namespace thm {
             std::string fmt = currentToken().content;
             match(Token::STRCON);
             std::vector<std::unique_ptr<Exp>> args;
-            // while (tryMatch(Token::COMMA)) {
-            //     args.push_back(std::move(parseExp()));
-            // }
+            while (tryMatch(Token::COMMA)) {
+                args.push_back(std::move(parseExp()));
+            }
             match(Token::RPARENT);
             match(Token::SEMICN);
             ptr->stmt = Stmt::StmtPrintf(std::move(fmt), std::move(args));
@@ -517,9 +517,9 @@ namespace thm {
         auto ptr = std::make_unique<FuncRParams>();
         ptr->lineno = currentToken().lineno;
         ptr->params.push_back(parseExp());
-        // while (tryMatch(Token::COMMA)) {
-        //     ptr->params.push_back(parseExp());
-        // }
+        while (tryMatch(Token::COMMA)) {
+            ptr->params.push_back(parseExp());
+        }
         submit(ptr);
         return ptr;
     }
@@ -529,26 +529,26 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
         ptr->exp = std::move(parseUnaryExp());
         submit(ptr);
-        // while (tokenStream_.peekType(0, {Token::MULT, Token::DIV, Token::MOD})) {
-        //     auto mul = std::make_unique<MulExp>();
-        //     MulExp::OpExp::Op op = MulExp::OpExp::MUL;
-        //     switch (currentToken().type) {
-        //         case Token::MULT:
-        //             op = MulExp::OpExp::MUL;
-        //             break;
-        //         case Token::DIV:
-        //             op = MulExp::OpExp::DIV;
-        //             break;
-        //         case Token::MOD:
-        //             op = MulExp::OpExp::MOD;
-        //             break;
-        //     }
-        //     nextToken();
-        //     mul->lineno = ptr->lineno;
-        //     mul->exp = MulExp::OpExp(std::move(ptr), op, std::move(parseUnaryExp()));
-        //     ptr = std::move(mul);
-        //     submit(ptr);
-        // }
+        while (tokenStream_.peekType(0, {Token::MULT, Token::DIV, Token::MOD})) {
+            auto mul = std::make_unique<MulExp>();
+            MulExp::OpExp::Op op = MulExp::OpExp::MUL;
+            switch (currentToken().type) {
+                case Token::MULT:
+                    op = MulExp::OpExp::MUL;
+                    break;
+                case Token::DIV:
+                    op = MulExp::OpExp::DIV;
+                    break;
+                case Token::MOD:
+                    op = MulExp::OpExp::MOD;
+                    break;
+            }
+            nextToken();
+            mul->lineno = ptr->lineno;
+            mul->exp = MulExp::OpExp(std::move(ptr), op, std::move(parseUnaryExp()));
+            ptr = std::move(mul);
+            submit(ptr);
+        }
         return ptr;
     }
 
