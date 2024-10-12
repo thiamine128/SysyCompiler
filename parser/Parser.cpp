@@ -616,16 +616,16 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
         ptr->exp = std::move(parseRelExp());
         submit(ptr);
-        // while (tokenStream_.peekType(0, {Token::EQL, Token::NEQ})) {
-        //     auto eq = std::make_unique<EqExp>();
-        //     eq->lineno = ptr->lineno;
-        //     Token::TokenType type = currentToken().type;
-        //     nextToken();
-        //     eq->exp = EqExp::OpExp(std::move(ptr), type ==Token:: EQL ? EqExp::OpExp::EQ : EqExp::OpExp::NEQ,
-        //                            std::move(parseRelExp()));
-        //     ptr = std::move(eq);
-        //     submit(ptr);
-        // }
+        while (tokenStream_.peekType(0, {Token::EQL, Token::NEQ})) {
+            auto eq = std::make_unique<EqExp>();
+            eq->lineno = ptr->lineno;
+            Token::TokenType type = currentToken().type;
+            nextToken();
+            eq->exp = EqExp::OpExp(std::move(ptr), type ==Token:: EQL ? EqExp::OpExp::EQ : EqExp::OpExp::NEQ,
+                                   std::move(parseRelExp()));
+            ptr = std::move(eq);
+            submit(ptr);
+        }
         return ptr;
     }
 
@@ -634,13 +634,13 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
         ptr->exp = std::move(parseEqExp());
         submit(ptr);
-        // while (tryMatch(Token::AND)) {
-        //     auto lAnd = std::make_unique<LAndExp>();
-        //     lAnd->lineno = ptr->lineno;
-        //     lAnd->exp = LAndExp::OpExp(std::move(ptr), std::move(parseEqExp()));
-        //     ptr = std::move(lAnd);
-        //     submit(ptr);
-        // }
+        while (tryMatch(Token::AND)) {
+            auto lAnd = std::make_unique<LAndExp>();
+            lAnd->lineno = ptr->lineno;
+            lAnd->exp = LAndExp::OpExp(std::move(ptr), std::move(parseEqExp()));
+            ptr = std::move(lAnd);
+            submit(ptr);
+        }
         return ptr;
     }
 
