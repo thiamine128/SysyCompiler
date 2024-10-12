@@ -64,7 +64,7 @@ namespace thm {
                 break;
             }
         }
-        ptr->mainFuncDef = parseMainFuncDef();
+        //ptr->mainFuncDef = parseMainFuncDef();
         submit(ptr);
         return ptr;
     }
