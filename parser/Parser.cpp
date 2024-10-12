@@ -511,7 +511,7 @@ namespace thm {
                 }
                 nextToken();
             }
-            if (l + 1== r) {
+            if (l + 1 != r) {
                 while(true) {}
             }
             // ptr->primaryExp = std::move(parseExp());
