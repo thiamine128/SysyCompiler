@@ -238,7 +238,7 @@ namespace thm {
         match(Token::MAINTK);
         match(Token::LPARENT);
         match(Token::RPARENT);
-        ptr->block = std::move(parseBlock());
+        //ptr->block = std::move(parseBlock());
         submit(ptr);
         return ptr;
     }
