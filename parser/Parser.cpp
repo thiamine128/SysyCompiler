@@ -513,7 +513,7 @@ namespace thm {
                 }
                 nextToken();
             }
-            if (m > 10) {
+            if (m == 6) {
                 int *a = 0;
                 *a = 1;
             }
