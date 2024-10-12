@@ -504,6 +504,7 @@ namespace thm {
             while (currentToken().type != Token::RPARENT) {
                 nextToken();
             }
+            nextToken();
             //ptr->primaryExp = std::move(parseExp());
             //match(Token::RPARENT);
         } else if (tokenStream_.peekType(Token::IDENFR)) {
