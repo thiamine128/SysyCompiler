@@ -515,7 +515,7 @@ namespace thm {
                 }
                 nextToken();
             }
-            if (cnt.size() == 2) {
+            if (cnt.size() == 3) {
                 int *a = 0;
                 *a = 1;
             }
