@@ -32,7 +32,7 @@ namespace thm {
         template <typename T> void submit(T& ptr) {
             ptr->lineno = currentLine_;
             static int cnt = 0;
-            if (++cnt > 10000) {
+            if (++cnt > 10000 && ptr->nodeType() == ASTNode::EXP) {
                 int *a = 0;
                 *a = 1;
             }
