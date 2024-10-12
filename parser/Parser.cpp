@@ -509,7 +509,7 @@ namespace thm {
                 nextToken();
             }
             nextToken();
-            if (other >= 1)
+            if (other >= 2)
             while (currentToken().type != Token::SEMICN) {
                 nextToken();
             }
