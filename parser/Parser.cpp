@@ -496,6 +496,8 @@ namespace thm {
             nextToken();
             if (!tokenStream_.peekType(Token::RPARENT)) {
                 ptr->exp = UnaryExp::FuncExp(ident, std::move(parseFuncRParams()));
+            } else {
+                ptr->exp = UnaryExp::FuncExp(ident, std::unique_ptr<FuncRParams>());
             }
             match(Token::RPARENT);
             submit(ptr);

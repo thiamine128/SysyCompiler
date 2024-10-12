@@ -184,7 +184,7 @@ namespace thm {
                     auto symbol = symbolTable->findSymbol(exp.ident.content);
                     if (symbol->symbolType() == Symbol::FUNCTION) {
                         std::shared_ptr<FunctionSymbol> functionSymbol = std::static_pointer_cast<FunctionSymbol>(symbol);
-                        if (exp.params->params.size() != functionSymbol->paramTypes.size()) {
+                        if ((exp.params == nullptr && functionSymbol->paramTypes.size() != 0) || (exp.params != nullptr && exp.params->params.size() != functionSymbol->paramTypes.size())) {
                             errorReporter_.error(CompilerException(ErrorType::MISMATCHED_PARAMS, exp.ident.lineno));
                         } else {
                             for (size_t idx = 0; idx < functionSymbol->paramTypes.size(); idx++) {
