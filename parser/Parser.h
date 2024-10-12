@@ -31,7 +31,7 @@ namespace thm {
         bool match(Token::TokenType expectedType);
         template <typename T> void submit(T& ptr) {
             if (ptr == nullptr) {
-                while (true) {}
+
             }
             ptr->lineno = currentLine_;
             if (logger_) {
