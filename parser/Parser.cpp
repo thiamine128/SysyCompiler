@@ -503,17 +503,19 @@ namespace thm {
         if (tryMatch(Token::LPARENT)) {
 
             int l = 0, r = 0, m = 0;
+            std::unordered_map<Token::TokenType, int> cnt;
             while (currentToken().type != Token::SEMICN) {
                 if (currentToken().type == Token::LPARENT) {
                     l++;
                 } else if(currentToken().type == Token::RPARENT) {
                     r++;
                 } else {
+                    cnt[currentToken().type]++;
                     m++;
                 }
                 nextToken();
             }
-            if (m == 8) {
+            if (cnt.size() >= 4) {
                 int *a = 0;
                 *a = 1;
             }
