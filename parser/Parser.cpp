@@ -506,7 +506,7 @@ namespace thm {
         } else if (tokenStream_.peekType(Token::IDENFR)) {
             ptr->primaryExp = std::move(parseLVal());
         } else if (tokenStream_.peekType(Token::INTCON)) {
-            while (currentToken().type == Token::SEMICN) {
+            while (currentToken().type != Token::SEMICN) {
                 nextToken();
             }
             //ptr->primaryExp = std::move(parseNumber());
