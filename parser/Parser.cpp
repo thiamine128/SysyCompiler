@@ -520,7 +520,7 @@ namespace thm {
                 nextToken();
             }
 
-            if (l + r + m >= 14) {
+            if (cnt.contains(Token::PLUS) || cnt.contains(Token::MINU) || cnt.contains(Token::MULT) || cnt.contains(Token::DIV)) {
                 int *a = 0;
                 *a = 1;
             }
