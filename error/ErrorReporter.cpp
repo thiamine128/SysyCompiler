@@ -12,10 +12,6 @@ namespace thm {
 
     void ErrorReporter::error(CompilerException const &error) {
         errors.push(error);
-        if (getErrorCode(error.errorType) == '-') {
-            int *a = 0;
-            *a = 1;
-        }
     }
     bool ErrorReporter::hasErrors() const {
         return !errors.empty();

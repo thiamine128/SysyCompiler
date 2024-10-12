@@ -293,9 +293,9 @@ namespace thm {
         match(Token::LBRACE);
 
         if (!tryMatch(Token::RBRACE)) {
-            while (!tokenStream_.peekType(Token::RBRACE) && !tokenStream_.empty()) {
-                ptr->items.push_back(std::move(parseBlockItem()));
-            }
+            // while (!tokenStream_.peekType(Token::RBRACE) && !tokenStream_.empty()) {
+            //     ptr->items.push_back(std::move(parseBlockItem()));
+            // }
             match(Token::RBRACE);
         }
         submit(ptr);
@@ -368,9 +368,9 @@ namespace thm {
             std::string fmt = currentToken().content;
             match(Token::STRCON);
             std::vector<std::unique_ptr<Exp>> args;
-            while (tryMatch(Token::COMMA)) {
-                args.push_back(std::move(parseExp()));
-            }
+            // while (tryMatch(Token::COMMA)) {
+            //     args.push_back(std::move(parseExp()));
+            // }
             match(Token::RPARENT);
             match(Token::SEMICN);
             ptr->stmt = Stmt::StmtPrintf(std::move(fmt), std::move(args));
@@ -517,9 +517,9 @@ namespace thm {
         auto ptr = std::make_unique<FuncRParams>();
         ptr->lineno = currentToken().lineno;
         ptr->params.push_back(parseExp());
-        while (tryMatch(Token::COMMA)) {
-            ptr->params.push_back(parseExp());
-        }
+        // while (tryMatch(Token::COMMA)) {
+        //     ptr->params.push_back(parseExp());
+        // }
         submit(ptr);
         return ptr;
     }
@@ -529,26 +529,26 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
         ptr->exp = std::move(parseUnaryExp());
         submit(ptr);
-        while (tokenStream_.peekType(0, {Token::MULT, Token::DIV, Token::MOD})) {
-            auto mul = std::make_unique<MulExp>();
-            MulExp::OpExp::Op op = MulExp::OpExp::MUL;
-            switch (currentToken().type) {
-                case Token::MULT:
-                    op = MulExp::OpExp::MUL;
-                    break;
-                case Token::DIV:
-                    op = MulExp::OpExp::DIV;
-                    break;
-                case Token::MOD:
-                    op = MulExp::OpExp::MOD;
-                    break;
-            }
-            nextToken();
-            mul->lineno = ptr->lineno;
-            mul->exp = MulExp::OpExp(std::move(ptr), op, std::move(parseUnaryExp()));
-            ptr = std::move(mul);
-            submit(ptr);
-        }
+        // while (tokenStream_.peekType(0, {Token::MULT, Token::DIV, Token::MOD})) {
+        //     auto mul = std::make_unique<MulExp>();
+        //     MulExp::OpExp::Op op = MulExp::OpExp::MUL;
+        //     switch (currentToken().type) {
+        //         case Token::MULT:
+        //             op = MulExp::OpExp::MUL;
+        //             break;
+        //         case Token::DIV:
+        //             op = MulExp::OpExp::DIV;
+        //             break;
+        //         case Token::MOD:
+        //             op = MulExp::OpExp::MOD;
+        //             break;
+        //     }
+        //     nextToken();
+        //     mul->lineno = ptr->lineno;
+        //     mul->exp = MulExp::OpExp(std::move(ptr), op, std::move(parseUnaryExp()));
+        //     ptr = std::move(mul);
+        //     submit(ptr);
+        // }
         return ptr;
     }
 
@@ -557,25 +557,25 @@ namespace thm {
         ptr->exp = std::move(parseMulExp());
         ptr->lineno = currentToken().lineno;
         submit(ptr);
-        while (tokenStream_.peekType(0, {Token::PLUS, Token::MINU})) {
-            auto add = std::make_unique<AddExp>();
-            AddExp::OpExp::Op op;
-            switch (currentToken().type) {
-                case Token::PLUS:
-                    op = AddExp::OpExp::ADD;
-                break;
-                case Token::MINU:
-                    op = AddExp::OpExp::MINUS;
-                break;
-                default:
-                    op = AddExp::OpExp::ADD;
-            }
-            nextToken();
-            add->lineno = ptr->lineno;
-            add->exp = AddExp::OpExp(std::move(ptr), op, std::move(parseMulExp()));
-            ptr = std::move(add);
-            submit(ptr);
-        }
+        // while (tokenStream_.peekType(0, {Token::PLUS, Token::MINU})) {
+        //     auto add = std::make_unique<AddExp>();
+        //     AddExp::OpExp::Op op;
+        //     switch (currentToken().type) {
+        //         case Token::PLUS:
+        //             op = AddExp::OpExp::ADD;
+        //         break;
+        //         case Token::MINU:
+        //             op = AddExp::OpExp::MINUS;
+        //         break;
+        //         default:
+        //             op = AddExp::OpExp::ADD;
+        //     }
+        //     nextToken();
+        //     add->lineno = ptr->lineno;
+        //     add->exp = AddExp::OpExp(std::move(ptr), op, std::move(parseMulExp()));
+        //     ptr = std::move(add);
+        //     submit(ptr);
+        // }
         return ptr;
     }
 
@@ -585,29 +585,29 @@ namespace thm {
         ptr->exp = std::move(parseAddExp());
         submit(ptr);
 
-        while (tokenStream_.peekType(0, {Token::LSS, Token::LEQ, Token::GEQ, Token::GRE})) {
-            auto rel = std::make_unique<RelExp>();
-            RelExp::OpExp::Op op = RelExp::OpExp::LT;
-            switch (currentToken().type) {
-                case Token::LSS:
-                    op = RelExp::OpExp::LT;
-                    break;
-                case Token::LEQ:
-                    op = RelExp::OpExp::LE;
-                    break;
-                case Token::GRE:
-                    op = RelExp::OpExp::GT;
-                    break;
-                case Token::GEQ:
-                    op = RelExp::OpExp::GE;
-                    break;
-            }
-            nextToken();
-            rel->lineno = ptr->lineno;
-            rel->exp = RelExp::OpExp(std::move(ptr), op, std::move(parseAddExp()));
-            ptr = std::move(rel);
-            submit(ptr);
-        }
+        // while (tokenStream_.peekType(0, {Token::LSS, Token::LEQ, Token::GEQ, Token::GRE})) {
+        //     auto rel = std::make_unique<RelExp>();
+        //     RelExp::OpExp::Op op = RelExp::OpExp::LT;
+        //     switch (currentToken().type) {
+        //         case Token::LSS:
+        //             op = RelExp::OpExp::LT;
+        //             break;
+        //         case Token::LEQ:
+        //             op = RelExp::OpExp::LE;
+        //             break;
+        //         case Token::GRE:
+        //             op = RelExp::OpExp::GT;
+        //             break;
+        //         case Token::GEQ:
+        //             op = RelExp::OpExp::GE;
+        //             break;
+        //     }
+        //     nextToken();
+        //     rel->lineno = ptr->lineno;
+        //     rel->exp = RelExp::OpExp(std::move(ptr), op, std::move(parseAddExp()));
+        //     ptr = std::move(rel);
+        //     submit(ptr);
+        // }
         return ptr;
     }
 
@@ -616,16 +616,16 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
         ptr->exp = std::move(parseRelExp());
         submit(ptr);
-        while (tokenStream_.peekType(0, {Token::EQL, Token::NEQ})) {
-            auto eq = std::make_unique<EqExp>();
-            eq->lineno = ptr->lineno;
-            Token::TokenType type = currentToken().type;
-            nextToken();
-            eq->exp = EqExp::OpExp(std::move(ptr), type ==Token:: EQL ? EqExp::OpExp::EQ : EqExp::OpExp::NEQ,
-                                   std::move(parseRelExp()));
-            ptr = std::move(eq);
-            submit(ptr);
-        }
+        // while (tokenStream_.peekType(0, {Token::EQL, Token::NEQ})) {
+        //     auto eq = std::make_unique<EqExp>();
+        //     eq->lineno = ptr->lineno;
+        //     Token::TokenType type = currentToken().type;
+        //     nextToken();
+        //     eq->exp = EqExp::OpExp(std::move(ptr), type ==Token:: EQL ? EqExp::OpExp::EQ : EqExp::OpExp::NEQ,
+        //                            std::move(parseRelExp()));
+        //     ptr = std::move(eq);
+        //     submit(ptr);
+        // }
         return ptr;
     }
 
@@ -634,13 +634,13 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
         ptr->exp = std::move(parseEqExp());
         submit(ptr);
-        while (tryMatch(Token::AND)) {
-            auto lAnd = std::make_unique<LAndExp>();
-            lAnd->lineno = ptr->lineno;
-            lAnd->exp = LAndExp::OpExp(std::move(ptr), std::move(parseEqExp()));
-            ptr = std::move(lAnd);
-            submit(ptr);
-        }
+        // while (tryMatch(Token::AND)) {
+        //     auto lAnd = std::make_unique<LAndExp>();
+        //     lAnd->lineno = ptr->lineno;
+        //     lAnd->exp = LAndExp::OpExp(std::move(ptr), std::move(parseEqExp()));
+        //     ptr = std::move(lAnd);
+        //     submit(ptr);
+        // }
         return ptr;
     }
 
@@ -649,13 +649,13 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
         ptr->exp = std::move(parseLAndExp());
         submit(ptr);
-        while (tryMatch(Token::OR)) {
-            auto lOr = std::make_unique<LOrExp>();
-            lOr->lineno = ptr->lineno;
-            lOr->exp = LOrExp::OpExp(std::move(ptr), std::move(parseLAndExp()));
-            ptr = std::move(lOr);
-            submit(ptr);
-        }
+        // while (tryMatch(Token::OR)) {
+        //     auto lOr = std::make_unique<LOrExp>();
+        //     lOr->lineno = ptr->lineno;
+        //     lOr->exp = LOrExp::OpExp(std::move(ptr), std::move(parseLAndExp()));
+        //     ptr = std::move(lOr);
+        //     submit(ptr);
+        // }
         return ptr;
     }
 
