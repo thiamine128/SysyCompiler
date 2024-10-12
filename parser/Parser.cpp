@@ -10,8 +10,6 @@
 
 
 namespace thm {
-    Token prevToken;
-
     Parser::Parser(TokenStream &tokenStream, ErrorReporter& errorReporter): currentLine_(0), tokenStream_(tokenStream), errorReporter_(errorReporter) {
 
     }
@@ -19,7 +17,6 @@ namespace thm {
 
     void Parser::nextToken() {
         Token const& token = currentToken();
-        prevToken = token;
         currentLine_ = token.lineno;
         if (logger_) {
             logger_->stream() << token;
@@ -380,16 +377,41 @@ namespace thm {
             ptr->stmt = Stmt::StmtPrintf(std::move(fmt), std::move(args));
         } else {
             if (!tryMatch(Token::SEMICN)) {
-                bool assign = false;
-                tokenStream_.peekForward([&assign](Token::TokenType type) {
-                    if (type == Token::ASSIGN) {
-                        assign = true;
-                    }
-                    return type != Token::SEMICN;
-                });
-                if (assign) {
+                // bool assign = false;
+                // tokenStream_.peekForward([&assign](Token::TokenType type) {
+                //     if (type == Token::ASSIGN) {
+                //         assign = true;
+                //     }
+                //     return type != Token::SEMICN;
+                // });
+                // if (assign) {
+                //     int size = tokenStream_.size();
+                //     auto lVal = parseLVal();
+                //     if (size == tokenStream_.size()) {
+                //         while (currentToken().type != Token::SEMICN) nextToken();
+                //         match(Token::SEMICN);
+                //         return ptr;
+                //     }
+                //     match(Token::ASSIGN);
+                //     if (tokenStream_.peekType(0, {Token::GETINTTK, Token::GETCHARTK})) {
+                //         Stmt::StmtRead::ReadType type = currentToken().type == Token::GETINTTK
+                //                                             ? Stmt::StmtRead::INT
+                //                                             : Stmt::StmtRead::CHAR;
+                //         nextToken();
+                //         match(Token::LPARENT);
+                //         match(Token::RPARENT);
+                //         ptr->stmt = Stmt::StmtRead(std::move(lVal), type);
+                //     } else {
+                //         ptr->stmt = Stmt::StmtAssign(std::move(lVal), std::move(parseExp()));
+                //     }
+                // } else {
+                //     ptr->stmt = std::move(parseExp());
+                // }
+                int offset = stepExp(0);
+                if (tokenStream_.peekType(offset, Token::ASSIGN)) {
+                    int size = tokenStream_.size();
                     auto lVal = parseLVal();
-                    if (currentToken().type == Token::LPARENT) {
+                    if (size == tokenStream_.size()) {
                         while (currentToken().type != Token::SEMICN) nextToken();
                         match(Token::SEMICN);
                         return ptr;
@@ -418,150 +440,6 @@ namespace thm {
         return ptr;
     }
 
-    std::unique_ptr<Exp> Parser::myparseExp() {
-        auto ptr = std::make_unique<Exp>();
-        ptr->lineno = currentToken().lineno;
-
-        ptr->addExp = std::move(myparseAddExp());
-        submit(ptr);
-        return ptr;
-    }
-
-    std::unique_ptr<AddExp> Parser::myparseAddExp() {
-        auto ptr = std::make_unique<AddExp>();
-        int size = tokenStream_.size();
-        ptr->exp = std::move(myparseMulExp());
-        ptr->lineno = currentToken().lineno;
-        submit(ptr);
-        while (tokenStream_.peekType(0, {Token::PLUS, Token::MINU})) {
-            auto add = std::make_unique<AddExp>();
-            AddExp::OpExp::Op op;
-            switch (currentToken().type) {
-                case Token::PLUS:
-                    op = AddExp::OpExp::ADD;
-                break;
-                case Token::MINU:
-                    op = AddExp::OpExp::MINUS;
-                break;
-                default:
-                    op = AddExp::OpExp::ADD;
-            }
-            nextToken();
-            add->lineno = ptr->lineno;
-            add->exp = AddExp::OpExp(std::move(ptr), op, std::move(parseMulExp()));
-            ptr = std::move(add);
-            submit(ptr);
-        }
-        return ptr;
-    }
-    std::unique_ptr<MulExp> Parser::myparseMulExp() {
-        auto ptr = std::make_unique<MulExp>();
-        ptr->lineno = currentToken().lineno;
-        ptr->exp = std::move(myparseUnaryExp());
-        submit(ptr);
-        while (tokenStream_.peekType(0, {Token::MULT, Token::DIV, Token::MOD})) {
-            auto mul = std::make_unique<MulExp>();
-            MulExp::OpExp::Op op = MulExp::OpExp::MUL;
-            switch (currentToken().type) {
-                case Token::MULT:
-                    op = MulExp::OpExp::MUL;
-                break;
-                case Token::DIV:
-                    op = MulExp::OpExp::DIV;
-                break;
-                case Token::MOD:
-                    op = MulExp::OpExp::MOD;
-                break;
-            }
-            nextToken();
-            mul->lineno = ptr->lineno;
-            mul->exp = MulExp::OpExp(std::move(ptr), op, std::move(parseUnaryExp()));
-            ptr = std::move(mul);
-            submit(ptr);
-        }
-        return ptr;
-    }
-    std::unique_ptr<UnaryExp> Parser::myparseUnaryExp() {
-        auto ptr = std::make_unique<UnaryExp>();
-        ptr->lineno = currentToken().lineno;
-        if (tokenStream_.peekType(Token::IDENFR) && tokenStream_.peekType(1, Token::LPARENT)) {
-            Token ident = currentToken();
-            nextToken();
-            nextToken();
-            if (!tokenStream_.peekType(Token::RPARENT)) {
-                ptr->exp = UnaryExp::FuncExp(ident, std::move(parseFuncRParams()));
-            } else {
-                ptr->exp = UnaryExp::FuncExp(ident, std::unique_ptr<FuncRParams>());
-            }
-            match(Token::RPARENT);
-            submit(ptr);
-            return ptr;
-        }
-        if (tokenStream_.peekType(0, {Token::PLUS, Token::MINU, Token::NOT})) {
-            ptr->exp = UnaryExp::OpExp(std::move(parseUnaryOp()), std::move(parseUnaryExp()));
-        } else {
-            ptr->exp = std::move(myparsePrimaryExp());
-        }
-        submit(ptr);
-        return ptr;
-    }
-
-    std::unique_ptr<PrimaryExp> Parser::myparsePrimaryExp() {
-        auto ptr = std::make_unique<PrimaryExp>();
-        ptr->lineno = currentToken().lineno;
-        bool met = false;
-
-        if (tryMatch(Token::LPARENT)) {
-
-            int l = 0, r = 0, m = 0;
-            std::unordered_map<Token::TokenType, int> cnt;
-            std::vector<Token::TokenType> s;
-            for (int i = 36; i < 37; ++i) s.push_back((Token::TokenType)i);
-            if (prevToken.type == Token::LPARENT && tokenStream_.peekType(0, Token::LPARENT) && tokenStream_.peekType(1, Token::LPARENT)
-                && tokenStream_.peekType(2, Token::LPARENT) && tokenStream_.peekType(3, Token::IDENFR)
-                && tokenStream_.peekType(4, Token::LPARENT) && tokenStream_.peekType(5, Token::IDENFR)
-                && tokenStream_.peekType(6, {Token::RPARENT}) && tokenStream_.peekType(7, Token::RPARENT)
-                && tokenStream_.peekType(8, Token::RPARENT) && tokenStream_.peekType(9, {Token::RPARENT})
-                && tokenStream_.peekType(10, Token::COMMA) && tokenStream_.peekType(11, Token::IDENFR)
-                && tokenStream_.peekType(12, Token::RPARENT)) {
-                int *a = 0;
-                *a = 1;
-            }
-            while (currentToken().type != Token::SEMICN) {
-                if (currentToken().type == Token::LPARENT) {
-                    l++;
-                } else if(currentToken().type == Token::RPARENT) {
-                    r++;
-                } else {
-                    cnt[currentToken().type]++;
-                    if (currentToken().type == Token::IDENFR && currentToken().content.size() == 0) {
-                        met = true;
-                    }
-                    m++;
-                }
-                nextToken();
-            }
-            if (cnt[Token::COMMA] == 1) {
-
-            }
-            // m = 8
-            // idenfr = 6
-            // if (cnt[Token::IDENFR] == 6 && m == 8 && met) {
-            //     int *a = 0;
-            //     *a = 1;
-            // }
-            // ptr->primaryExp = std::move(parseExp());
-            // match(Token::RPARENT);
-        } else if (tokenStream_.peekType(Token::IDENFR)) {
-            ptr->primaryExp = std::move(parseLVal());
-        } else if (tokenStream_.peekType(Token::INTCON)) {
-            ptr->primaryExp = std::move(parseNumber());
-        } else {
-            ptr->primaryExp = std::move(parseCharacter());
-        }
-        submit(ptr);
-        return ptr;
-    }
     std::unique_ptr<ForStmt> Parser::parseForStmt() {
         auto ptr = std::make_unique<ForStmt>();
         ptr->lineno = currentToken().lineno;
@@ -580,6 +458,10 @@ namespace thm {
         ptr->addExp = std::move(parseAddExp());
         submit(ptr);
         return ptr;
+    }
+
+    int Parser::stepExp(int offset) {
+        return stepAddExp(offset);
     }
 
     std::unique_ptr<Cond> Parser::parseCond() {
@@ -604,6 +486,18 @@ namespace thm {
         return ptr;
     }
 
+    int Parser::stepLVal(int offset) {
+        if (tokenStream_.peekType(offset, Token::IDENFR))
+            offset += 1;
+        if (tokenStream_.peekType(offset, Token::LBRACK)) {
+            offset += 1;
+            offset = stepExp(offset);
+            if (tokenStream_.peekType(offset, Token::RBRACK))
+                offset += 1;
+        }
+        return offset;
+    }
+
     std::unique_ptr<PrimaryExp> Parser::parsePrimaryExp() {
         auto ptr = std::make_unique<PrimaryExp>();
         ptr->lineno = currentToken().lineno;
@@ -621,6 +515,22 @@ namespace thm {
         return ptr;
     }
 
+    int Parser::stepPrimaryExp(int offset) {
+        if (tokenStream_.peekType(offset, Token::LPARENT)) {
+            offset += 1;
+            offset = stepExp(offset);
+            if (tokenStream_.peekType(offset, Token::RPARENT))
+                offset += 1;
+        } else if (tokenStream_.peekType(offset, Token::IDENFR)) {
+            offset = stepLVal(offset);
+        } else if (tokenStream_.peekType(offset, Token::INTCON)) {
+            offset = stepNumber(offset);
+        } else {
+            offset = stepCharacter(offset);
+        }
+        return offset;
+    }
+
     std::unique_ptr<Number> Parser::parseNumber() {
         auto ptr = std::make_unique<Number>();
         ptr->lineno = currentToken().lineno;
@@ -631,6 +541,12 @@ namespace thm {
         return ptr;
     }
 
+    int Parser::stepNumber(int offset) {
+        if (tokenStream_.peekType(offset, Token::INTCON))
+            offset += 1;
+        return offset;
+    }
+
     std::unique_ptr<Character> Parser::parseCharacter() {
         auto ptr = std::make_unique<Character>();
         char v = currentToken().content[0];
@@ -639,6 +555,12 @@ namespace thm {
         ptr->ch = v;
         submit(ptr);
         return ptr;
+    }
+
+    int Parser::stepCharacter(int offset) {
+        if (tokenStream_.peekType(offset, Token::CHRCON))
+            offset += 1;
+        return offset;
     }
 
     std::unique_ptr<UnaryExp> Parser::parseUnaryExp() {
@@ -666,6 +588,25 @@ namespace thm {
         return ptr;
     }
 
+    int Parser::stepUnaryExp(int offset) {
+        if (tokenStream_.peekType(offset, Token::IDENFR) && tokenStream_.peekType(offset + 1, Token::LPARENT)) {
+            offset += 2;
+            if (!tokenStream_.peekType(offset, Token::RPARENT)) {
+                offset = stepFuncRParams(offset);
+            }
+            if (tokenStream_.peekType(offset, Token::RPARENT))
+                offset += 1;
+            return offset;
+        }
+        if (tokenStream_.peekType(offset, {Token::PLUS, Token::MINU, Token::NOT})) {
+            offset = stepUnaryOp(offset);
+            offset = stepUnaryExp(offset);
+        } else {
+            offset = stepPrimaryExp(offset);
+        }
+        return offset;
+    }
+
     std::unique_ptr<FuncRParams> Parser::parseFuncRParams() {
         auto ptr = std::make_unique<FuncRParams>();
         ptr->lineno = currentToken().lineno;
@@ -675,6 +616,15 @@ namespace thm {
         }
         submit(ptr);
         return ptr;
+    }
+
+    int Parser::stepFuncRParams(int offset) {
+        offset = stepExp(offset);
+        while (tokenStream_.peekType(offset, Token::COMMA)) {
+            offset += 1;
+            offset = stepExp(offset);
+        }
+        return offset;
     }
 
     std::unique_ptr<MulExp> Parser::parseMulExp() {
@@ -705,6 +655,15 @@ namespace thm {
         return ptr;
     }
 
+    int Parser::stepMulExp(int offset) {
+        offset = stepUnaryExp(offset);
+        while (tokenStream_.peekType(offset, {Token::MULT, Token::DIV, Token::MOD})) {
+            offset += 1;
+            offset = stepUnaryExp(offset);
+        }
+        return offset;
+    }
+
     std::unique_ptr<AddExp> Parser::parseAddExp() {
         auto ptr = std::make_unique<AddExp>();
         ptr->exp = std::move(parseMulExp());
@@ -730,6 +689,15 @@ namespace thm {
             submit(ptr);
         }
         return ptr;
+    }
+
+    int Parser::stepAddExp(int offset) {
+        offset = stepMulExp(offset);
+        while (tokenStream_.peekType(offset, {Token::PLUS, Token::MINU})) {
+            offset += 1;
+            offset = stepMulExp(offset);
+        }
+        return offset;
     }
 
     std::unique_ptr<RelExp> Parser::parseRelExp() {
@@ -837,5 +805,12 @@ namespace thm {
         nextToken();
         submit(ptr);
         return ptr;
+    }
+
+    int Parser::stepUnaryOp(int offset) {
+        if (tokenStream_.peekType(offset, {Token::PLUS, Token::MINU, Token::NOT})) {
+            offset += 1;
+        }
+        return offset;
     }
 } // thm

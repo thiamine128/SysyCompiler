@@ -52,29 +52,28 @@ namespace thm {
         std::unique_ptr<Block> parseBlock();
         std::unique_ptr<BlockItem> parseBlockItem();
         std::unique_ptr<Stmt> parseStmt();
-
-        std::unique_ptr<Exp> myparseExp();
-
-        std::unique_ptr<AddExp> myparseAddExp();
-
-        std::unique_ptr<MulExp> myparseMulExp();
-
-        std::unique_ptr<UnaryExp> myparseUnaryExp();
-
-        std::unique_ptr<PrimaryExp> myparsePrimaryExp();
-
         std::unique_ptr<ForStmt> parseForStmt();
         std::unique_ptr<Exp> parseExp();
+        int stepExp(int offset);
         std::unique_ptr<Cond> parseCond();
         std::unique_ptr<LVal> parseLVal();
+        int stepLVal(int offset);
         std::unique_ptr<PrimaryExp> parsePrimaryExp();
+        int stepPrimaryExp(int offset);
         std::unique_ptr<Number> parseNumber();
+        int stepNumber(int offset);
         std::unique_ptr<Character> parseCharacter();
+        int stepCharacter(int offset);
         std::unique_ptr<UnaryExp> parseUnaryExp();
+        int stepUnaryExp(int offset);
         std::unique_ptr<UnaryOp> parseUnaryOp();
+        int stepUnaryOp(int offset);
         std::unique_ptr<FuncRParams> parseFuncRParams();
+        int stepFuncRParams(int offset);
         std::unique_ptr<MulExp> parseMulExp();
+        int stepMulExp(int offset);
         std::unique_ptr<AddExp> parseAddExp();
+        int stepAddExp(int offset);
         std::unique_ptr<RelExp> parseRelExp();
         std::unique_ptr<EqExp> parseEqExp();
         std::unique_ptr<LAndExp> parseLAndExp();
