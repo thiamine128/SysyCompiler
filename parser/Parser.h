@@ -52,6 +52,11 @@ namespace thm {
         std::unique_ptr<Block> parseBlock();
         std::unique_ptr<BlockItem> parseBlockItem();
         std::unique_ptr<Stmt> parseStmt();
+
+        std::unique_ptr<Exp> myparseExp();
+
+        std::unique_ptr<AddExp> myparseAddExp();
+
         std::unique_ptr<ForStmt> parseForStmt();
         std::unique_ptr<Exp> parseExp();
         std::unique_ptr<Cond> parseCond();

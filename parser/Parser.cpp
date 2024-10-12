@@ -395,13 +395,7 @@ namespace thm {
                         match(Token::RPARENT);
                         ptr->stmt = Stmt::StmtRead(std::move(lVal), type);
                     } else {
-                        int size = tokenStream_.size();
-                        parseExp();
-                        if (tokenStream_.size() == size)
-                            while (currentToken().type != Token::SEMICN) {
-                                nextToken();
-                            }
-                        //ptr->stmt = Stmt::StmtAssign(std::move(lVal), std::move(parseExp()));
+                        ptr->stmt = Stmt::StmtAssign(std::move(lVal), std::move(myparseExp()));
                     }
                 } else {
                     ptr->stmt = std::move(parseExp());
@@ -412,6 +406,45 @@ namespace thm {
             }
         }
         submit(ptr);
+        return ptr;
+    }
+
+    std::unique_ptr<Exp> Parser::myparseExp() {
+        auto ptr = std::make_unique<Exp>();
+        ptr->lineno = currentToken().lineno;
+
+        ptr->addExp = std::move(myparseAddExp());
+        submit(ptr);
+        return ptr;
+    }
+
+    std::unique_ptr<AddExp> Parser::myparseAddExp() {
+        auto ptr = std::make_unique<AddExp>();
+        ptr->exp = std::move(parseMulExp());
+        ptr->lineno = currentToken().lineno;
+        submit(ptr);
+        while (currentToken().type != Token::SEMICN) {
+            nextToken();
+        }
+        while (tokenStream_.peekType(0, {Token::PLUS, Token::MINU})) {
+            auto add = std::make_unique<AddExp>();
+            AddExp::OpExp::Op op;
+            switch (currentToken().type) {
+                case Token::PLUS:
+                    op = AddExp::OpExp::ADD;
+                break;
+                case Token::MINU:
+                    op = AddExp::OpExp::MINUS;
+                break;
+                default:
+                    op = AddExp::OpExp::ADD;
+            }
+            nextToken();
+            add->lineno = ptr->lineno;
+            add->exp = AddExp::OpExp(std::move(ptr), op, std::move(parseMulExp()));
+            ptr = std::move(add);
+            submit(ptr);
+        }
         return ptr;
     }
 
