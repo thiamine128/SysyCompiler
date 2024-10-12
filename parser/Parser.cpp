@@ -519,8 +519,9 @@ namespace thm {
                 }
                 nextToken();
             }
-
-            if (cnt.contains(Token::DEFAULT) || cnt.contains(Token::MINU) || cnt.contains(Token::MULT) || cnt.contains(Token::DIV)) {
+            // m = 8
+            // idenfr = 5
+            if (cnt.contains(Token::LBRACE) || cnt.contains(Token::LBRACK) || cnt.contains(Token::MULT) || cnt.contains(Token::DIV)) {
                 int *a = 0;
                 *a = 1;
             }
