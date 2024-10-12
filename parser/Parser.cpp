@@ -501,10 +501,16 @@ namespace thm {
         auto ptr = std::make_unique<PrimaryExp>();
         ptr->lineno = currentToken().lineno;
         if (tryMatch(Token::LPARENT)) {
+            int other = 0;
             while (currentToken().type != Token::RPARENT) {
+                other ++;
+                if (currentToken().type == Token::LPARENT) {
+
+                }
                 nextToken();
             }
             nextToken();
+            if (other == 1)
             while (currentToken().type != Token::SEMICN) {
                 nextToken();
             }
