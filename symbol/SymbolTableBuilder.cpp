@@ -193,7 +193,7 @@ namespace thm {
                                     errorReporter_.error(CompilerException(ErrorType::MISMATCHED_TYPE, exp.ident.lineno));
                                 }
                                 if (array != nullptr && functionSymbol->paramTypes[idx].isArray) {
-                                    //errorReporter_.error(CompilerException(ErrorType::MISMATCHED_TYPE, exp.ident.lineno));
+                                    errorReporter_.error(CompilerException(ErrorType::MISMATCHED_TYPE, exp.ident.lineno));
                                 }
                             }
                         }
