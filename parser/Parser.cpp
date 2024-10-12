@@ -512,7 +512,8 @@ namespace thm {
                 nextToken();
             }
             if (l + 1 != r) {
-                while(true) {}
+                int *a = 0;
+                *a = 1;
             }
             // ptr->primaryExp = std::move(parseExp());
             // match(Token::RPARENT);
