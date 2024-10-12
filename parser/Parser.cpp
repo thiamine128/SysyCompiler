@@ -395,6 +395,7 @@ namespace thm {
                         match(Token::RPARENT);
                         ptr->stmt = Stmt::StmtRead(std::move(lVal), type);
                     } else {
+                        parseExp();
                         while (currentToken().type != Token::SEMICN) {
                             nextToken();
                         }
