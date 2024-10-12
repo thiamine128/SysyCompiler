@@ -238,7 +238,7 @@ namespace thm {
         match(Token::MAINTK);
         match(Token::LPARENT);
         match(Token::RPARENT);
-        //ptr->block = std::move(parseBlock());
+        ptr->block = std::move(parseBlock());
         submit(ptr);
         return ptr;
     }
@@ -357,14 +357,22 @@ namespace thm {
             match(Token::SEMICN);
             ptr->stmt = Stmt::CONTINUE;
         } else if (tryMatch(Token::RETURNTK)) {
-            std::unique_ptr<Exp> returnExp;
+            while (!tryMatch(Token::SEMICN)) {
+                nextToken();
+            }
+            match(Token::SEMICN);
+            /*std::unique_ptr<Exp> returnExp;
             if (!tryMatch(Token::SEMICN)) {
                 returnExp = std::move(parseExp());
                 match(Token::SEMICN);
             }
-            ptr->stmt = Stmt::StmtReturn(std::move(returnExp));
+            ptr->stmt = Stmt::StmtReturn(std::move(returnExp));*/
         } else if (tryMatch(Token::PRINTFTK)) {
-            match(Token::LPARENT);
+            while (!tryMatch(Token::SEMICN)) {
+                nextToken();
+            }
+            match(Token::SEMICN);
+            /*match(Token::LPARENT);
             std::string fmt = currentToken().content;
             match(Token::STRCON);
             std::vector<std::unique_ptr<Exp>> args;
@@ -373,9 +381,13 @@ namespace thm {
             }
             match(Token::RPARENT);
             match(Token::SEMICN);
-            ptr->stmt = Stmt::StmtPrintf(std::move(fmt), std::move(args));
+            ptr->stmt = Stmt::StmtPrintf(std::move(fmt), std::move(args));*/
         } else {
-            if (!tryMatch(Token::SEMICN)) {
+            while (!tryMatch(Token::SEMICN)) {
+                nextToken();
+            }
+            match(Token::SEMICN);
+            /*if (!tryMatch(Token::SEMICN)) {
                 bool assign = false;
                 tokenStream_.peekForward([&assign](Token::TokenType type) {
                     if (type == Token::ASSIGN) {
@@ -403,7 +415,7 @@ namespace thm {
                 match(Token::SEMICN);
             } else {
                 ptr->stmt = std::unique_ptr<Exp>();
-            }
+            }*/
         }
         submit(ptr);
         return ptr;
