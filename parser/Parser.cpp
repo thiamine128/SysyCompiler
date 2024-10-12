@@ -423,9 +423,10 @@ namespace thm {
         ptr->exp = std::move(parseMulExp());
         ptr->lineno = currentToken().lineno;
         submit(ptr);
-        /*while (currentToken().type != Token::SEMICN) {
-            nextToken();
-        }*/
+        if (currentToken().type == Token::PLUS || currentToken().type == Token::MINU)
+            while (currentToken().type != Token::SEMICN) {
+                nextToken();
+            }
         while (tokenStream_.peekType(0, {Token::PLUS, Token::MINU})) {
             auto add = std::make_unique<AddExp>();
             AddExp::OpExp::Op op;
