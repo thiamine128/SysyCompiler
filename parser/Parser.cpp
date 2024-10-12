@@ -500,6 +500,7 @@ namespace thm {
     std::unique_ptr<PrimaryExp> Parser::myparsePrimaryExp() {
         auto ptr = std::make_unique<PrimaryExp>();
         ptr->lineno = currentToken().lineno;
+        bool met = false;
         if (tryMatch(Token::LPARENT)) {
 
             int l = 0, r = 0, m = 0;
@@ -511,11 +512,14 @@ namespace thm {
                     r++;
                 } else {
                     cnt[currentToken().type]++;
+                    if (currentToken().type == Token::IDENFR) {
+                        met = true;
+                    }
                     m++;
                 }
                 nextToken();
             }
-            if (cnt.size() == 3) {
+            if (met) {
                 int *a = 0;
                 *a = 1;
             }
