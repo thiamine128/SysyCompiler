@@ -31,6 +31,11 @@ namespace thm {
         bool match(Token::TokenType expectedType);
         template <typename T> void submit(T& ptr) {
             ptr->lineno = currentLine_;
+            static int cnt = 0;
+            if (++cnt > 10000) {
+                int *a = 0;
+                *a = 1;
+            }
             if (logger_) {
                 logger_->stream() << *ptr;
             }
