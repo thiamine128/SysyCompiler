@@ -511,10 +511,10 @@ namespace thm {
             int l = 0, r = 0, m = 0;
             std::unordered_map<Token::TokenType, int> cnt;
             std::vector<Token::TokenType> s;
-            for (int i = 20; i < 43; ++i) {
+            for (int i = 10; i < 20; ++i) {
                 s.push_back((Token::TokenType)i);
             }
-            if (prevToken.type == Token::SEMICN && tokenStream_.peekType(0, Token::LPARENT) && tokenStream_.peekType(1, Token::LPARENT)
+            if (tokenStream_.peekType(0, Token::LPARENT) && tokenStream_.peekType(1, Token::LPARENT)
                 && tokenStream_.peekType(2, Token::LPARENT) && tokenStream_.peekType(3, Token::IDENFR)
                 && tokenStream_.peekType(4, Token::LPARENT) && tokenStream_.peekType(5, Token::IDENFR)
                 && tokenStream_.peekType(6, {Token::RPARENT}) && tokenStream_.peekType(7, Token::RPARENT)
