@@ -395,6 +395,9 @@ namespace thm {
                         match(Token::RPARENT);
                         ptr->stmt = Stmt::StmtRead(std::move(lVal), type);
                     } else {
+                        int size = tokenStream_.size();
+                        parseExp();
+                        if (tokenStream_.size() == size)
                         while (!tryMatch(Token::SEMICN)) {
                             nextToken();
                         }
