@@ -368,8 +368,12 @@ namespace thm {
             std::string fmt = currentToken().content;
             match(Token::STRCON);
             std::vector<std::unique_ptr<Exp>> args;
+            int size = tokenStream_.size();
             while (tryMatch(Token::COMMA)) {
                 args.push_back(std::move(parseExp()));
+                if (tokenStream_.size() == size) {
+                    break;
+                }
             }
             match(Token::RPARENT);
             match(Token::SEMICN);
