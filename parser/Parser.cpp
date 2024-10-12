@@ -501,13 +501,13 @@ namespace thm {
         auto ptr = std::make_unique<PrimaryExp>();
         ptr->lineno = currentToken().lineno;
         if (tryMatch(Token::LPARENT)) {
-            ptr->primaryExp = std::move(parseExp());
-            match(Token::RPARENT);
-        } else if (tokenStream_.peekType(Token::IDENFR)) {
             while (currentToken().type != Token::SEMICN) {
                 nextToken();
             }
-            //ptr->primaryExp = std::move(parseLVal());
+            //ptr->primaryExp = std::move(parseExp());
+            //match(Token::RPARENT);
+        } else if (tokenStream_.peekType(Token::IDENFR)) {
+            ptr->primaryExp = std::move(parseLVal());
         } else if (tokenStream_.peekType(Token::INTCON)) {
             ptr->primaryExp = std::move(parseNumber());
         } else {
