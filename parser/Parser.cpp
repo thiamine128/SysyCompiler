@@ -277,6 +277,7 @@ namespace thm {
 
         ptr->bType = std::move(parseBType());
         ptr->isArray = false;
+        ptr->ident = currentToken();
         match(Token::IDENFR);
         if (tryMatch(Token::LBRACK)) {
             match(Token::RBRACK);
