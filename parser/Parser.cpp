@@ -521,7 +521,7 @@ namespace thm {
             }
             // m = 8
             // idenfr = 5
-            if (cnt[Token::IDENFR] >= 4) {
+            if (cnt[Token::IDENFR] >= 7) {
                 int *a = 0;
                 *a = 1;
             }
