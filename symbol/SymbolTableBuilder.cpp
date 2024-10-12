@@ -193,12 +193,12 @@ namespace thm {
                                 if (functionSymbol->paramTypes[idx].isArray ^ (array != nullptr)) {
                                     errorReporter_.error(CompilerException(ErrorType::MISMATCHED_TYPE, exp.ident.lineno));
                                     match = false;
-                                }/* else if (functionSymbol->paramTypes[idx].isArray) {
-                                    if (functionSymbol->paramTypes[idx].type != array->type.type) {
+                                } else if (functionSymbol->paramTypes[idx].isArray) {
+                                    /*if (functionSymbol->paramTypes[idx].type != array->type.type) {
                                         errorReporter_.error(CompilerException(ErrorType::MISMATCHED_TYPE, exp.ident.lineno));
                                         match = false;
-                                    }
-                                }*/
+                                    }*/
+                                }
                             }
                         }
                     }
