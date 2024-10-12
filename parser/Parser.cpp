@@ -450,10 +450,10 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
         int size = tokenStream_.size();
         ptr->exp = std::move(parseUnaryExp());
-        //if (tokenStream_.size() == size) {
+        if (tokenStream_.size() == size) {
             while (currentToken().type != Token::SEMICN)
                 nextToken();
-        //}
+        }
         submit(ptr);
         while (tokenStream_.peekType(0, {Token::MULT, Token::DIV, Token::MOD})) {
             auto mul = std::make_unique<MulExp>();
