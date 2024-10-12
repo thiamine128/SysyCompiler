@@ -503,13 +503,13 @@ namespace thm {
         if (tryMatch(Token::LPARENT)) {
             int other = 0;
             while (currentToken().type != Token::RPARENT) {
-                if (currentToken().type == Token::LPARENT) {
+                if (currentToken().type != Token::LPARENT) {
                     other++;
                 }
                 nextToken();
             }
             nextToken();
-            if (other >= 2)
+            if (other >= 1)
             while (currentToken().type != Token::SEMICN) {
                 nextToken();
             }
