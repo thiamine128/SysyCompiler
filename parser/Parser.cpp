@@ -357,16 +357,12 @@ namespace thm {
             match(Token::SEMICN);
             ptr->stmt = Stmt::CONTINUE;
         } else if (tryMatch(Token::RETURNTK)) {
-            while (!tryMatch(Token::SEMICN)) {
-                nextToken();
-            }
-            match(Token::SEMICN);
-            /*std::unique_ptr<Exp> returnExp;
+            std::unique_ptr<Exp> returnExp;
             if (!tryMatch(Token::SEMICN)) {
                 returnExp = std::move(parseExp());
                 match(Token::SEMICN);
             }
-            ptr->stmt = Stmt::StmtReturn(std::move(returnExp));*/
+            ptr->stmt = Stmt::StmtReturn(std::move(returnExp));
         } else if (tryMatch(Token::PRINTFTK)) {
             while (!tryMatch(Token::SEMICN)) {
                 nextToken();
