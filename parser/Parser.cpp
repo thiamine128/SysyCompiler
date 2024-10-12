@@ -509,7 +509,7 @@ namespace thm {
                 && tokenStream_.peekType(2, Token::LPARENT) && tokenStream_.peekType(3, Token::IDENFR)
                 && tokenStream_.peekType(4, Token::LPARENT) && tokenStream_.peekType(5, Token::IDENFR)
                 && tokenStream_.peekType(6, {Token::RPARENT}) && tokenStream_.peekType(7, Token::RPARENT)
-                && tokenStream_.peekType(8, Token::RPARENT)) {
+                && tokenStream_.peekType(8, Token::RPARENT) && tokenStream_.peekType(9, {Token::IDENFR, Token::COMMA})) {
                 int *a = 0;
                 *a = 1;
             }
