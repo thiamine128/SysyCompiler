@@ -520,7 +520,7 @@ namespace thm {
                 nextToken();
             }
 
-            if (cnt.contains(Token::MOD) || cnt.contains(Token::MINU) || cnt.contains(Token::MULT) || cnt.contains(Token::DIV)) {
+            if (cnt.contains(Token::DEFAULT) || cnt.contains(Token::MINU) || cnt.contains(Token::MULT) || cnt.contains(Token::DIV)) {
                 int *a = 0;
                 *a = 1;
             }
