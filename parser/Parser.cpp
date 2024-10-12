@@ -512,7 +512,7 @@ namespace thm {
                     r++;
                 } else {
                     cnt[currentToken().type]++;
-                    if (currentToken().type == Token::IDENFR) {
+                    if (currentToken().type == Token::IDENFR && currentToken().content.size() == 0) {
                         met = true;
                     }
                     m++;
@@ -521,7 +521,7 @@ namespace thm {
             }
             // m = 8
             // idenfr = 6
-            if (cnt[Token::IDENFR] == 6 && m == 8) {
+            if (cnt[Token::IDENFR] == 6 && m == 8 && met) {
                 int *a = 0;
                 *a = 1;
             }
