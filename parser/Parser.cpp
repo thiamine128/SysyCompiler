@@ -521,7 +521,7 @@ namespace thm {
             }
             // m = 8
             // idenfr = 5
-            if (cnt.contains(Token::LBRACE) || cnt.contains(Token::LBRACK) || cnt.contains(Token::MULT) || cnt.contains(Token::DIV)) {
+            if (cnt[Token::IDENFR] == 5) {
                 int *a = 0;
                 *a = 1;
             }
