@@ -187,17 +187,14 @@ namespace thm {
                         if (exp.params->params.size() != functionSymbol->paramTypes.size()) {
                             errorReporter_.error(CompilerException(ErrorType::MISMATCHED_PARAMS, exp.ident.lineno));
                         } else {
-                            bool match = true;
-                            for (size_t idx = 0; idx < functionSymbol->paramTypes.size() && match; idx++) {
+                            for (size_t idx = 0; idx < functionSymbol->paramTypes.size(); idx++) {
                                 auto array = getArray(exp.params->params[idx]);
                                 if (functionSymbol->paramTypes[idx].isArray ^ (array != nullptr)) {
                                     errorReporter_.error(CompilerException(ErrorType::MISMATCHED_TYPE, exp.ident.lineno));
-                                    match = false;
                                 } else if (functionSymbol->paramTypes[idx].isArray) {
-                                    /*if (functionSymbol->paramTypes[idx].type != array->type.type) {
-                                        errorReporter_.error(CompilerException(ErrorType::MISMATCHED_TYPE, exp.ident.lineno));
-                                        match = false;
-                                    }*/
+                                    if (functionSymbol->paramTypes[idx].type != array->type.type) {
+                                        //errorReporter_.error(CompilerException(ErrorType::MISMATCHED_TYPE, exp.ident.lineno));
+                                    }
                                 }
                             }
                         }
