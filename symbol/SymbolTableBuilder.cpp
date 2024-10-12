@@ -192,10 +192,8 @@ namespace thm {
                                 if (functionSymbol->paramTypes[idx].isArray != (array != nullptr)) {
                                     errorReporter_.error(CompilerException(ErrorType::MISMATCHED_TYPE, exp.ident.lineno));
                                 }
-                                if (array != nullptr && functionSymbol->paramTypes[idx].isArray && functionSymbol->paramTypes[idx].type != array->type.type) {
-                                    if (true) {
-                                        //errorReporter_.error(CompilerException(ErrorType::MISMATCHED_TYPE, exp.ident.lineno));
-                                    }
+                                if (array != nullptr && functionSymbol->paramTypes[idx].isArray) {
+                                    errorReporter_.error(CompilerException(ErrorType::MISMATCHED_TYPE, exp.ident.lineno));
                                 }
                             }
                         }
