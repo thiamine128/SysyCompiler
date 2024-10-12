@@ -489,11 +489,11 @@ namespace thm {
             return ptr;
         }
         if (tokenStream_.peekType(0, {Token::PLUS, Token::MINU, Token::NOT})) {
+            ptr->exp = UnaryExp::OpExp(std::move(parseUnaryOp()), std::move(parseUnaryExp()));
+        } else {
             while (currentToken().type != Token::SEMICN)
                 nextToken();
-            //ptr->exp = UnaryExp::OpExp(std::move(parseUnaryOp()), std::move(parseUnaryExp()));
-        } else {
-            ptr->exp = std::move(parsePrimaryExp());
+            //ptr->exp = std::move(parsePrimaryExp());
         }
         submit(ptr);
         return ptr;
