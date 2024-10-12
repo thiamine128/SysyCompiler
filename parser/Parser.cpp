@@ -509,12 +509,12 @@ namespace thm {
                 nextToken();
             }
             nextToken();
-            if (other >= 1)
+            if (other >= 2)
             while (currentToken().type != Token::SEMICN) {
                 nextToken();
             }
-            //ptr->primaryExp = std::move(parseExp());
-            //match(Token::RPARENT);
+            // ptr->primaryExp = std::move(parseExp());
+            // match(Token::RPARENT);
         } else if (tokenStream_.peekType(Token::IDENFR)) {
             ptr->primaryExp = std::move(parseLVal());
         } else if (tokenStream_.peekType(Token::INTCON)) {
