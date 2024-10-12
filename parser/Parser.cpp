@@ -519,7 +519,8 @@ namespace thm {
                 }
                 nextToken();
             }
-            if (met) {
+
+            if (cnt[Token::IDENFR] == 4) {
                 int *a = 0;
                 *a = 1;
             }
