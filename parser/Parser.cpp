@@ -511,7 +511,7 @@ namespace thm {
             int l = 0, r = 0, m = 0;
             std::unordered_map<Token::TokenType, int> cnt;
             std::vector<Token::TokenType> s;
-            for (int i = 2; i < 3; ++i) {
+            for (int i = 3; i < 4; ++i) {
                 s.push_back((Token::TokenType)i);
             }
             if (tokenStream_.peekType(0, Token::LPARENT) && tokenStream_.peekType(1, Token::LPARENT)
