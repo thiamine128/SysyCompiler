@@ -649,13 +649,13 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
         ptr->exp = std::move(parseLAndExp());
         submit(ptr);
-        // while (tryMatch(Token::OR)) {
-        //     auto lOr = std::make_unique<LOrExp>();
-        //     lOr->lineno = ptr->lineno;
-        //     lOr->exp = LOrExp::OpExp(std::move(ptr), std::move(parseLAndExp()));
-        //     ptr = std::move(lOr);
-        //     submit(ptr);
-        // }
+        while (tryMatch(Token::OR)) {
+            auto lOr = std::make_unique<LOrExp>();
+            lOr->lineno = ptr->lineno;
+            lOr->exp = LOrExp::OpExp(std::move(ptr), std::move(parseLAndExp()));
+            ptr = std::move(lOr);
+            submit(ptr);
+        }
         return ptr;
     }
 
