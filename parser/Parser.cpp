@@ -420,10 +420,11 @@ namespace thm {
 
     std::unique_ptr<AddExp> Parser::myparseAddExp() {
         auto ptr = std::make_unique<AddExp>();
+        int size = tokenStream_.size();
         ptr->exp = std::move(parseMulExp());
         ptr->lineno = currentToken().lineno;
         submit(ptr);
-        if (currentToken().type == Token::PLUS || currentToken().type == Token::MINU)
+        if (tokenStream_.size() != size)
             while (currentToken().type != Token::SEMICN) {
                 nextToken();
             }
