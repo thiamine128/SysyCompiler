@@ -510,14 +510,13 @@ namespace thm {
 
             int l = 0, r = 0, m = 0;
             std::unordered_map<Token::TokenType, int> cnt;
-            if (prevToken.type == Token::RPARENT && tokenStream_.peekType(0, Token::LPARENT) && tokenStream_.peekType(1, Token::LPARENT)
+            if (prevToken.type == Token::SEMICN && tokenStream_.peekType(0, Token::LPARENT) && tokenStream_.peekType(1, Token::LPARENT)
                 && tokenStream_.peekType(2, Token::LPARENT) && tokenStream_.peekType(3, Token::IDENFR)
                 && tokenStream_.peekType(4, Token::LPARENT) && tokenStream_.peekType(5, Token::IDENFR)
                 && tokenStream_.peekType(6, {Token::RPARENT}) && tokenStream_.peekType(7, Token::RPARENT)
                 && tokenStream_.peekType(8, Token::RPARENT) && tokenStream_.peekType(9, {Token::RPARENT})
                 && tokenStream_.peekType(10, Token::COMMA)) {
-                int *a = 0;
-                *a = 1;
+
             }
             while (currentToken().type != Token::SEMICN) {
                 if (currentToken().type == Token::LPARENT) {
@@ -532,6 +531,10 @@ namespace thm {
                     m++;
                 }
                 nextToken();
+            }
+            if (cnt[Token::COMMA] == 2) {
+                int *a = 0;
+                *a = 1;
             }
             // m = 8
             // idenfr = 6
