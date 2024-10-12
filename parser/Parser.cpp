@@ -511,14 +511,13 @@ namespace thm {
             int l = 0, r = 0, m = 0;
             std::unordered_map<Token::TokenType, int> cnt;
             std::vector<Token::TokenType> s;
-            for (int i = 0; i < 43; ++i) s.push_back((Token::TokenType)i);
+            for (int i = 2; i < 3; ++i) s.push_back((Token::TokenType)i);
             if (tokenStream_.peekType(0, Token::LPARENT) && tokenStream_.peekType(1, Token::LPARENT)
                 && tokenStream_.peekType(2, Token::LPARENT) && tokenStream_.peekType(3, Token::IDENFR)
                 && tokenStream_.peekType(4, Token::LPARENT) && tokenStream_.peekType(5, Token::IDENFR)
                 && tokenStream_.peekType(6, {Token::RPARENT}) && tokenStream_.peekType(7, Token::RPARENT)
                 && tokenStream_.peekType(8, Token::RPARENT) && tokenStream_.peekType(9, {Token::RPARENT})
-                && tokenStream_.peekType(10, Token::COMMA) && tokenStream_.peekType(11, Token::STRCON)
-                && tokenStream_.peekType(12, s)) {
+                && tokenStream_.peekType(10, Token::COMMA) && tokenStream_.peekType(11, s)) {
                 int *a = 0;
                 *a = 1;
             }
