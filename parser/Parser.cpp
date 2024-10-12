@@ -375,11 +375,7 @@ namespace thm {
             match(Token::SEMICN);
             ptr->stmt = Stmt::StmtPrintf(std::move(fmt), std::move(args));
         } else {
-            while (!tryMatch(Token::SEMICN)) {
-                nextToken();
-            }
-            match(Token::SEMICN);
-            /*if (!tryMatch(Token::SEMICN)) {
+            if (!tryMatch(Token::SEMICN)) {
                 bool assign = false;
                 tokenStream_.peekForward([&assign](Token::TokenType type) {
                     if (type == Token::ASSIGN) {
@@ -407,7 +403,7 @@ namespace thm {
                 match(Token::SEMICN);
             } else {
                 ptr->stmt = std::unique_ptr<Exp>();
-            }*/
+            }
         }
         submit(ptr);
         return ptr;
