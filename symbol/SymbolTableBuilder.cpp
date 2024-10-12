@@ -7,6 +7,7 @@
 #include <iostream>
 #include <bits/locale_facets_nonio.h>
 
+#include "../core/Scope.h"
 #include "../error/ErrorReporter.h"
 #include "../util/overloaded.h"
 
@@ -17,24 +18,24 @@ namespace thm {
     void SymbolTableBuilder::pushScope() {
         ++scopeNum;
 
-        symbolTableStack.push(std::make_shared<SymbolTable>(scopeNum, symbolTable));
-        symbolTable = symbolTableStack.top();
-        symbolTables.push_back(symbolTable);
+        scopeStack.push(std::make_shared<Scope>(scopeNum, currentScope, std::make_shared<SymbolTable>(scopeNum, currentScope == nullptr ? nullptr : currentScope->symbolTable)));
+        currentScope = scopeStack.top();
+        scopes.push_back(currentScope);
     }
 
     void SymbolTableBuilder::popScope() {
-        symbolTableStack.pop();
-        symbolTable = symbolTableStack.top();
+        scopeStack.pop();
+        currentScope = scopeStack.top();
     }
 
     void SymbolTableBuilder::submitSymbol(std::shared_ptr<Symbol> symbol) {
-        if (!symbolTable->addSymbol(symbol)) {
+        if (!currentScope->symbolTable->addSymbol(symbol)) {
             errorReporter_.error(CompilerException(ErrorType::REDEFINITION, symbol->ident.lineno));
         }
     }
 
     bool SymbolTableBuilder::tryAccessSymbol(Token const &ident) const {
-        if (!symbolTable->findSymbol(ident.content)) {
+        if (!currentScope->symbolTable->findSymbol(ident.content)) {
             errorReporter_.error(CompilerException(ErrorType::UNDEFINED_IDENTIFIER, ident.lineno));
             return false;
         }
@@ -54,7 +55,7 @@ namespace thm {
 
                                     },
                                     [&](std::unique_ptr<LVal>& lVal) {
-                                        std::shared_ptr<Symbol> symbol = symbolTable->findSymbol(lVal->ident.content);
+                                        std::shared_ptr<Symbol> symbol = currentScope->symbolTable->findSymbol(lVal->ident.content);
                                         if (lVal->exp == nullptr && symbol != nullptr && symbol->symbolType() == Symbol::VARIABLE) {
                                             std::shared_ptr<VariableSymbol> variableSymbol = std::static_pointer_cast<VariableSymbol>(symbol);
                                             if (variableSymbol->type.isArray) {
@@ -87,7 +88,7 @@ namespace thm {
         for (auto const& def : constDecl->constDefs) {
             std::shared_ptr<VariableSymbol> symbol = std::make_shared<VariableSymbol>();
             symbol->id = ++symbolNum;
-            symbol->scopeId = symbolTable->getScopeId();
+            symbol->scopeId = currentScope->scopeId;
             symbol->type.isConst = true;
             symbol->type.type = constDecl->bType->type;
             std::visit(overloaded{
@@ -108,7 +109,7 @@ namespace thm {
         for (auto const& def : varDecl->varDefs) {
             std::shared_ptr<VariableSymbol> symbol = std::make_shared<VariableSymbol>();
             symbol->id = ++symbolNum;
-            symbol->scopeId = symbolTable->getScopeId();
+            symbol->scopeId = currentScope->scopeId;
             symbol->type.isConst = false;
             symbol->type.type = varDecl->bType->type;
             std::visit(overloaded{
@@ -128,7 +129,7 @@ namespace thm {
     void SymbolTableBuilder::visitFuncDef(std::unique_ptr<FuncDef> &funcDef) {
         std::shared_ptr<FunctionSymbol> symbol = std::make_shared<FunctionSymbol>();
         symbol->id = ++symbolNum;
-        symbol->scopeId = symbolTable->getScopeId();
+        symbol->scopeId = currentScope->scopeId;
         symbol->type = funcDef->funcType->type;
         symbol->ident = funcDef->ident;
         if (funcDef->params != nullptr)
@@ -145,7 +146,7 @@ namespace thm {
             for (auto& param : funcDef->params->params) {
                 std::shared_ptr<VariableSymbol> paramSymbol = std::make_shared<VariableSymbol>();
                 paramSymbol->id = ++symbolNum;
-                paramSymbol->scopeId = symbolTable->getScopeId();
+                paramSymbol->scopeId = currentScope->scopeId;
                 paramSymbol->type.isConst = false;
                 paramSymbol->type.type = param->bType->type;
                 paramSymbol->type.isArray = param->isArray;
@@ -181,7 +182,7 @@ namespace thm {
             },
             [&](UnaryExp::FuncExp& exp) {
                 if (tryAccessSymbol(exp.ident)) {
-                    auto symbol = symbolTable->findSymbol(exp.ident.content);
+                    auto symbol = currentScope->symbolTable->findSymbol(exp.ident.content);
                     if (symbol->symbolType() == Symbol::FUNCTION) {
                         std::shared_ptr<FunctionSymbol> functionSymbol = std::static_pointer_cast<FunctionSymbol>(symbol);
                         if ((exp.params == nullptr && functionSymbol->paramTypes.size() != 0) || (exp.params != nullptr && exp.params->params.size() != functionSymbol->paramTypes.size())) {

@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "Scope.h"
 #include "../error/CompilerException.h"
 #include "../symbol/SymbolTableBuilder.h"
 
@@ -42,8 +43,8 @@ namespace thm {
         builder->visitCompUnit(compUnit_);
 #ifdef PRINT_SYMBOL
         std::shared_ptr<Logger> logger = std::make_shared<Logger>("symbol.txt");
-        for (auto& symbolTable : builder->symbolTables) {
-            symbolTable->print(logger->stream());
+        for (auto& scope : builder->scopes) {
+            scope->symbolTable->print(logger->stream());
         }
     }
 #endif

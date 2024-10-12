@@ -7,9 +7,9 @@
 int main() {
     thm::Compiler compiler("testfile.txt");
 
-    compiler.lexer();
-    compiler.parse();
-    compiler.buildSymbolTables();
+    //compiler.lexer();
+    //compiler.parse();
+    //compiler.buildSymbolTables();
     compiler.printErrors();
 
     return 0;

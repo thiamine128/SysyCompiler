@@ -10,15 +10,16 @@
 #include "../parser/ASTVisitor.h"
 
 namespace thm {
+    class Scope;
     class ErrorReporter;
 
 class SymbolTableBuilder : public ASTVisitor{
 public:
     int scopeNum = 0;
     int symbolNum = 0;
-    std::shared_ptr<SymbolTable> symbolTable;
-    std::stack<std::shared_ptr<SymbolTable>> symbolTableStack;
-    std::vector<std::shared_ptr<SymbolTable>> symbolTables;
+    std::shared_ptr<Scope> currentScope;
+    std::stack<std::shared_ptr<Scope>> scopeStack;
+    std::vector<std::shared_ptr<Scope>> scopes;
     ErrorReporter& errorReporter_;
 
     SymbolTableBuilder(ErrorReporter& errorReporter);
