@@ -57,6 +57,8 @@ namespace thm {
 
         std::unique_ptr<AddExp> myparseAddExp();
 
+        std::unique_ptr<MulExp> myparseMulExp();
+
         std::unique_ptr<ForStmt> parseForStmt();
         std::unique_ptr<Exp> parseExp();
         std::unique_ptr<Cond> parseCond();
