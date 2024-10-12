@@ -505,7 +505,7 @@ namespace thm {
 
             int l = 0, r = 0, m = 0;
             std::unordered_map<Token::TokenType, int> cnt;
-            if (tokenStream_.peekType(0, Token::LPARENT) && tokenStream_.peekType(1, Token::IDENFR)) {
+            if (tokenStream_.peekType(0, Token::LPARENT) && tokenStream_.peekType(1, Token::LPARENT)) {
                 int *a = 0;
                 *a = 1;
             }
