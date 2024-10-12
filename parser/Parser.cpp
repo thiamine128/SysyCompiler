@@ -508,7 +508,7 @@ namespace thm {
             if (tokenStream_.peekType(0, Token::LPARENT) && tokenStream_.peekType(1, Token::LPARENT)
                 && tokenStream_.peekType(2, Token::LPARENT) && tokenStream_.peekType(3, Token::IDENFR)
                 && tokenStream_.peekType(4, Token::LPARENT) && tokenStream_.peekType(5, Token::IDENFR)
-                && tokenStream_.peekType(6, {Token::RPARENT})) {
+                && tokenStream_.peekType(6, {Token::RPARENT}) && tokenStream_.peekType(7, Token::COMMA)) {
                 int *a = 0;
                 *a = 1;
             }
