@@ -384,12 +384,13 @@ namespace thm {
                     return type != Token::SEMICN;
                 });
                 if (assign) {
+
+                    auto lVal = parseLVal();
                     while (!tryMatch(Token::SEMICN)) {
                         nextToken();
                     }
                     match(Token::SEMICN);
-                    /*auto lVal = parseLVal();
-                    match(Token::ASSIGN);
+                    /*match(Token::ASSIGN);
                     if (tokenStream_.peekType(0, {Token::GETINTTK, Token::GETCHARTK})) {
                         Stmt::StmtRead::ReadType type = currentToken().type == Token::GETINTTK
                                                             ? Stmt::StmtRead::INT
