@@ -634,13 +634,13 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
         ptr->exp = std::move(parseEqExp());
         submit(ptr);
-        while (tryMatch(Token::AND)) {
-            auto lAnd = std::make_unique<LAndExp>();
-            lAnd->lineno = ptr->lineno;
-            lAnd->exp = LAndExp::OpExp(std::move(ptr), std::move(parseEqExp()));
-            ptr = std::move(lAnd);
-            submit(ptr);
-        }
+        // while (tryMatch(Token::AND)) {
+        //     auto lAnd = std::make_unique<LAndExp>();
+        //     lAnd->lineno = ptr->lineno;
+        //     lAnd->exp = LAndExp::OpExp(std::move(ptr), std::move(parseEqExp()));
+        //     ptr = std::move(lAnd);
+        //     submit(ptr);
+        // }
         return ptr;
     }
 

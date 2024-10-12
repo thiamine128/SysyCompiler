@@ -11,7 +11,5 @@ int main() {
     compiler.parse();
     //compiler.buildSymbolTables();
     compiler.printErrors();
-    int* a = 0;
-    *a = 1;
     return 0;
 }
