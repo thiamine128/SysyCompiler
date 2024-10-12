@@ -506,12 +506,12 @@ namespace thm {
         } else if (tokenStream_.peekType(Token::IDENFR)) {
             ptr->primaryExp = std::move(parseLVal());
         } else if (tokenStream_.peekType(Token::INTCON)) {
-            ptr->primaryExp = std::move(parseNumber());
-        } else {
             while (currentToken().type == Token::SEMICN) {
                 nextToken();
             }
-            //ptr->primaryExp = std::move(parseCharacter());
+            //ptr->primaryExp = std::move(parseNumber());
+        } else {
+            ptr->primaryExp = std::move(parseCharacter());
         }
         submit(ptr);
         return ptr;
