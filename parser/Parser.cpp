@@ -515,8 +515,9 @@ namespace thm {
                 && tokenStream_.peekType(4, Token::LPARENT) && tokenStream_.peekType(5, Token::IDENFR)
                 && tokenStream_.peekType(6, {Token::RPARENT}) && tokenStream_.peekType(7, Token::RPARENT)
                 && tokenStream_.peekType(8, Token::RPARENT) && tokenStream_.peekType(9, {Token::RPARENT})
-                && tokenStream_.peekType(10, Token::COMMA)) {
-
+                && tokenStream_.peekType(10, Token::COMMA) && tokenStream_.peekType(11, Token::IDENFR)) {
+                int *a = 0;
+                *a = 1;
             }
             while (currentToken().type != Token::SEMICN) {
                 if (currentToken().type == Token::LPARENT) {
@@ -532,9 +533,8 @@ namespace thm {
                 }
                 nextToken();
             }
-            if (cnt[Token::COMMA] == 2) {
-                int *a = 0;
-                *a = 1;
+            if (cnt[Token::COMMA] == 1) {
+
             }
             // m = 8
             // idenfr = 6
