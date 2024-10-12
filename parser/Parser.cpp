@@ -247,7 +247,7 @@ namespace thm {
         auto ptr = std::make_unique<FuncType>();
         ptr->lineno = currentToken().lineno;
 
-        if (tokenStream_.peekType(Token::IDENFR)) {
+        if (tokenStream_.peekType(Token::INTTK)) {
             ptr->type = FunctionSymbol::INT;
         } else if (tokenStream_.peekType(Token::CHARTK)) {
             ptr->type = FunctionSymbol::CHAR;
@@ -401,6 +401,8 @@ namespace thm {
                     ptr->stmt = std::move(parseExp());
                 }
                 match(Token::SEMICN);
+            } else {
+                ptr->stmt = std::unique_ptr<Exp>();
             }
         }
         submit(ptr);
@@ -439,7 +441,6 @@ namespace thm {
     std::unique_ptr<LVal> Parser::parseLVal() {
         auto ptr = std::make_unique<LVal>();
         ptr->lineno = currentToken().lineno;
-
         ptr->ident = currentToken();
         match(Token::IDENFR);
         if (tryMatch(Token::LBRACK)) {
