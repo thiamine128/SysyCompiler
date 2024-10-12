@@ -503,6 +503,7 @@ namespace thm {
         if (tryMatch(Token::LPARENT)) {
 
             int l = 0, r = 0;
+            parseExp();
             while (currentToken().type != Token::SEMICN) {
                 if (currentToken().type == Token::LPARENT) {
                     l++;
@@ -510,10 +511,6 @@ namespace thm {
                     r++;
                 }
                 nextToken();
-            }
-            if (l + 1 != r) {
-                int *a = 0;
-                *a = 1;
             }
             // ptr->primaryExp = std::move(parseExp());
             // match(Token::RPARENT);
