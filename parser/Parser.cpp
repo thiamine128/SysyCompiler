@@ -520,8 +520,8 @@ namespace thm {
                 nextToken();
             }
             // m = 8
-            // idenfr = 5
-            if (cnt[Token::IDENFR] == 6) {
+            // idenfr = 6
+            if (cnt[Token::IDENFR] == 6 && m == 8) {
                 int *a = 0;
                 *a = 1;
             }
