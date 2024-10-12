@@ -190,7 +190,7 @@ namespace thm {
                             bool match = true;
                             for (size_t idx = 0; idx < functionSymbol->paramTypes.size() && match; idx++) {
                                 auto array = getArray(exp.params->params[idx]);
-                                /*if (functionSymbol->paramTypes[idx].isArray ^ (array != nullptr)) {
+                                if (functionSymbol->paramTypes[idx].isArray ^ (array != nullptr)) {
                                     errorReporter_.error(CompilerException(ErrorType::MISMATCHED_TYPE, exp.ident.lineno));
                                     match = false;
                                 } else if (functionSymbol->paramTypes[idx].isArray) {
@@ -198,7 +198,7 @@ namespace thm {
                                         errorReporter_.error(CompilerException(ErrorType::MISMATCHED_TYPE, exp.ident.lineno));
                                         match = false;
                                     }
-                                }*/
+                                }
                             }
                         }
                     }
