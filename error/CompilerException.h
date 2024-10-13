@@ -15,7 +15,7 @@
     X(MISSING_RBRACK, 'k') \
     X(REDEFINITION, 'b') \
     X(UNDEFINED_IDENTIFIER, 'c') \
-    X(MISMATCHED_PARAMS, 'd') \
+    X(MISMATCHED_PARAMS, '-') \
     X(MISMATCHED_TYPE, 'e') \
     X(VOID_RETURN_VAL, 'f') \
     X(RETURN_NOT_FOUND, 'g') \
