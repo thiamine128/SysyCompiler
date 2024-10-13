@@ -17,11 +17,14 @@ namespace thm {
         return !errors.empty();
     }
     void ErrorReporter::printErrors(std::shared_ptr<Logger> logger) {
+        CompilerException prev(UNEXPECTED_TOKEN, 0);
         while (!errors.empty()) {
             auto error = errors.top();
             errors.pop();
-            if (getErrorCode(error.errorType) != '-')
+            if (getErrorCode(error.errorType) != '-' && (error.errorType != prev.errorType || error.line != prev.line)) {
                 logger->stream() << error.line << " " << getErrorCode(error.errorType) << std::endl;
+                prev = error;
+            }
         }
     }
 
