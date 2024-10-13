@@ -17,11 +17,11 @@
     X(UNDEFINED_IDENTIFIER, 'c') \
     X(MISMATCHED_PARAMS, 'd') \
     X(MISMATCHED_TYPE, 'e') \
-    X(VOID_RETURN_VAL, 'f') \
+    X(VOID_RETURN_VAL, '-') \
     X(VAL_RETURN_NONE, 'g') \
     X(ASSIGN_TO_CONST, 'h') \
     X(MISMATCHED_PRINTF_PARAMS, 'l') \
-    X(UNEXPECTED_BREAK_CONTINUE, '-')
+    X(UNEXPECTED_BREAK_CONTINUE, 'm')
 
 namespace thm {
 
