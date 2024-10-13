@@ -30,7 +30,6 @@ namespace thm {
         bool tryMatch(Token::TokenType expectedType);
         bool match(Token::TokenType expectedType);
         template <typename T> void submit(T& ptr) {
-            ptr->lineno = currentLine_;
             if (logger_) {
                 logger_->stream() << *ptr;
             }
