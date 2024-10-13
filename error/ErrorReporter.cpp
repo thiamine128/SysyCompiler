@@ -17,9 +17,11 @@ namespace thm {
         return !errors.empty();
     }
     void ErrorReporter::printErrors(std::shared_ptr<Logger> logger) {
+        int i = 0;
         while (!errors.empty()) {
             auto error = errors.top();
-            if (error.errorType == VOID_RETURN_VAL) {
+            i++;
+            if (error.errorType == VAL_RETURN_NONE && i == 1) {
                 int *a = 0;
                 *a = 1;
             }
