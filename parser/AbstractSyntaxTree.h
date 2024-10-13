@@ -269,6 +269,7 @@ namespace thm {
     };
     class Exp : public ASTNode {
     public:
+        int len;
         std::unique_ptr<AddExp> addExp;
         ASTNodeType nodeType() const override { return ASTNode::EXP; }
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;

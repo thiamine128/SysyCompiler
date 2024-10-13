@@ -29,7 +29,9 @@ public:
     virtual void visitFuncFParams(std::unique_ptr<FuncFParams>& funcFParams) { funcFParams->visitChildren(shared_from_this()); };
     virtual void visitFuncFParam(std::unique_ptr<FuncFParam>& funcFParam) { funcFParam->visitChildren(shared_from_this()); };
     virtual void visitBlock(std::unique_ptr<Block>& block) { block->visitChildren(shared_from_this()); };
-    virtual void visitBlockItem(std::unique_ptr<BlockItem>& blockItem) { blockItem->visitChildren(shared_from_this()); };
+    virtual void visitBlockItem(std::unique_ptr<BlockItem>& blockItem) {
+        blockItem->visitChildren(shared_from_this());
+    };
     virtual void visitStmt(std::unique_ptr<Stmt>& stmt) { stmt->visitChildren(shared_from_this()); };
     virtual void visitForStmt(std::unique_ptr<ForStmt>& forStmt) { forStmt->visitChildren(shared_from_this()); };
     virtual void visitExp(std::unique_ptr<Exp>& exp) { exp->visitChildren(shared_from_this()); };

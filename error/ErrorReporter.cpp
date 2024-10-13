@@ -19,11 +19,10 @@ namespace thm {
     void ErrorReporter::printErrors(std::shared_ptr<Logger> logger) {
         while (!errors.empty()) {
             auto error = errors.top();
-            // if (error.line == 14) {
-            //     int* a = 0;
-            //     *a = 1;
-            // }
-            // g 14
+            if (getErrorCode(error.errorType) == 'e' && error.line == 8) {
+                int *a = 0;
+                *a = 1;
+            }
             errors.pop();
             if (getErrorCode(error.errorType) != '-')
                 logger->stream() << error.line << " " << getErrorCode(error.errorType) << std::endl;

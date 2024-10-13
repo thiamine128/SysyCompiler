@@ -431,6 +431,7 @@ namespace thm {
 
     std::unique_ptr<Exp> Parser::parseExp() {
         auto ptr = std::make_unique<Exp>();
+        ptr->len = stepExp(0);
         ptr->lineno = currentToken().lineno;
 
         ptr->addExp = std::move(parseAddExp());
@@ -458,10 +459,6 @@ namespace thm {
         match(Token::IDENFR);
         if (tryMatch(Token::LBRACK)) {
             ptr->exp = parseExp();
-            if (ptr->exp == nullptr) {
-                int *a = 0;
-                *a = 1;
-            }
             match(Token::RBRACK);
         }
         submit(ptr);

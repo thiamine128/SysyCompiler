@@ -109,7 +109,8 @@ namespace thm {
                     visitor->visitConstExp(array.size);
             }
         }, def);
-        visitor->visitInitVal(val);
+        if (val != nullptr)
+            visitor->visitInitVal(val);
     }
 
     void InitVal::visitChildren(std::shared_ptr<ASTVisitor> visitor) {

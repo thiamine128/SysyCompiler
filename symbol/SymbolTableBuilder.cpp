@@ -52,7 +52,7 @@ namespace thm {
                             [&](std::unique_ptr<PrimaryExp>& primaryExp) {
                                 std::visit(overloaded{
                                     [&](std::unique_ptr<Exp>& exp) {
-
+                                        result = getArray(exp);
                                     },
                                     [&](std::unique_ptr<LVal>& lVal) {
                                         std::shared_ptr<Symbol> symbol = currentScope->symbolTable->findSymbol(lVal->ident.content);
@@ -128,6 +128,7 @@ namespace thm {
             }, def->def);
             submitSymbol(symbol);
         }
+        ASTVisitor::visitConstDecl(constDecl);
     }
 
     void SymbolTableBuilder::visitVarDecl(std::unique_ptr<VarDecl> &varDecl) {
@@ -149,6 +150,7 @@ namespace thm {
             }, def->def);
             submitSymbol(symbol);
         }
+        ASTVisitor::visitVarDecl(varDecl);
     }
 
     void SymbolTableBuilder::visitFuncDef(std::unique_ptr<FuncDef> &funcDef) {
@@ -293,9 +295,7 @@ namespace thm {
 
     void SymbolTableBuilder::visitUnaryExp(std::unique_ptr<UnaryExp> &unaryExp) {
         std::visit(overloaded{
-            [&](std::unique_ptr<PrimaryExp>& exp) {
-
-            },
+            [&](std::unique_ptr<PrimaryExp>& exp) {},
             [&](UnaryExp::FuncExp& exp) {
                 if (tryAccessSymbol(exp.ident)) {
                     auto symbol = currentScope->symbolTable->findSymbol(exp.ident.content);
@@ -307,6 +307,7 @@ namespace thm {
                             for (size_t idx = 0; idx < functionSymbol->paramTypes.size(); idx++) {
                                 auto array = getArray(exp.params->params[idx]);
                                 bool isArray = array != nullptr && array->type.isArray;
+
                                 if (functionSymbol->paramTypes[idx].isArray ^ isArray) {
                                     errorReporter_.error(CompilerException(ErrorType::MISMATCHED_TYPE, exp.ident.lineno));
                                 } else if (isArray && array->type.type != functionSymbol->paramTypes[idx].type) {
