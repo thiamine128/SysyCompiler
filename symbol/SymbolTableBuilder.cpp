@@ -264,6 +264,17 @@ namespace thm {
         }, stmt->stmt);
     }
 
+    void SymbolTableBuilder::visitForStmt(std::unique_ptr<ForStmt> &forStmt) {
+        auto symbol = currentScope->symbolTable->findSymbol(forStmt->lVal->ident.content);
+        if (symbol != nullptr && symbol->symbolType() == Symbol::VARIABLE) {
+            std::shared_ptr<VariableSymbol> variableSymbol = std::static_pointer_cast<VariableSymbol>(symbol);
+            if (variableSymbol->type.isConst) {
+                errorReporter_.error(CompilerException(ASSIGN_TO_CONST, forStmt->lVal->lineno));
+            }
+        }
+        ASTVisitor::visitForStmt(forStmt);
+    }
+
     void SymbolTableBuilder::visitCompUnit(std::unique_ptr<CompUnit> &compUnit) {
         pushScope(false, false);
         ASTVisitor::visitCompUnit(compUnit);

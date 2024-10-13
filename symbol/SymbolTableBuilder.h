@@ -36,6 +36,7 @@ public:
     void visitFuncDef(std::unique_ptr<FuncDef> &funcDef) override;
     void visitMainFuncDef(std::unique_ptr<MainFuncDef> &mainFuncDef) override;
     void visitStmt(std::unique_ptr<Stmt> &stmt) override;
+    void visitForStmt(std::unique_ptr<ForStmt> &forStmt) override;
     void visitCompUnit(std::unique_ptr<CompUnit> &compUnit) override;
     void visitBlock(std::unique_ptr<Block> &block) override;
     void visitLVal(std::unique_ptr<LVal> &lval) override;
