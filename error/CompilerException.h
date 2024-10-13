@@ -14,10 +14,10 @@
     X(MISSING_RPARENT, 'j') \
     X(MISSING_RBRACK, 'k') \
     X(REDEFINITION, 'b') \
-    X(UNDEFINED_IDENTIFIER, 'c') \
+    X(UNDEFINED_IDENTIFIER, '-') \
     X(MISMATCHED_PARAMS, 'd') \
     X(MISMATCHED_TYPE, 'e') \
-    X(VOID_RETURN_VAL, '-') \
+    X(VOID_RETURN_VAL, 'f') \
     X(VAL_RETURN_NONE, 'g') \
     X(ASSIGN_TO_CONST, 'h') \
     X(MISMATCHED_PRINTF_PARAMS, 'l') \
