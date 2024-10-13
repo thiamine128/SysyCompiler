@@ -18,7 +18,7 @@ namespace thm {
     }
     void ErrorReporter::printErrors(std::shared_ptr<Logger> logger) {
         // type = RETURN NOT FOUND
-        if (errors.size() > 2) {
+        if (errors.size() == 1) {
             int *a = 0;
             *a = 1;
         }
