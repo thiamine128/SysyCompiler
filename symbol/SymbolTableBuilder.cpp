@@ -15,10 +15,10 @@ namespace thm {
     SymbolTableBuilder::SymbolTableBuilder(ErrorReporter &errorReporter) : errorReporter_(errorReporter) {
     }
 
-    void SymbolTableBuilder::pushScope() {
+    void SymbolTableBuilder::pushScope(bool isReturnScope, bool requireReturnValue) {
         ++scopeNum;
 
-        scopeStack.push(std::make_shared<Scope>(scopeNum, currentScope, std::make_shared<SymbolTable>(scopeNum, currentScope == nullptr ? nullptr : currentScope->symbolTable)));
+        scopeStack.push(std::make_shared<Scope>(scopeNum, currentScope, std::make_shared<SymbolTable>(scopeNum, currentScope == nullptr ? nullptr : currentScope->symbolTable), isReturnScope, requireReturnValue));
         currentScope = scopeStack.top();
         scopes.push_back(currentScope);
     }
@@ -83,6 +83,31 @@ namespace thm {
         return result;
     }
 
+    bool SymbolTableBuilder::endWithReturn(std::unique_ptr<Block> &block) const {
+        if (block->items.empty()) return false;
+        auto const& last = block->items.back();
+        bool result = false;
+        std::visit(overloaded{
+            [&](std::unique_ptr<Stmt>& stmt) {
+                std::visit(overloaded{
+                    [&](Stmt::StmtAssign& assign) {},
+                    [&](Stmt::StmtIf& stmtIf) {},
+                    [&](Stmt::StmtFor& stmtFor) {},
+                    [&](Stmt::BreakOrContinue& breakOrContinue) {},
+                    [&](Stmt::StmtReturn& stmtReturn) {
+                        result = true;
+                    },
+                    [&](Stmt::StmtRead& stmtRead) {},
+                    [&](Stmt::StmtPrintf& stmtPrintf) {},
+                    [&](std::unique_ptr<Exp>& exp) {},
+                    [&](std::unique_ptr<Block>& block) {}
+                }, stmt->stmt);
+            },
+            [&](std::unique_ptr<Decl>& decl) {}
+        }, last->item);
+        return result;
+    }
+
 
     void SymbolTableBuilder::visitConstDecl(std::unique_ptr<ConstDecl> &constDecl) {
         for (auto const& def : constDecl->constDefs) {
@@ -141,7 +166,7 @@ namespace thm {
                 symbol->paramTypes.push_back(paramType);
             }
         submitSymbol(symbol);
-        pushScope();
+        pushScope(true, symbol->type != FunctionSymbol::VOID);
         if (funcDef->params != nullptr) {
             for (auto& param : funcDef->params->params) {
                 std::shared_ptr<VariableSymbol> paramSymbol = std::make_shared<VariableSymbol>();
@@ -156,16 +181,92 @@ namespace thm {
             }
         }
         funcDef->block->visitChildren(shared_from_this());
+        if (currentScope->requireReturnValue && !endWithReturn(funcDef->block)) {
+            errorReporter_.error(CompilerException(VAL_RETURN_NONE, funcDef->block->rBrace.lineno));
+        }
         popScope();
     }
 
+    void SymbolTableBuilder::visitMainFuncDef(std::unique_ptr<MainFuncDef> &mainFuncDef) {
+        pushScope(true, true);
+        mainFuncDef->block->visitChildren(shared_from_this());
+        if (currentScope->requireReturnValue && !endWithReturn(mainFuncDef->block)) {
+            errorReporter_.error(CompilerException(VAL_RETURN_NONE, mainFuncDef->block->rBrace.lineno));
+        }
+        popScope();
+    }
+
+    void SymbolTableBuilder::visitStmt(std::unique_ptr<Stmt> &stmt) {
+        std::visit(overloaded{
+            [&](Stmt::StmtAssign& assign) {
+                auto symbol = currentScope->symbolTable->findSymbol(assign.lVal->ident.content);
+                if (symbol != nullptr && symbol->symbolType() == Symbol::VARIABLE) {
+                    std::shared_ptr<VariableSymbol> variableSymbol = std::static_pointer_cast<VariableSymbol>(symbol);
+                    if (variableSymbol->type.isConst) {
+                        errorReporter_.error(CompilerException(ASSIGN_TO_CONST, assign.lVal->lineno));
+                    }
+                }
+            },
+            [&](Stmt::StmtIf& stmtIf) {},
+            [&](Stmt::StmtFor& stmtFor) {
+                loops++;
+            },
+            [&](Stmt::BreakOrContinue& breakOrContinue) {
+                if (loops == 0) {
+                    errorReporter_.error(CompilerException(UNEXPECTED_BREAK_CONTINUE, stmt->lineno));
+                }
+            },
+            [&](Stmt::StmtReturn& stmtReturn) {
+                if (!currentScope->canReturnWithValue() && stmtReturn.exp != nullptr) {
+                    errorReporter_.error(CompilerException(VOID_RETURN_VAL, stmt->lineno));
+                }
+            },
+            [&](Stmt::StmtRead& stmtRead) {
+                auto symbol = currentScope->symbolTable->findSymbol(stmtRead.lVal->ident.content);
+                if (symbol != nullptr && symbol->symbolType() == Symbol::VARIABLE) {
+                    std::shared_ptr<VariableSymbol> variableSymbol = std::static_pointer_cast<VariableSymbol>(symbol);
+                    if (variableSymbol->type.isConst) {
+                        errorReporter_.error(CompilerException(ASSIGN_TO_CONST, stmtRead.lVal->lineno));
+                    }
+                }
+            },
+            [&](Stmt::StmtPrintf& stmtPrintf) {
+                int exprs = 0;
+                for (int i = 0; i < stmtPrintf.fmt.size(); i++) {
+                    if (stmtPrintf.fmt[i] == '%' && i + 1 < stmtPrintf.fmt.size() && (stmtPrintf.fmt[i + 1] == 'c' || stmtPrintf.fmt[i + 1] == 'd')) {
+                        exprs++;
+                    }
+                }
+                if (exprs != stmtPrintf.exps.size()) {
+                    errorReporter_.error(CompilerException(MISMATCHED_PRINTF_PARAMS, stmtPrintf.printfToken.lineno));
+                }
+            },
+            [&](std::unique_ptr<Exp>& exp) {},
+            [&](std::unique_ptr<Block>& block) {}
+        }, stmt->stmt);
+        ASTVisitor::visitStmt(stmt);
+        std::visit(overloaded{
+            [&](Stmt::StmtAssign& assign) {},
+            [&](Stmt::StmtIf& stmtIf) {},
+            [&](Stmt::StmtFor& stmtFor) {
+                loops--;
+            },
+            [&](Stmt::BreakOrContinue& breakOrContinue) {},
+            [&](Stmt::StmtReturn& stmtReturn) {},
+            [&](Stmt::StmtRead& stmtRead) {},
+            [&](Stmt::StmtPrintf& stmtPrintf) {},
+            [&](std::unique_ptr<Exp>& exp) {},
+            [&](std::unique_ptr<Block>& block) {}
+        }, stmt->stmt);
+    }
+
     void SymbolTableBuilder::visitCompUnit(std::unique_ptr<CompUnit> &compUnit) {
-        pushScope();
+        pushScope(false, false);
         ASTVisitor::visitCompUnit(compUnit);
     }
 
     void SymbolTableBuilder::visitBlock(std::unique_ptr<Block> &block) {
-        pushScope();
+        pushScope(false, false);
         ASTVisitor::visitBlock(block);
         popScope();
     }

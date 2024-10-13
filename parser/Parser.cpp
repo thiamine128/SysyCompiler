@@ -293,11 +293,15 @@ namespace thm {
         ptr->lineno = currentToken().lineno;
         match(Token::LBRACE);
 
-        if (!tryMatch(Token::RBRACE)) {
+        if (!tokenStream_.peekType(Token::RBRACE)) {
             while (!tokenStream_.peekType(Token::RBRACE) && !tokenStream_.empty()) {
                 ptr->items.push_back(std::move(parseBlockItem()));
             }
+            ptr->rBrace = currentToken();
             match(Token::RBRACE);
+        } else {
+            ptr->rBrace = currentToken();
+            nextToken();
         }
         submit(ptr);
         return ptr;
@@ -364,7 +368,9 @@ namespace thm {
                 match(Token::SEMICN);
             }
             ptr->stmt = Stmt::StmtReturn(std::move(returnExp));
-        } else if (tryMatch(Token::PRINTFTK)) {
+        } else if (tokenStream_.peekType(Token::PRINTFTK)) {
+            Token printfTk = currentToken();
+            nextToken();
             match(Token::LPARENT);
             std::string fmt = currentToken().content;
             match(Token::STRCON);
@@ -374,39 +380,9 @@ namespace thm {
             }
             match(Token::RPARENT);
             match(Token::SEMICN);
-            ptr->stmt = Stmt::StmtPrintf(std::move(fmt), std::move(args));
+            ptr->stmt = Stmt::StmtPrintf(std::move(fmt), std::move(args), printfTk);
         } else {
             if (!tryMatch(Token::SEMICN)) {
-                // bool assign = false;
-                // tokenStream_.peekForward([&assign](Token::TokenType type) {
-                //     if (type == Token::ASSIGN) {
-                //         assign = true;
-                //     }
-                //     return type != Token::SEMICN;
-                // });
-                // if (assign) {
-                //     int size = tokenStream_.size();
-                //     auto lVal = parseLVal();
-                //     if (size == tokenStream_.size()) {
-                //         while (currentToken().type != Token::SEMICN) nextToken();
-                //         match(Token::SEMICN);
-                //         return ptr;
-                //     }
-                //     match(Token::ASSIGN);
-                //     if (tokenStream_.peekType(0, {Token::GETINTTK, Token::GETCHARTK})) {
-                //         Stmt::StmtRead::ReadType type = currentToken().type == Token::GETINTTK
-                //                                             ? Stmt::StmtRead::INT
-                //                                             : Stmt::StmtRead::CHAR;
-                //         nextToken();
-                //         match(Token::LPARENT);
-                //         match(Token::RPARENT);
-                //         ptr->stmt = Stmt::StmtRead(std::move(lVal), type);
-                //     } else {
-                //         ptr->stmt = Stmt::StmtAssign(std::move(lVal), std::move(parseExp()));
-                //     }
-                // } else {
-                //     ptr->stmt = std::move(parseExp());
-                // }
                 int offset = stepExp(0);
                 if (tokenStream_.peekType(offset, Token::ASSIGN)) {
                     int size = tokenStream_.size();
@@ -570,7 +546,7 @@ namespace thm {
             Token ident = currentToken();
             nextToken();
             nextToken();
-            if (!tokenStream_.peekType(Token::RPARENT)) {
+            if (stepExp(0)) {
                 ptr->exp = UnaryExp::FuncExp(ident, std::move(parseFuncRParams()));
             } else {
                 ptr->exp = UnaryExp::FuncExp(ident, std::unique_ptr<FuncRParams>());

@@ -4,5 +4,27 @@
 
 #include "Scope.h"
 
+#include "../parser/AbstractSyntaxTree.h"
+#include "../util/overloaded.h"
+
 namespace thm {
+    Scope::Scope(int scopeId, std::shared_ptr<Scope> parent, std::shared_ptr<SymbolTable> symbolTable, bool isReturnScope, bool requireReturnValue) : scopeId(scopeId), parent(parent), symbolTable(symbolTable), requireReturnValue(requireReturnValue), isReturnScope(isReturnScope) {
+        if (!isReturnScope && parent != nullptr) {
+            if (parent->isReturnScope) {
+                returnScope = parent;
+            } else {
+                returnScope = parent->returnScope;
+            }
+        }
+    }
+
+    bool Scope::canReturnWithValue() {
+        if (isReturnScope) {
+            return requireReturnValue;
+        }
+        if (returnScope != nullptr) {
+            return returnScope->canReturnWithValue();
+        }
+        return false;
+    }
 } // thm

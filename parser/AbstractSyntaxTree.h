@@ -200,6 +200,7 @@ namespace thm {
     class Block : public ASTNode {
     public:
         std::vector<std::unique_ptr<BlockItem>> items;
+        Token rBrace;
         ASTNodeType nodeType() const override {return ASTNode::BLOCK;}
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
     };
@@ -243,6 +244,7 @@ namespace thm {
         struct  StmtPrintf {
             std::string fmt;
             std::vector<std::unique_ptr<Exp>> exps;
+            Token printfToken;
         };
 
 

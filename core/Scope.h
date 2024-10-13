@@ -14,7 +14,15 @@ class Scope {
 public:
     int scopeId;
     std::shared_ptr<Scope> parent;
+    std::shared_ptr<Scope> returnScope;
     std::shared_ptr<SymbolTable> symbolTable;
+    std::shared_ptr<SymbolTable> loopScope;
+    bool isReturnScope;
+    bool requireReturnValue;
+
+    Scope(int scopeId, std::shared_ptr<Scope> parent, std::shared_ptr<SymbolTable> symbolTable, bool isReturnScope, bool requireReturnValue);
+
+    bool canReturnWithValue();
 };
 
 } // thm
