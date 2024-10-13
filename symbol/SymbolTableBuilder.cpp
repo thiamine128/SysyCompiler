@@ -233,6 +233,10 @@ namespace thm {
             [&](Stmt::StmtPrintf& stmtPrintf) {
                 int exprs = 0;
                 for (int i = 0; i < stmtPrintf.fmt.size(); i++) {
+                    if (stmtPrintf.fmt[i] == '\\') {
+                        i += 1;
+                        continue;
+                    }
                     if (stmtPrintf.fmt[i] == '%' && i + 1 < stmtPrintf.fmt.size() && (stmtPrintf.fmt[i + 1] == 'c' || stmtPrintf.fmt[i + 1] == 'd')) {
                         exprs++;
                     }
@@ -299,6 +303,9 @@ namespace thm {
                                 }
                             }
                         }
+                    } else {
+                        int *a = 0;
+                        *a = 1;
                     }
                 }
             },
