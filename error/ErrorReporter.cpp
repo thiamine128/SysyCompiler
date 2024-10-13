@@ -20,9 +20,11 @@ namespace thm {
         int i = 0;
         while (!errors.empty()) {
             auto error = errors.top();
+            i ++;
             errors.pop();
             if (getErrorCode(error.errorType) != '-')
                 logger->stream() << error.line << " " << getErrorCode(error.errorType) << std::endl;
+            if (i == 1) break;
         }
     }
 
