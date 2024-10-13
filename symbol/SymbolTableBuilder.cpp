@@ -202,7 +202,7 @@ namespace thm {
                 auto symbol = currentScope->symbolTable->findSymbol(assign.lVal->ident.content);
                 if (symbol != nullptr && symbol->symbolType() == Symbol::VARIABLE) {
                     std::shared_ptr<VariableSymbol> variableSymbol = std::static_pointer_cast<VariableSymbol>(symbol);
-                    if (variableSymbol->type.isConst && !variableSymbol->type.isArray) {
+                    if (variableSymbol->type.isConst) {
                         errorReporter_.error(CompilerException(ASSIGN_TO_CONST, assign.lVal->lineno));
                     }
                 }
