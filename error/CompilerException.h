@@ -20,7 +20,7 @@
     X(VOID_RETURN_VAL, 'f') \
     X(VAL_RETURN_NONE, 'g') \
     X(ASSIGN_TO_CONST, 'h') \
-    X(MISMATCHED_PRINTF_PARAMS, 'l') \
+    X(MISMATCHED_PRINTF_PARAMS, '-') \
     X(UNEXPECTED_BREAK_CONTINUE, 'm')
 
 namespace thm {
