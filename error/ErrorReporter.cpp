@@ -20,11 +20,6 @@ namespace thm {
         int i = 0;
         while (!errors.empty()) {
             auto error = errors.top();
-            i++;
-            if (error.errorType == VAL_RETURN_NONE && i == 1) {
-                int *a = 0;
-                *a = 1;
-            }
             errors.pop();
             if (getErrorCode(error.errorType) != '-')
                 logger->stream() << error.line << " " << getErrorCode(error.errorType) << std::endl;
