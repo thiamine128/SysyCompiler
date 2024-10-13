@@ -19,6 +19,10 @@ namespace thm {
     void ErrorReporter::printErrors(std::shared_ptr<Logger> logger) {
         while (!errors.empty()) {
             auto error = errors.top();
+            if (error.errorType == ASSIGN_TO_CONST || error.errorType == MISMATCHED_PRINTF_PARAMS || error.errorType == UNEXPECTED_BREAK_CONTINUE) {
+                int *a = 0;
+                *a =  1;
+            }
             errors.pop();
             if (getErrorCode(error.errorType) != '-')
                 logger->stream() << error.line << " " << getErrorCode(error.errorType) << std::endl;
