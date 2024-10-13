@@ -363,8 +363,10 @@ namespace thm {
             ptr->stmt = Stmt::CONTINUE;
         } else if (tryMatch(Token::RETURNTK)) {
             std::unique_ptr<Exp> returnExp;
-            if (!tryMatch(Token::SEMICN)) {
+            if (stepExp(0)) {
                 returnExp = std::move(parseExp());
+                match(Token::SEMICN);
+            } else {
                 match(Token::SEMICN);
             }
             ptr->stmt = Stmt::StmtReturn(std::move(returnExp));

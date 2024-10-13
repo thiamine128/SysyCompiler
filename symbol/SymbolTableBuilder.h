@@ -22,7 +22,6 @@ public:
     std::stack<std::shared_ptr<Scope>> scopeStack;
     std::vector<std::shared_ptr<Scope>> scopes;
     ErrorReporter& errorReporter_;
-    bool metReturn = false;
 
     SymbolTableBuilder(ErrorReporter& errorReporter);
 

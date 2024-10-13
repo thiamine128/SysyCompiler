@@ -167,7 +167,6 @@ namespace thm {
             }
         submitSymbol(symbol);
         pushScope(true, symbol->type != FunctionSymbol::VOID);
-        metReturn = false;
         if (funcDef->params != nullptr) {
             for (auto& param : funcDef->params->params) {
                 std::shared_ptr<VariableSymbol> paramSymbol = std::make_shared<VariableSymbol>();
@@ -182,7 +181,7 @@ namespace thm {
             }
         }
         funcDef->block->visitChildren(shared_from_this());
-        if (currentScope->requireReturnValue && !metReturn) {
+        if (currentScope->requireReturnValue && !endWithReturn(funcDef->block)) {
             errorReporter_.error(CompilerException(RETURN_NOT_FOUND, funcDef->block->rBrace.lineno));
         }
         popScope();
@@ -190,9 +189,8 @@ namespace thm {
 
     void SymbolTableBuilder::visitMainFuncDef(std::unique_ptr<MainFuncDef> &mainFuncDef) {
         pushScope(true, true);
-        metReturn = false;
         mainFuncDef->block->visitChildren(shared_from_this());
-        if (currentScope->requireReturnValue && !metReturn) {
+        if (currentScope->requireReturnValue && !endWithReturn(mainFuncDef->block)) {
             errorReporter_.error(CompilerException(RETURN_NOT_FOUND, mainFuncDef->block->rBrace.lineno));
         }
         popScope();
@@ -219,7 +217,6 @@ namespace thm {
                 }
             },
             [&](Stmt::StmtReturn& stmtReturn) {
-                metReturn = true;
                 if (!currentScope->canReturnWithValue() && stmtReturn.exp != nullptr) {
                     errorReporter_.error(CompilerException(VOID_RETURN_VAL, stmt->lineno));
                 }
