@@ -306,10 +306,10 @@ namespace thm {
                         } else {
                             for (size_t idx = 0; idx < functionSymbol->paramTypes.size(); idx++) {
                                 auto array = getArray(exp.params->params[idx]);
-                                if (functionSymbol->paramTypes[idx].isArray != (array != nullptr)) {
+                                bool isArray = array != nullptr && array->type.isArray;
+                                if (functionSymbol->paramTypes[idx].isArray ^ isArray) {
                                     errorReporter_.error(CompilerException(ErrorType::MISMATCHED_TYPE, exp.ident.lineno));
-                                }
-                                if (array != nullptr && functionSymbol->paramTypes[idx].isArray && array->type.type != functionSymbol->paramTypes[idx].type) {
+                                } else if (isArray && array->type.type != functionSymbol->paramTypes[idx].type) {
                                     errorReporter_.error(CompilerException(ErrorType::MISMATCHED_TYPE, exp.ident.lineno));
                                 }
                             }
