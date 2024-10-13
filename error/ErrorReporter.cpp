@@ -17,17 +17,16 @@ namespace thm {
         return !errors.empty();
     }
     void ErrorReporter::printErrors(std::shared_ptr<Logger> logger) {
-        int i = 0;
+        // type = RETURN NOT FOUND
+        if (errors.size() > 2) {
+            int *a = 0;
+            *a = 1;
+        }
         while (!errors.empty()) {
             auto error = errors.top();
-            i ++;
             errors.pop();
             if (getErrorCode(error.errorType) != '-')
                 logger->stream() << error.line << " " << getErrorCode(error.errorType) << std::endl;
-            else {
-                int *a = 0;
-                *a = 1;
-            }
         }
     }
 
