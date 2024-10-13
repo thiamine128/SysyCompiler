@@ -24,7 +24,10 @@ namespace thm {
             errors.pop();
             if (getErrorCode(error.errorType) != '-')
                 logger->stream() << error.line << " " << getErrorCode(error.errorType) << std::endl;
-            if (i == 1) break;
+            else {
+                int *a = 0;
+                *a = 1;
+            }
         }
     }
 
