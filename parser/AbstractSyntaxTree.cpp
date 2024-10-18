@@ -4,6 +4,8 @@
 
 #include "AbstractSyntaxTree.h"
 
+#include <ostream>
+
 #include "ASTVisitor.h"
 #include "../util/overloaded.h"
 

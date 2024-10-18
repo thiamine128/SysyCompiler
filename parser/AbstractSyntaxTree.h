@@ -107,10 +107,16 @@ namespace thm {
     public:
         struct ConstDefBasic {
             Token ident;
+
+            ConstDefBasic(Token const& ident) : ident(ident) {}
+            ConstDefBasic() {}
         };
         struct ConstDefArray {
             Token ident;
             std::unique_ptr<ConstExp> size;
+
+            ConstDefArray(Token const& ident, std::unique_ptr<ConstExp> size) : ident(ident), size(std::move(size)) {}
+            ConstDefArray() {}
         };
         std::variant<ConstDefBasic, ConstDefArray> def;
         std::unique_ptr<ConstInitVal> val;
@@ -121,9 +127,15 @@ namespace thm {
     public:
         struct  ConstInitValBasic {
             std::unique_ptr<ConstExp> exp;
+
+            ConstInitValBasic(std::unique_ptr<ConstExp> exp) : exp(std::move(exp)) {}
+            ConstInitValBasic() {}
         };
         struct  ConstInitValArray {
             std::vector<std::unique_ptr<ConstExp>> exps;
+
+            ConstInitValArray(std::vector<std::unique_ptr<ConstExp>>& exps) : exps(std::move(exps)) {}
+            ConstInitValArray() {}
         };
         std::variant<ConstInitValBasic, ConstInitValArray, std::string> val;
         ASTNodeType nodeType() const override {return ASTNode::CONSTINITVAL;}
@@ -133,6 +145,7 @@ namespace thm {
     public:
         std::unique_ptr<BType> bType;
         std::vector<std::unique_ptr<VarDef>> varDefs;
+
         ASTNodeType nodeType() const override {return ASTNode::VARDECL;}
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
     };
@@ -140,10 +153,14 @@ namespace thm {
     public:
         struct  VarDefBasic {
             Token ident;
+            VarDefBasic(Token const& ident) : ident(ident) {}
+            VarDefBasic() {}
         };
         struct  VarDefArray {
             Token ident;
             std::unique_ptr<ConstExp> size;
+            VarDefArray(Token const& ident, std::unique_ptr<ConstExp> size) : ident(ident), size(std::move(size)) {}
+            VarDefArray() {}
         };
         std::variant<VarDefBasic, VarDefArray> def;
         std::unique_ptr<InitVal> val;
@@ -152,11 +169,15 @@ namespace thm {
     };
     class InitVal : public ASTNode {
     public:
-        struct  InitValBasic {
+        struct InitValBasic {
             std::unique_ptr<Exp> exp;
+            InitValBasic(std::unique_ptr<Exp> exp) : exp(std::move(exp)) {}
+            InitValBasic() {}
         };
-        struct  InitValArray {
+        struct InitValArray {
             std::vector<std::unique_ptr<Exp>> exps;
+            InitValArray(std::vector<std::unique_ptr<Exp>>& exps) : exps(std::move(exps)) {}
+            InitValArray() {}
         };
         std::variant<InitValBasic, InitValArray, std::string> val;
         ASTNodeType nodeType() const override {return ASTNode::INITVAL;}
@@ -168,6 +189,7 @@ namespace thm {
         Token ident;
         std::unique_ptr<FuncFParams> params;
         std::unique_ptr<Block> block;
+
         ASTNodeType nodeType() const override {return ASTNode::FUNCDEF;}
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
     };
@@ -215,17 +237,26 @@ namespace thm {
         struct  StmtAssign {
             std::unique_ptr<LVal> lVal;
             std::unique_ptr<Exp> exp;
+
+            StmtAssign(std::unique_ptr<LVal> lVal, std::unique_ptr<Exp> exp) : lVal(std::move(lVal)), exp(std::move(exp)) {}
+            StmtAssign() {}
         };
         struct  StmtIf {
             std::unique_ptr<Cond> cond;
             std::unique_ptr<Stmt> stmt;
             std::unique_ptr<Stmt> elseStmt;
+
+            StmtIf(std::unique_ptr<Cond> cond, std::unique_ptr<Stmt> stmt, std::unique_ptr<Stmt> elseStmt) : cond(std::move(cond)), stmt(std::move(stmt)), elseStmt(std::move(elseStmt)) {}
+            StmtIf() {}
         };
         struct  StmtFor {
             std::unique_ptr<ForStmt> initStmt;
             std::unique_ptr<Cond> cond;
             std::unique_ptr<ForStmt> updateStmt;
             std::unique_ptr<Stmt> stmt;
+
+            StmtFor(std::unique_ptr<ForStmt> initStmt, std::unique_ptr<Cond> cond, std::unique_ptr<ForStmt> updateStmt, std::unique_ptr<Stmt> stmt) : initStmt(std::move(initStmt)), cond(std::move(cond)), updateStmt(std::move(updateStmt)), stmt(std::move(stmt)) {}
+            StmtFor() {}
         };
         enum BreakOrContinue {
             BREAK,
@@ -233,6 +264,9 @@ namespace thm {
         };
         struct  StmtReturn {
             std::unique_ptr<Exp> exp;
+
+            StmtReturn(std::unique_ptr<Exp> exp) : exp(std::move(exp)) {}
+            StmtReturn() {}
         };
         struct  StmtRead {
             std::unique_ptr<LVal> lVal;
@@ -240,11 +274,17 @@ namespace thm {
                 INT,
                 CHAR
             } type;
+
+            StmtRead(std::unique_ptr<LVal> lVal, ReadType type) : lVal(std::move(lVal)), type(type) {}
+            StmtRead() {}
         };
         struct  StmtPrintf {
             std::string fmt;
             std::vector<std::unique_ptr<Exp>> exps;
             Token printfToken;
+
+            StmtPrintf(std::string const& fmt, std::vector<std::unique_ptr<Exp>>& exps, Token const& printfToken) : fmt(fmt), exps(std::move(exps)), printfToken(printfToken) {}
+            StmtPrintf() {}
         };
 
 
@@ -310,10 +350,14 @@ namespace thm {
         struct  FuncExp {
             Token ident;
             std::unique_ptr<FuncRParams> params;
+
+            FuncExp(Token const& ident, std::unique_ptr<FuncRParams> params) : ident(ident), params(std::move(params)) {}
         };
         struct  OpExp {
             std::unique_ptr<UnaryOp> op;
             std::unique_ptr<UnaryExp> exp;
+
+            OpExp(std::unique_ptr<UnaryOp> op, std::unique_ptr<UnaryExp> exp) : op(std::move(op)), exp(std::move(exp)) {}
         };
         std::variant<std::unique_ptr<PrimaryExp>, FuncExp, OpExp> exp;
         ASTNodeType nodeType() const override { return ASTNode::UNARYEXP; }
@@ -341,6 +385,8 @@ namespace thm {
                 MUL, DIV, MOD
             } op;
             std::unique_ptr<UnaryExp> unaryExp;
+
+            OpExp(std::unique_ptr<MulExp> mulExp, Op op, std::unique_ptr<UnaryExp> unaryExp) : mulExp(std::move(mulExp)), op(op), unaryExp(std::move(unaryExp)) {}
         };
         std::variant<std::unique_ptr<UnaryExp>, OpExp> exp;
         ASTNodeType nodeType() const override { return ASTNode::MULEXP; }
@@ -354,6 +400,7 @@ namespace thm {
                 ADD, MINUS
             } op;
             std::unique_ptr<MulExp> mulExp;
+            OpExp(std::unique_ptr<AddExp> addExp, Op op, std::unique_ptr<MulExp> mulExp) : addExp(std::move(addExp)), op(op), mulExp(std::move(mulExp)) {}
         };
         std::variant<std::unique_ptr<MulExp>, OpExp> exp;
         ASTNodeType nodeType() const override { return ASTNode::ADDEXP; }
@@ -367,6 +414,8 @@ namespace thm {
                 GT, LT, GE, LE
             } op;
             std::unique_ptr<AddExp> addExp;
+
+            OpExp(std::unique_ptr<RelExp> relExp, Op op, std::unique_ptr<AddExp> addExp) : relExp(std::move(relExp)), op(op), addExp(std::move(addExp)) {}
         };
         std::variant<std::unique_ptr<AddExp>, OpExp> exp;
         ASTNodeType nodeType() const override { return ASTNode::RELEXP; }
@@ -380,6 +429,8 @@ namespace thm {
                 EQ, NEQ
             } op;
             std::unique_ptr<RelExp> relExp;
+
+            OpExp(std::unique_ptr<EqExp> eqExp, Op op, std::unique_ptr<RelExp> relExp) : eqExp(std::move(eqExp)), op(op), relExp(std::move(relExp)) {}
         };
         std::variant<std::unique_ptr<RelExp>, OpExp> exp;
         ASTNodeType nodeType() const override { return ASTNode::EQEXP; }
@@ -390,6 +441,8 @@ namespace thm {
         struct OpExp {
             std::unique_ptr<LAndExp> lAndExp;
             std::unique_ptr<EqExp> eqExp;
+
+            OpExp(std::unique_ptr<LAndExp> lAndExp, std::unique_ptr<EqExp> eqExp) : lAndExp(std::move(lAndExp)), eqExp(std::move(eqExp)) {}
         };
         std::variant<std::unique_ptr<EqExp>, OpExp> exp;
         ASTNodeType nodeType() const override { return ASTNode::LANDEXP; }
@@ -400,6 +453,8 @@ namespace thm {
         struct OpExp {
             std::unique_ptr<LOrExp> lOrExp;
             std::unique_ptr<LAndExp> lAndExp;
+
+            OpExp(std::unique_ptr<LOrExp> lOrExp, std::unique_ptr<LAndExp> lAndExp) : lOrExp(std::move(lOrExp)), lAndExp(std::move(lAndExp)) {}
         };
         std::variant<std::unique_ptr<LAndExp>, OpExp> exp;
         ASTNodeType nodeType() const override { return ASTNode::LOREXP; }

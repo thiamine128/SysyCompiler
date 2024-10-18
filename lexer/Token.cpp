@@ -39,7 +39,7 @@ namespace thm {
     }
 
     Token::TokenType reserve(const std::string& content) {
-        if (reserved.contains(content)) {
+        if (reserved.find(content) != reserved.end()) {
             return reserved[content];
         }
         return Token::IDENFR;

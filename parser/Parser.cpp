@@ -140,7 +140,7 @@ namespace thm {
                     exps.push_back(parseConstExp());
                 }
             }
-            ptr->val = ConstInitVal::ConstInitValArray(std::move(exps));
+            ptr->val = ConstInitVal::ConstInitValArray(exps);
             match(Token::RBRACE);
         } else if (tokenStream_.peekType(Token::STRCON)) {
             ptr->val = currentToken().content;
@@ -204,7 +204,7 @@ namespace thm {
                     exps.push_back(std::move(parseExp()));
                 }
             }
-            ptr->val = InitVal::InitValArray(std::move(exps));
+            ptr->val = InitVal::InitValArray(exps);
             match(Token::RBRACE);
         } else if (tokenStream_.peekType(Token::STRCON)) {
             ptr->val = currentToken().content;
@@ -382,7 +382,7 @@ namespace thm {
             }
             match(Token::RPARENT);
             match(Token::SEMICN);
-            ptr->stmt = Stmt::StmtPrintf(std::move(fmt), std::move(args), printfTk);
+            ptr->stmt = Stmt::StmtPrintf(std::move(fmt), args, printfTk);
         } else {
             if (!tryMatch(Token::SEMICN)) {
                 int offset = stepExp(0);
@@ -559,7 +559,8 @@ namespace thm {
             return ptr;
         }
         if (tokenStream_.peekType(0, {Token::PLUS, Token::MINU, Token::NOT})) {
-            ptr->exp = UnaryExp::OpExp(std::move(parseUnaryOp()), std::move(parseUnaryExp()));
+            auto op = parseUnaryOp();
+            ptr->exp = UnaryExp::OpExp(std::move(op), std::move(parseUnaryExp()));
         } else {
             ptr->exp = std::move(parsePrimaryExp());
         }

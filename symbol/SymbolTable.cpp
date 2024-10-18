@@ -5,6 +5,7 @@
 #include "SymbolTable.h"
 
 #include <algorithm>
+#include <ostream>
 
 namespace thm {
     bool SymbolTable::hasSymbolInScope(const std::string &ident) const {

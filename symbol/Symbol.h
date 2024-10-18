@@ -21,7 +21,7 @@ public:
     int scopeId;
     Token ident;
 
-    virtual std::string typeString() const {};
+    virtual std::string typeString() const {return "";};
     virtual Type symbolType() const { return VARIABLE; };
 };
 
