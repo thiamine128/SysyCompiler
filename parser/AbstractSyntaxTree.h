@@ -49,6 +49,7 @@
     X(Decl, "Decl", DECL) \
 
 namespace thm {
+    class SymbolTable;
     class ASTVisitor;
 #define X(a, b, c) class a;
     ASTNODES
@@ -311,8 +312,11 @@ namespace thm {
     public:
         int len;
         std::unique_ptr<AddExp> addExp;
+        bool isConst;
+        int constVal;
         ASTNodeType nodeType() const override { return ASTNode::EXP; }
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        int evalConst();
     };
     class Cond : public ASTNode {
     public:
@@ -324,14 +328,21 @@ namespace thm {
     public:
         Token ident;
         std::unique_ptr<Exp> exp;
+        bool isConst = false;
+        int constVal = 0;
+
         ASTNodeType nodeType() const override { return ASTNode::LVAL; }
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void evalConst(std::shared_ptr<SymbolTable> symbolTable);
     };
     class PrimaryExp : public ASTNode {
     public:
         std::variant<std::unique_ptr<Exp>, std::unique_ptr<LVal>, std::unique_ptr<Number>, std::unique_ptr<Character>> primaryExp;
+        bool isConst = false;
+        int constVal = 0;
         ASTNodeType nodeType() const override { return ASTNode::PRIMARYEXP; }
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void evalConst();
     };
     class Number : public ASTNode {
     public:
@@ -360,8 +371,12 @@ namespace thm {
             OpExp(std::unique_ptr<UnaryOp> op, std::unique_ptr<UnaryExp> exp) : op(std::move(op)), exp(std::move(exp)) {}
         };
         std::variant<std::unique_ptr<PrimaryExp>, FuncExp, OpExp> exp;
+        bool isConst = false;
+        int constVal = 0;
+
         ASTNodeType nodeType() const override { return ASTNode::UNARYEXP; }
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void evalConst();
     };
     class UnaryOp : public ASTNode {
     public:
@@ -389,8 +404,11 @@ namespace thm {
             OpExp(std::unique_ptr<MulExp> mulExp, Op op, std::unique_ptr<UnaryExp> unaryExp) : mulExp(std::move(mulExp)), op(op), unaryExp(std::move(unaryExp)) {}
         };
         std::variant<std::unique_ptr<UnaryExp>, OpExp> exp;
+        bool isConst = false;
+        int constVal = 0;
         ASTNodeType nodeType() const override { return ASTNode::MULEXP; }
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void evalConst();
     };
     class AddExp : public ASTNode {
     public:
@@ -403,8 +421,11 @@ namespace thm {
             OpExp(std::unique_ptr<AddExp> addExp, Op op, std::unique_ptr<MulExp> mulExp) : addExp(std::move(addExp)), op(op), mulExp(std::move(mulExp)) {}
         };
         std::variant<std::unique_ptr<MulExp>, OpExp> exp;
+        bool isConst = false;
+        int constVal = 0;
         ASTNodeType nodeType() const override { return ASTNode::ADDEXP; }
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void evalConst();
     };
     class RelExp : public ASTNode {
     public:
@@ -463,8 +484,12 @@ namespace thm {
     class ConstExp : public ASTNode {
     public:
         std::unique_ptr<AddExp> addExp;
+        int constVal;
+        bool isConst = true;
+
         ASTNodeType nodeType() const override { return ASTNode::CONSTEXP; }
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void evalConst();
     };
     class AbstractSyntaxTree {
 

@@ -38,6 +38,7 @@ public:
 class VariableSymbol : public Symbol {
 public:
     VariableType type;
+    int constVal;
 
     std::string typeString() const override;
     Type symbolType() const override;

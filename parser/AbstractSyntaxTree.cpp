@@ -7,6 +7,7 @@
 #include <ostream>
 
 #include "ASTVisitor.h"
+#include "../symbol/SymbolTable.h"
 #include "../util/overloaded.h"
 
 namespace thm {
@@ -229,6 +230,10 @@ namespace thm {
         visitor->visitAddExp(addExp);
     }
 
+    int Exp::evalConst() {
+        return constVal;
+    }
+
     void Cond::visitChildren(std::shared_ptr<ASTVisitor> visitor) {
         visitor->visitLOrExp(lOrExp);
     }
@@ -236,6 +241,24 @@ namespace thm {
     void LVal::visitChildren(std::shared_ptr<ASTVisitor> visitor) {
         if (exp != nullptr)
             visitor->visitExp(exp);
+    }
+
+    void LVal::evalConst(std::shared_ptr<SymbolTable> symbolTable) {
+        auto symbol = symbolTable->findSymbol(ident.content);
+        if (exp != nullptr) {
+            exp->evalConst();
+        }
+        if (symbol != nullptr && symbol->symbolType() == Symbol::VARIABLE) {
+            std::shared_ptr<VariableSymbol> variableSymbol = std::static_pointer_cast<VariableSymbol>(symbol);
+            if (variableSymbol->type.isConst) {
+                if (!variableSymbol->type.isArray) {
+                    isConst = true;
+                    constVal = variableSymbol->constVal;
+                } else if (exp != nullptr && exp->isConst) {
+                    isConst &= exp->isConst;
+                }
+            }
+        }
     }
 
     void PrimaryExp::visitChildren(std::shared_ptr<ASTVisitor> visitor) {
@@ -251,6 +274,24 @@ namespace thm {
             },
             [&](std::unique_ptr<Character>& character) {
                 visitor->visitCharacter(character);
+            }
+        }, primaryExp);
+    }
+
+    void PrimaryExp::evalConst() {
+        std::visit(overloaded{
+            [&](std::unique_ptr<Exp>& exp) {
+                constVal = exp->evalConst();
+            },
+            [&](std::unique_ptr<LVal>& lVal) {
+                //lVal->evalConst();
+                //constVal = lVal->constVal;
+            },
+            [&](std::unique_ptr<Number>& number) {
+                constVal = number->num;
+            },
+            [&](std::unique_ptr<Character>& character) {
+                constVal = character->ch;
             }
         }, primaryExp);
     }
@@ -279,6 +320,9 @@ namespace thm {
         }, exp);
     }
 
+    void UnaryExp::evalConst() {
+    }
+
     void UnaryOp::visitChildren(std::shared_ptr<ASTVisitor> visitor) {
 
     }
@@ -301,6 +345,10 @@ namespace thm {
         }, exp);
     }
 
+    void MulExp::evalConst() {
+
+    }
+
     void AddExp::visitChildren(std::shared_ptr<ASTVisitor> visitor) {
         std::visit(overloaded{
             [&](std::unique_ptr<MulExp>& exp) {
@@ -311,6 +359,10 @@ namespace thm {
                 visitor->visitMulExp(opExp.mulExp);
             }
         }, exp);
+    }
+
+    void AddExp::evalConst() {
+
     }
 
     void RelExp::visitChildren(std::shared_ptr<ASTVisitor> visitor) {
@@ -363,5 +415,9 @@ namespace thm {
 
     void ConstExp::visitChildren(std::shared_ptr<ASTVisitor> visitor) {
         visitor->visitAddExp(addExp);
+    }
+
+    void ConstExp::evalConst() {
+
     }
 } // thm
