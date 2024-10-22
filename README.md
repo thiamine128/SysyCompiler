@@ -38,6 +38,8 @@ pl0编译器仅有一个文件组成。
 - `core`: 核心部分，例如编译过程的抽象
 - `parser`: 词法分析相关
 - `error`: 错误处理相关
+- `symbol`: 符号相关
+- `util`: 工具方法
 - `main.cpp`: 程序入口
 # 接口设计
 ## Token
@@ -98,6 +100,46 @@ Token流
 
 定义了抽象语法树中的各种节点
 
+## Symbol
+符号基类
+- `id`: 符号id
+- `scopeId`: 符号作用域
+- `ident`: 符号标识符
+- `typeString()`: 符号类型字符串
+- `symbolType()`: 符号类型：变量/函数
+
+## VariableType
+变量类型
+- `type`: 变量类型，int/char
+- `isConst`: 是否是常量
+- `isArray`: 是否是数组
+
+## VariableSymbol
+变量符号
+- `type`: 变量类型
+- `constVal`: 常数值
+- `constVals`: 常量数组
+
+## FunctionSymbol
+函数符号
+- `type`: 返回类型
+- `paramTypes`: 形参列表
+
+## SymbolTable
+符号表
+- `SymbolTable(int, std::shared_ptr<SymbolTable>)`:创建符号表
+- `hasSymbolInScope(const std::string&)`:当前作用域内是否有该符号
+- `findSymbol(const std::string&)`:查找符号
+- `addSymbol(std::shared_ptr<Symbol>)`:添加符号
+- `getScopeId()`:获取作用域id
+- `print(std::ostream&)`:输出符号表
+
+## ASTVisitor
+抽象语法树访问器，提供了访问每个节点的接口
+
+## SymbolTableBuilder
+ASTVisitor的实现，用于遍历语法树构建符号表
+
 #  词法分析
 
 编码前设计：通过某个方法对字符流进行逐字符处理，使用有限状态机来解析token，最后存储到token表中。同时，单独存储错误的token, 方便后续输出
@@ -108,3 +150,8 @@ Token流
 编码前设计：利用词法分析得到的TokenStream,使用递归下降法进行词法分析，通过CompUnit来开始构建抽象语法树。使用预读方式来处理语法成分的多种情况。
 
 编码完成之后的修改：通过调用`Compiler::parse`来完成一次编译过程中的语法分析，在`Parser::parseCompUnit`中开始，并逐级调用`Parser::parseXXX`来分析语法成分，返回构建的抽象语法树节点，如果遇到错误，则保存到`ErrorReporter`中。
+
+# 符号表
+编码前设计： 利用语法分析得到的抽象语法树，遍历语法树分析作用域，创建符号表，并针对所有的声明节点创建符号来加入符号表。
+
+编码完成之后完成的修改：通过`ASTVisitor`来代表一次遍历语法树的过程，并为构建符号表创建一次遍历过程`SymbolTableBuilder`，遇到Block则创建作用域和符号表，遇到Decl则准备插入符号表，如果遇到错误，则保存到`ErrorReporter`中。

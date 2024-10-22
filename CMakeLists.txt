@@ -24,7 +24,7 @@ add_executable(Compiler main.cpp
         core/Logger.h
         parser/ASTVisitor.cpp
         parser/ASTVisitor.h
-        util/overloaded.h
+        util/util.h
         symbol/Symbol.cpp
         symbol/Symbol.h
         symbol/SymbolTable.cpp
@@ -33,6 +33,7 @@ add_executable(Compiler main.cpp
         symbol/SymbolTableBuilder.h
         core/Scope.cpp
         core/Scope.h
+        util/util.cpp
 )
 
 add_definitions(-DPRINT_LEXER)

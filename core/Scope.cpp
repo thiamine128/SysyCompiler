@@ -5,7 +5,7 @@
 #include "Scope.h"
 
 #include "../parser/AbstractSyntaxTree.h"
-#include "../util/overloaded.h"
+#include "../util/util.h"
 
 namespace thm {
     Scope::Scope(int scopeId, std::shared_ptr<Scope> parent, std::shared_ptr<SymbolTable> symbolTable, bool isReturnScope, bool requireReturnValue) : scopeId(scopeId), parent(parent), symbolTable(symbolTable), requireReturnValue(requireReturnValue), isReturnScope(isReturnScope) {

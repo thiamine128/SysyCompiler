@@ -316,7 +316,7 @@ namespace thm {
         int constVal;
         ASTNodeType nodeType() const override { return ASTNode::EXP; }
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
-        int evalConst();
+        void evalConst(std::shared_ptr<SymbolTable> symbolTable);
     };
     class Cond : public ASTNode {
     public:
@@ -489,7 +489,7 @@ namespace thm {
 
         ASTNodeType nodeType() const override { return ASTNode::CONSTEXP; }
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
-        void evalConst();
+        void evalConst(std::shared_ptr<SymbolTable> symbolTable);
     };
     class AbstractSyntaxTree {
 

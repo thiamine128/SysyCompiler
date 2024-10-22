@@ -8,7 +8,7 @@
 
 #include "ASTVisitor.h"
 #include "../symbol/SymbolTable.h"
-#include "../util/overloaded.h"
+#include "../util/util.h"
 
 namespace thm {
     void ASTNode::consume(std::vector<Token> &tokens) {
@@ -230,8 +230,8 @@ namespace thm {
         visitor->visitAddExp(addExp);
     }
 
-    int Exp::evalConst() {
-        return constVal;
+    void Exp::evalConst(std::shared_ptr<SymbolTable> symbolTable) {
+
     }
 
     void Cond::visitChildren(std::shared_ptr<ASTVisitor> visitor) {
@@ -245,9 +245,6 @@ namespace thm {
 
     void LVal::evalConst(std::shared_ptr<SymbolTable> symbolTable) {
         auto symbol = symbolTable->findSymbol(ident.content);
-        if (exp != nullptr) {
-            exp->evalConst();
-        }
         if (symbol != nullptr && symbol->symbolType() == Symbol::VARIABLE) {
             std::shared_ptr<VariableSymbol> variableSymbol = std::static_pointer_cast<VariableSymbol>(symbol);
             if (variableSymbol->type.isConst) {
@@ -281,7 +278,7 @@ namespace thm {
     void PrimaryExp::evalConst() {
         std::visit(overloaded{
             [&](std::unique_ptr<Exp>& exp) {
-                constVal = exp->evalConst();
+                //constVal = exp->evalConst();
             },
             [&](std::unique_ptr<LVal>& lVal) {
                 //lVal->evalConst();
@@ -417,7 +414,7 @@ namespace thm {
         visitor->visitAddExp(addExp);
     }
 
-    void ConstExp::evalConst() {
+    void ConstExp::evalConst(std::shared_ptr<SymbolTable> symbolTable) {
 
     }
 } // thm

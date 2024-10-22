@@ -9,7 +9,7 @@
 
 #include "../core/Scope.h"
 #include "../error/ErrorReporter.h"
-#include "../util/overloaded.h"
+#include "../util/util.h"
 
 namespace thm {
     SymbolTableBuilder::SymbolTableBuilder(ErrorReporter &errorReporter) : errorReporter_(errorReporter) {
@@ -116,6 +116,7 @@ namespace thm {
             symbol->scopeId = currentScope->scopeId;
             symbol->type.isConst = true;
             symbol->type.type = constDecl->bType->type;
+
             std::visit(overloaded{
                 [&](ConstDef::ConstDefBasic& basic) {
                     symbol->ident = basic.ident;
