@@ -17,11 +17,14 @@ namespace thm {
         return !errors.empty();
     }
     void ErrorReporter::printErrors(std::shared_ptr<Logger> logger) {
+        int prev = -1;
         while (!errors.empty()) {
             auto error = errors.top();
             errors.pop();
-            if (getErrorCode(error.errorType) != '-')
+            int lineno = error.line;
+            if (lineno != prev && getErrorCode(error.errorType) != '-')
                 logger->stream() << error.line << " " << getErrorCode(error.errorType) << std::endl;
+            prev = lineno;
         }
     }
 
