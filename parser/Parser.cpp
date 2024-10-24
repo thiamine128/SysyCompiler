@@ -50,9 +50,12 @@ namespace thm {
     std::unique_ptr<CompUnit> Parser::parseCompUnit() {
         auto ptr = std::make_unique<CompUnit>();
         ptr->lineno = currentToken().lineno;
+
+
+
         while (true) {
             if (tokenStream_.peekType(Token::CONSTTK) ||
-                (tokenStream_.peekType(0, {Token::INTTK, Token::CHARTK}) && tokenStream_.peekType(1, Token::IDENFR) && tokenStream_.peekType(2, {Token::COMMA, Token::SEMICN, Token::LBRACK, Token::ASSIGN}))) {
+                (tokenStream_.peekType(0, {Token::INTTK, Token::CHARTK}) && tokenStream_.peekType(1, Token::IDENFR) && !tokenStream_.peekType(2, Token::LPARENT))) {
                 ptr->decls.push_back(parseDecl());
             } else {
                 break;
