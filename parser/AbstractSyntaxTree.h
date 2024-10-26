@@ -77,24 +77,24 @@ namespace thm {
 
     class CompUnit : public ASTNode {
     public:
-        std::vector<std::unique_ptr<Decl>> decls;
-        std::vector<std::unique_ptr<FuncDef>> funcDefs;
-        std::unique_ptr<MainFuncDef> mainFuncDef;
+        std::vector<std::shared_ptr<Decl>> decls;
+        std::vector<std::shared_ptr<FuncDef>> funcDefs;
+        std::shared_ptr<MainFuncDef> mainFuncDef;
 
         ASTNodeType nodeType() const override {return ASTNode::COMPUNIT;}
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class Decl : public ASTNode {
     public:
-        std::variant<std::unique_ptr<ConstDecl>, std::unique_ptr<VarDecl>> decl;
+        std::variant<std::shared_ptr<ConstDecl>, std::shared_ptr<VarDecl>> decl;
 
         ASTNodeType nodeType() const override {return ASTNode::DECL;}
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class ConstDecl : public ASTNode {
     public:
-        std::unique_ptr<BType> bType;
-        std::vector<std::unique_ptr<ConstDef>> constDefs;
+        std::shared_ptr<BType> bType;
+        std::vector<std::shared_ptr<ConstDef>> constDefs;
         ASTNodeType nodeType() const override {return ASTNode::CONSTDECL;}
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
     };
@@ -114,28 +114,28 @@ namespace thm {
         };
         struct ConstDefArray {
             Token ident;
-            std::unique_ptr<ConstExp> size;
+            std::shared_ptr<ConstExp> size;
 
-            ConstDefArray(Token const& ident, std::unique_ptr<ConstExp> size) : ident(ident), size(std::move(size)) {}
+            ConstDefArray(Token const& ident, std::shared_ptr<ConstExp> size) : ident(ident), size(size) {}
             ConstDefArray() {}
         };
         std::variant<ConstDefBasic, ConstDefArray> def;
-        std::unique_ptr<ConstInitVal> val;
+        std::shared_ptr<ConstInitVal> val;
         ASTNodeType nodeType() const override {return ASTNode::CONSTDEF;}
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class ConstInitVal : public ASTNode {
     public:
         struct  ConstInitValBasic {
-            std::unique_ptr<ConstExp> exp;
+            std::shared_ptr<ConstExp> exp;
 
-            ConstInitValBasic(std::unique_ptr<ConstExp> exp) : exp(std::move(exp)) {}
+            ConstInitValBasic(std::shared_ptr<ConstExp> exp) : exp(exp) {}
             ConstInitValBasic() {}
         };
         struct  ConstInitValArray {
-            std::vector<std::unique_ptr<ConstExp>> exps;
+            std::vector<std::shared_ptr<ConstExp>> exps;
 
-            ConstInitValArray(std::vector<std::unique_ptr<ConstExp>>& exps) : exps(std::move(exps)) {}
+            ConstInitValArray(std::vector<std::shared_ptr<ConstExp>>& exps) : exps(exps) {}
             ConstInitValArray() {}
         };
         std::variant<ConstInitValBasic, ConstInitValArray, std::string> val;
@@ -144,8 +144,8 @@ namespace thm {
     };
     class VarDecl : public ASTNode {
     public:
-        std::unique_ptr<BType> bType;
-        std::vector<std::unique_ptr<VarDef>> varDefs;
+        std::shared_ptr<BType> bType;
+        std::vector<std::shared_ptr<VarDef>> varDefs;
 
         ASTNodeType nodeType() const override {return ASTNode::VARDECL;}
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
@@ -159,25 +159,25 @@ namespace thm {
         };
         struct  VarDefArray {
             Token ident;
-            std::unique_ptr<ConstExp> size;
-            VarDefArray(Token const& ident, std::unique_ptr<ConstExp> size) : ident(ident), size(std::move(size)) {}
+            std::shared_ptr<ConstExp> size;
+            VarDefArray(Token const& ident, std::shared_ptr<ConstExp> size) : ident(ident), size(size) {}
             VarDefArray() {}
         };
         std::variant<VarDefBasic, VarDefArray> def;
-        std::unique_ptr<InitVal> val;
+        std::shared_ptr<InitVal> val;
         ASTNodeType nodeType() const override {return ASTNode::VARDEF;}
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class InitVal : public ASTNode {
     public:
         struct InitValBasic {
-            std::unique_ptr<Exp> exp;
-            InitValBasic(std::unique_ptr<Exp> exp) : exp(std::move(exp)) {}
+            std::shared_ptr<Exp> exp;
+            InitValBasic(std::shared_ptr<Exp> exp) : exp(exp) {}
             InitValBasic() {}
         };
         struct InitValArray {
-            std::vector<std::unique_ptr<Exp>> exps;
-            InitValArray(std::vector<std::unique_ptr<Exp>>& exps) : exps(std::move(exps)) {}
+            std::vector<std::shared_ptr<Exp>> exps;
+            InitValArray(std::vector<std::shared_ptr<Exp>>& exps) : exps(exps) {}
             InitValArray() {}
         };
         std::variant<InitValBasic, InitValArray, std::string> val;
@@ -186,17 +186,17 @@ namespace thm {
     };
     class FuncDef : public ASTNode {
     public:
-        std::unique_ptr<FuncType> funcType;
+        std::shared_ptr<FuncType> funcType;
         Token ident;
-        std::unique_ptr<FuncFParams> params;
-        std::unique_ptr<Block> block;
+        std::shared_ptr<FuncFParams> params;
+        std::shared_ptr<Block> block;
 
         ASTNodeType nodeType() const override {return ASTNode::FUNCDEF;}
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class MainFuncDef : public ASTNode {
     public:
-        std::unique_ptr<Block> block;
+        std::shared_ptr<Block> block;
         ASTNodeType nodeType() const override {return ASTNode::MAINFUNCDEF;}
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
     };
@@ -208,13 +208,13 @@ namespace thm {
     };
     class FuncFParams : public ASTNode {
     public:
-        std::vector<std::unique_ptr<FuncFParam>> params;
+        std::vector<std::shared_ptr<FuncFParam>> params;
         ASTNodeType nodeType() const override {return ASTNode::FUNCFPARAMS;}
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class FuncFParam : public ASTNode {
     public:
-        std::unique_ptr<BType> bType;
+        std::shared_ptr<BType> bType;
         Token ident;
         bool isArray;
         ASTNodeType nodeType() const override {return ASTNode::FUNCFPARAM;}
@@ -222,41 +222,41 @@ namespace thm {
     };
     class Block : public ASTNode {
     public:
-        std::vector<std::unique_ptr<BlockItem>> items;
+        std::vector<std::shared_ptr<BlockItem>> items;
         Token rBrace;
         ASTNodeType nodeType() const override {return ASTNode::BLOCK;}
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class BlockItem : public ASTNode {
     public:
-        std::variant<std::unique_ptr<Decl>, std::unique_ptr<Stmt>> item;
+        std::variant<std::shared_ptr<Decl>, std::shared_ptr<Stmt>> item;
         ASTNodeType nodeType() const override {return ASTNode::BLOCKITEM;}
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class Stmt : public ASTNode {
     public:
         struct  StmtAssign {
-            std::unique_ptr<LVal> lVal;
-            std::unique_ptr<Exp> exp;
+            std::shared_ptr<LVal> lVal;
+            std::shared_ptr<Exp> exp;
 
-            StmtAssign(std::unique_ptr<LVal> lVal, std::unique_ptr<Exp> exp) : lVal(std::move(lVal)), exp(std::move(exp)) {}
+            StmtAssign(std::shared_ptr<LVal> lVal, std::shared_ptr<Exp> exp) : lVal(lVal), exp(exp) {}
             StmtAssign() {}
         };
         struct  StmtIf {
-            std::unique_ptr<Cond> cond;
-            std::unique_ptr<Stmt> stmt;
-            std::unique_ptr<Stmt> elseStmt;
+            std::shared_ptr<Cond> cond;
+            std::shared_ptr<Stmt> stmt;
+            std::shared_ptr<Stmt> elseStmt;
 
-            StmtIf(std::unique_ptr<Cond> cond, std::unique_ptr<Stmt> stmt, std::unique_ptr<Stmt> elseStmt) : cond(std::move(cond)), stmt(std::move(stmt)), elseStmt(std::move(elseStmt)) {}
+            StmtIf(std::shared_ptr<Cond> cond, std::shared_ptr<Stmt> stmt, std::shared_ptr<Stmt> elseStmt) : cond(cond), stmt(stmt), elseStmt(elseStmt) {}
             StmtIf() {}
         };
         struct  StmtFor {
-            std::unique_ptr<ForStmt> initStmt;
-            std::unique_ptr<Cond> cond;
-            std::unique_ptr<ForStmt> updateStmt;
-            std::unique_ptr<Stmt> stmt;
+            std::shared_ptr<ForStmt> initStmt;
+            std::shared_ptr<Cond> cond;
+            std::shared_ptr<ForStmt> updateStmt;
+            std::shared_ptr<Stmt> stmt;
 
-            StmtFor(std::unique_ptr<ForStmt> initStmt, std::unique_ptr<Cond> cond, std::unique_ptr<ForStmt> updateStmt, std::unique_ptr<Stmt> stmt) : initStmt(std::move(initStmt)), cond(std::move(cond)), updateStmt(std::move(updateStmt)), stmt(std::move(stmt)) {}
+            StmtFor(std::shared_ptr<ForStmt> initStmt, std::shared_ptr<Cond> cond, std::shared_ptr<ForStmt> updateStmt, std::shared_ptr<Stmt> stmt) : initStmt(initStmt), cond(cond), updateStmt(updateStmt), stmt(stmt) {}
             StmtFor() {}
         };
         enum BreakOrContinue {
@@ -264,34 +264,34 @@ namespace thm {
             CONTINUE
         };
         struct  StmtReturn {
-            std::unique_ptr<Exp> exp;
+            std::shared_ptr<Exp> exp;
 
-            StmtReturn(std::unique_ptr<Exp> exp) : exp(std::move(exp)) {}
+            StmtReturn(std::shared_ptr<Exp> exp) : exp(exp) {}
             StmtReturn() {}
         };
         struct  StmtRead {
-            std::unique_ptr<LVal> lVal;
+            std::shared_ptr<LVal> lVal;
             enum ReadType {
                 INT,
                 CHAR
             } type;
 
-            StmtRead(std::unique_ptr<LVal> lVal, ReadType type) : lVal(std::move(lVal)), type(type) {}
+            StmtRead(std::shared_ptr<LVal> lVal, ReadType type) : lVal(lVal), type(type) {}
             StmtRead() {}
         };
         struct  StmtPrintf {
             std::string fmt;
-            std::vector<std::unique_ptr<Exp>> exps;
+            std::vector<std::shared_ptr<Exp>> exps;
             Token printfToken;
 
-            StmtPrintf(std::string const& fmt, std::vector<std::unique_ptr<Exp>>& exps, Token const& printfToken) : fmt(fmt), exps(std::move(exps)), printfToken(printfToken) {}
+            StmtPrintf(std::string const& fmt, std::vector<std::shared_ptr<Exp>>& exps, Token const& printfToken) : fmt(fmt), exps(exps), printfToken(printfToken) {}
             StmtPrintf() {}
         };
 
 
         std::variant<StmtAssign,
-            std::unique_ptr<Exp>,
-            std::unique_ptr<Block>,
+            std::shared_ptr<Exp>,
+            std::shared_ptr<Block>,
             StmtIf,
             StmtFor,
             BreakOrContinue,
@@ -303,15 +303,15 @@ namespace thm {
     };
     class ForStmt : public ASTNode {
     public:
-        std::unique_ptr<LVal> lVal;
-        std::unique_ptr<Exp> exp;
+        std::shared_ptr<LVal> lVal;
+        std::shared_ptr<Exp> exp;
         ASTNodeType nodeType() const override { return ASTNodeType::FORSTMT; }
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class Exp : public ASTNode {
     public:
         int len;
-        std::unique_ptr<AddExp> addExp;
+        std::shared_ptr<AddExp> addExp;
         bool isConst;
         int constVal;
         ASTNodeType nodeType() const override { return ASTNode::EXP; }
@@ -320,14 +320,14 @@ namespace thm {
     };
     class Cond : public ASTNode {
     public:
-        std::unique_ptr<LOrExp> lOrExp;
+        std::shared_ptr<LOrExp> lOrExp;
         ASTNodeType nodeType() const override { return ASTNode::COND; }
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class LVal : public ASTNode {
     public:
         Token ident;
-        std::unique_ptr<Exp> exp;
+        std::shared_ptr<Exp> exp;
         bool isConst = false;
         int constVal = 0;
 
@@ -337,7 +337,7 @@ namespace thm {
     };
     class PrimaryExp : public ASTNode {
     public:
-        std::variant<std::unique_ptr<Exp>, std::unique_ptr<LVal>, std::unique_ptr<Number>, std::unique_ptr<Character>> primaryExp;
+        std::variant<std::shared_ptr<Exp>, std::shared_ptr<LVal>, std::shared_ptr<Number>, std::shared_ptr<Character>> primaryExp;
         bool isConst = false;
         int constVal = 0;
         ASTNodeType nodeType() const override { return ASTNode::PRIMARYEXP; }
@@ -360,17 +360,17 @@ namespace thm {
     public:
         struct  FuncExp {
             Token ident;
-            std::unique_ptr<FuncRParams> params;
+            std::shared_ptr<FuncRParams> params;
 
-            FuncExp(Token const& ident, std::unique_ptr<FuncRParams> params) : ident(ident), params(std::move(params)) {}
+            FuncExp(Token const& ident, std::shared_ptr<FuncRParams> params) : ident(ident), params(params) {}
         };
         struct  OpExp {
-            std::unique_ptr<UnaryOp> op;
-            std::unique_ptr<UnaryExp> exp;
+            std::shared_ptr<UnaryOp> op;
+            std::shared_ptr<UnaryExp> exp;
 
-            OpExp(std::unique_ptr<UnaryOp> op, std::unique_ptr<UnaryExp> exp) : op(std::move(op)), exp(std::move(exp)) {}
+            OpExp(std::shared_ptr<UnaryOp> op, std::shared_ptr<UnaryExp> exp) : op(op), exp(exp) {}
         };
-        std::variant<std::unique_ptr<PrimaryExp>, FuncExp, OpExp> exp;
+        std::variant<std::shared_ptr<PrimaryExp>, FuncExp, OpExp> exp;
         bool isConst = false;
         int constVal = 0;
 
@@ -388,22 +388,22 @@ namespace thm {
     };
     class FuncRParams : public ASTNode {
     public:
-        std::vector<std::unique_ptr<Exp>> params;
+        std::vector<std::shared_ptr<Exp>> params;
         ASTNodeType nodeType() const override { return ASTNode::FUNCRPARAMS; }
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class MulExp : public ASTNode {
     public:
         struct  OpExp {
-            std::unique_ptr<MulExp> mulExp;
+            std::shared_ptr<MulExp> mulExp;
             enum Op {
                 MUL, DIV, MOD
             } op;
-            std::unique_ptr<UnaryExp> unaryExp;
+            std::shared_ptr<UnaryExp> unaryExp;
 
-            OpExp(std::unique_ptr<MulExp> mulExp, Op op, std::unique_ptr<UnaryExp> unaryExp) : mulExp(std::move(mulExp)), op(op), unaryExp(std::move(unaryExp)) {}
+            OpExp(std::shared_ptr<MulExp> mulExp, Op op, std::shared_ptr<UnaryExp> unaryExp) : mulExp(mulExp), op(op), unaryExp(unaryExp) {}
         };
-        std::variant<std::unique_ptr<UnaryExp>, OpExp> exp;
+        std::variant<std::shared_ptr<UnaryExp>, OpExp> exp;
         bool isConst = false;
         int constVal = 0;
         ASTNodeType nodeType() const override { return ASTNode::MULEXP; }
@@ -413,14 +413,14 @@ namespace thm {
     class AddExp : public ASTNode {
     public:
         struct OpExp {
-            std::unique_ptr<AddExp> addExp;
+            std::shared_ptr<AddExp> addExp;
             enum Op {
                 ADD, MINUS
             } op;
-            std::unique_ptr<MulExp> mulExp;
-            OpExp(std::unique_ptr<AddExp> addExp, Op op, std::unique_ptr<MulExp> mulExp) : addExp(std::move(addExp)), op(op), mulExp(std::move(mulExp)) {}
+            std::shared_ptr<MulExp> mulExp;
+            OpExp(std::shared_ptr<AddExp> addExp, Op op, std::shared_ptr<MulExp> mulExp) : addExp(addExp), op(op), mulExp(mulExp) {}
         };
-        std::variant<std::unique_ptr<MulExp>, OpExp> exp;
+        std::variant<std::shared_ptr<MulExp>, OpExp> exp;
         bool isConst = false;
         int constVal = 0;
         ASTNodeType nodeType() const override { return ASTNode::ADDEXP; }
@@ -430,60 +430,60 @@ namespace thm {
     class RelExp : public ASTNode {
     public:
         struct OpExp {
-            std::unique_ptr<RelExp> relExp;
+            std::shared_ptr<RelExp> relExp;
             enum Op {
                 GT, LT, GE, LE
             } op;
-            std::unique_ptr<AddExp> addExp;
+            std::shared_ptr<AddExp> addExp;
 
-            OpExp(std::unique_ptr<RelExp> relExp, Op op, std::unique_ptr<AddExp> addExp) : relExp(std::move(relExp)), op(op), addExp(std::move(addExp)) {}
+            OpExp(std::shared_ptr<RelExp> relExp, Op op, std::shared_ptr<AddExp> addExp) : relExp(relExp), op(op), addExp(addExp) {}
         };
-        std::variant<std::unique_ptr<AddExp>, OpExp> exp;
+        std::variant<std::shared_ptr<AddExp>, OpExp> exp;
         ASTNodeType nodeType() const override { return ASTNode::RELEXP; }
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class EqExp : public ASTNode {
     public:
         struct OpExp {
-            std::unique_ptr<EqExp> eqExp;
+            std::shared_ptr<EqExp> eqExp;
             enum Op {
                 EQ, NEQ
             } op;
-            std::unique_ptr<RelExp> relExp;
+            std::shared_ptr<RelExp> relExp;
 
-            OpExp(std::unique_ptr<EqExp> eqExp, Op op, std::unique_ptr<RelExp> relExp) : eqExp(std::move(eqExp)), op(op), relExp(std::move(relExp)) {}
+            OpExp(std::shared_ptr<EqExp> eqExp, Op op, std::shared_ptr<RelExp> relExp) : eqExp(eqExp), op(op), relExp(relExp) {}
         };
-        std::variant<std::unique_ptr<RelExp>, OpExp> exp;
+        std::variant<std::shared_ptr<RelExp>, OpExp> exp;
         ASTNodeType nodeType() const override { return ASTNode::EQEXP; }
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class LAndExp : public ASTNode {
     public:
         struct OpExp {
-            std::unique_ptr<LAndExp> lAndExp;
-            std::unique_ptr<EqExp> eqExp;
+            std::shared_ptr<LAndExp> lAndExp;
+            std::shared_ptr<EqExp> eqExp;
 
-            OpExp(std::unique_ptr<LAndExp> lAndExp, std::unique_ptr<EqExp> eqExp) : lAndExp(std::move(lAndExp)), eqExp(std::move(eqExp)) {}
+            OpExp(std::shared_ptr<LAndExp> lAndExp, std::shared_ptr<EqExp> eqExp) : lAndExp(lAndExp), eqExp(eqExp) {}
         };
-        std::variant<std::unique_ptr<EqExp>, OpExp> exp;
+        std::variant<std::shared_ptr<EqExp>, OpExp> exp;
         ASTNodeType nodeType() const override { return ASTNode::LANDEXP; }
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class LOrExp : public ASTNode {
     public:
         struct OpExp {
-            std::unique_ptr<LOrExp> lOrExp;
-            std::unique_ptr<LAndExp> lAndExp;
+            std::shared_ptr<LOrExp> lOrExp;
+            std::shared_ptr<LAndExp> lAndExp;
 
-            OpExp(std::unique_ptr<LOrExp> lOrExp, std::unique_ptr<LAndExp> lAndExp) : lOrExp(std::move(lOrExp)), lAndExp(std::move(lAndExp)) {}
+            OpExp(std::shared_ptr<LOrExp> lOrExp, std::shared_ptr<LAndExp> lAndExp) : lOrExp(lOrExp), lAndExp(lAndExp) {}
         };
-        std::variant<std::unique_ptr<LAndExp>, OpExp> exp;
+        std::variant<std::shared_ptr<LAndExp>, OpExp> exp;
         ASTNodeType nodeType() const override { return ASTNode::LOREXP; }
         void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class ConstExp : public ASTNode {
     public:
-        std::unique_ptr<AddExp> addExp;
+        std::shared_ptr<AddExp> addExp;
         int constVal;
         bool isConst = true;
 

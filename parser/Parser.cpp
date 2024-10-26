@@ -47,8 +47,8 @@ namespace thm {
         return true;
     }
 
-    std::unique_ptr<CompUnit> Parser::parseCompUnit() {
-        auto ptr = std::make_unique<CompUnit>();
+    std::shared_ptr<CompUnit> Parser::parseCompUnit() {
+        auto ptr = std::make_shared<CompUnit>();
         ptr->lineno = currentToken().lineno;
 
 
@@ -73,8 +73,8 @@ namespace thm {
         return ptr;
     }
 
-    std::unique_ptr<Decl> Parser::parseDecl() {
-        auto ptr = std::make_unique<Decl>();
+    std::shared_ptr<Decl> Parser::parseDecl() {
+        auto ptr = std::make_shared<Decl>();
         ptr->lineno = currentToken().lineno;
 
         if (tokenStream_.peekType(Token::CONSTTK)) ptr->decl = parseConstDecl();
@@ -83,8 +83,8 @@ namespace thm {
         return ptr;
     }
 
-    std::unique_ptr<ConstDecl> Parser::parseConstDecl() {
-        auto ptr = std::make_unique<ConstDecl>();
+    std::shared_ptr<ConstDecl> Parser::parseConstDecl() {
+        auto ptr = std::make_shared<ConstDecl>();
         ptr->lineno = currentToken().lineno;
 
         match(Token::CONSTTK);
@@ -98,8 +98,8 @@ namespace thm {
         return ptr;
     }
 
-    std::unique_ptr<BType> Parser::parseBType() {
-        auto ptr = std::make_unique<BType>();
+    std::shared_ptr<BType> Parser::parseBType() {
+        auto ptr = std::make_shared<BType>();
         ptr->lineno = currentToken().lineno;
         ptr->type = currentToken().type == Token::INTTK ? VariableType::INT : VariableType::CHAR;
         nextToken();
@@ -108,17 +108,17 @@ namespace thm {
     }
 
 
-    std::unique_ptr<ConstDef> Parser::parseConstDef() {
-        auto ptr = std::make_unique<ConstDef>();
+    std::shared_ptr<ConstDef> Parser::parseConstDef() {
+        auto ptr = std::make_shared<ConstDef>();
         ptr->lineno = currentToken().lineno;
         Token ident = currentToken();
         match(Token::IDENFR);
         if (tryMatch(Token::LBRACK)) {
-            std::unique_ptr<ConstExp> len;
+            std::shared_ptr<ConstExp> len;
             if (!tryMatch(Token::RBRACK)) {
                 len = parseConstExp();
             }
-            ptr->def = ConstDef::ConstDefArray(ident, std::move(len));
+            ptr->def = ConstDef::ConstDefArray(ident, len);
             match(Token::RBRACK);
         } else {
             ptr->def = ConstDef::ConstDefBasic(ident);
@@ -129,14 +129,14 @@ namespace thm {
         return ptr;
     }
 
-    std::unique_ptr<ConstInitVal> Parser::parseConstInitVal() {
-        auto ptr = std::make_unique<ConstInitVal>();
+    std::shared_ptr<ConstInitVal> Parser::parseConstInitVal() {
+        auto ptr = std::make_shared<ConstInitVal>();
         ptr->lineno = currentToken().lineno;
 
         if (tokenStream_.peekType(0, {Token::PLUS, Token::MINU, Token::NOT, Token::IDENFR, Token::LPARENT, Token::INTCON, Token::CHRCON})) {
             ptr->val = ConstInitVal::ConstInitValBasic(parseConstExp());
         } else if (tryMatch(Token::LBRACE)) {
-            std::vector<std::unique_ptr<ConstExp> > exps;
+            std::vector<std::shared_ptr<ConstExp> > exps;
             if (tokenStream_.peekType(0, {Token::PLUS, Token::MINU, Token::NOT, Token::IDENFR, Token::LPARENT, Token::INTCON, Token::CHRCON})) {
                 exps.push_back(parseConstExp());
                 while (tryMatch(Token::COMMA)) {
@@ -153,11 +153,11 @@ namespace thm {
         return ptr;
     }
 
-    std::unique_ptr<VarDecl> Parser::parseVarDecl() {
-        auto ptr = std::make_unique<VarDecl>();
+    std::shared_ptr<VarDecl> Parser::parseVarDecl() {
+        auto ptr = std::make_shared<VarDecl>();
         ptr->lineno = currentToken().lineno;
 
-        ptr->bType = std::move(parseBType());
+        ptr->bType = parseBType();
         ptr->varDefs.push_back(parseVarDef());
         while (tryMatch(Token::COMMA)) {
             ptr->varDefs.push_back(parseVarDef());
@@ -167,44 +167,44 @@ namespace thm {
         return ptr;
     }
 
-    std::unique_ptr<VarDef> Parser::parseVarDef() {
-        auto ptr = std::make_unique<VarDef>();
+    std::shared_ptr<VarDef> Parser::parseVarDef() {
+        auto ptr = std::make_shared<VarDef>();
         ptr->lineno = currentToken().lineno;
 
         Token ident = currentToken();
         match(Token::IDENFR);
 
         if (tryMatch(Token::LBRACK)) {
-            std::unique_ptr<ConstExp> len;
+            std::shared_ptr<ConstExp> len;
             if (!tokenStream_.peekType(Token::RBRACK)) {
-                len = std::move(parseConstExp());
+                len = parseConstExp();
             }
-            ptr->def = VarDef::VarDefArray(ident, std::move(len));
+            ptr->def = VarDef::VarDefArray(ident, len);
             match(Token::RBRACK);
         } else {
             ptr->def = VarDef::VarDefBasic(ident);
         }
-        std::unique_ptr<InitVal> initVal;
+        std::shared_ptr<InitVal> initVal;
         if (tryMatch(Token::ASSIGN)) {
             initVal = parseInitVal();
         }
-        ptr->val = std::move(initVal);
+        ptr->val = initVal;
         submit(ptr);
         return ptr;
     }
 
-    std::unique_ptr<InitVal> Parser::parseInitVal() {
-        auto ptr = std::make_unique<InitVal>();
+    std::shared_ptr<InitVal> Parser::parseInitVal() {
+        auto ptr = std::make_shared<InitVal>();
         ptr->lineno = currentToken().lineno;
 
         if (tokenStream_.peekType(0, {Token::PLUS, Token::MINU, Token::NOT, Token::IDENFR, Token::LPARENT, Token::INTCON, Token::CHRCON})) {
-            ptr->val = InitVal::InitValBasic(std::move(parseExp()));
+            ptr->val = InitVal::InitValBasic(parseExp());
         } else if (tryMatch(Token::LBRACE)) {
-            std::vector<std::unique_ptr<Exp> > exps;
+            std::vector<std::shared_ptr<Exp> > exps;
             if (tokenStream_.peekType(0, {Token::PLUS, Token::MINU, Token::NOT, Token::IDENFR, Token::LPARENT, Token::INTCON, Token::CHRCON})) {
-                exps.push_back(std::move(parseExp()));
+                exps.push_back(parseExp());
                 while (tryMatch(Token::COMMA)) {
-                    exps.push_back(std::move(parseExp()));
+                    exps.push_back(parseExp());
                 }
             }
             ptr->val = InitVal::InitValArray(exps);
@@ -217,38 +217,38 @@ namespace thm {
         return ptr;
     }
 
-    std::unique_ptr<FuncDef> Parser::parseFuncDef() {
-        auto ptr = std::make_unique<FuncDef>();
+    std::shared_ptr<FuncDef> Parser::parseFuncDef() {
+        auto ptr = std::make_shared<FuncDef>();
         ptr->lineno = currentToken().lineno;
 
-        ptr->funcType = std::move(parseFuncType());
+        ptr->funcType = parseFuncType();
         ptr->ident = currentToken();
         match(Token::IDENFR);
         match(Token::LPARENT);
         if (tokenStream_.peekType(0, {Token::INTTK, Token::CHARTK})) {
-            ptr->params = std::move(parseFuncFParams());
+            ptr->params = parseFuncFParams();
         }
         match(Token::RPARENT);
-        ptr->block = std::move(parseBlock());
+        ptr->block = parseBlock();
         submit(ptr);
         return ptr;
     }
 
-    std::unique_ptr<MainFuncDef> Parser::parseMainFuncDef() {
-        auto ptr = std::make_unique<MainFuncDef>();
+    std::shared_ptr<MainFuncDef> Parser::parseMainFuncDef() {
+        auto ptr = std::make_shared<MainFuncDef>();
         ptr->lineno = currentToken().lineno;
 
         match(Token::INTTK);
         match(Token::MAINTK);
         match(Token::LPARENT);
         match(Token::RPARENT);
-        ptr->block = std::move(parseBlock());
+        ptr->block = parseBlock();
         submit(ptr);
         return ptr;
     }
 
-    std::unique_ptr<FuncType> Parser::parseFuncType() {
-        auto ptr = std::make_unique<FuncType>();
+    std::shared_ptr<FuncType> Parser::parseFuncType() {
+        auto ptr = std::make_shared<FuncType>();
         ptr->lineno = currentToken().lineno;
 
         if (tokenStream_.peekType(Token::INTTK)) {
@@ -263,8 +263,8 @@ namespace thm {
         return ptr;
     }
 
-    std::unique_ptr<FuncFParams> Parser::parseFuncFParams() {
-        auto ptr = std::make_unique<FuncFParams>();
+    std::shared_ptr<FuncFParams> Parser::parseFuncFParams() {
+        auto ptr = std::make_shared<FuncFParams>();
         ptr->lineno = currentToken().lineno;
 
         ptr->params.push_back(parseFuncFParam());
@@ -275,11 +275,11 @@ namespace thm {
         return ptr;
     }
 
-    std::unique_ptr<FuncFParam> Parser::parseFuncFParam() {
-        auto ptr = std::make_unique<FuncFParam>();
+    std::shared_ptr<FuncFParam> Parser::parseFuncFParam() {
+        auto ptr = std::make_shared<FuncFParam>();
         ptr->lineno = currentToken().lineno;
 
-        ptr->bType = std::move(parseBType());
+        ptr->bType = parseBType();
         ptr->isArray = false;
         ptr->ident = currentToken();
         match(Token::IDENFR);
@@ -291,14 +291,14 @@ namespace thm {
         return ptr;
     }
 
-    std::unique_ptr<Block> Parser::parseBlock() {
-        auto ptr = std::make_unique<Block>();
+    std::shared_ptr<Block> Parser::parseBlock() {
+        auto ptr = std::make_shared<Block>();
         ptr->lineno = currentToken().lineno;
         match(Token::LBRACE);
 
         if (!tokenStream_.peekType(Token::RBRACE)) {
             while (!tokenStream_.peekType(Token::RBRACE) && !tokenStream_.empty()) {
-                ptr->items.push_back(std::move(parseBlockItem()));
+                ptr->items.push_back(parseBlockItem());
             }
             ptr->rBrace = currentToken();
             match(Token::RBRACE);
@@ -310,53 +310,53 @@ namespace thm {
         return ptr;
     }
 
-    std::unique_ptr<BlockItem> Parser::parseBlockItem() {
-        auto ptr = std::make_unique<BlockItem>();
+    std::shared_ptr<BlockItem> Parser::parseBlockItem() {
+        auto ptr = std::make_shared<BlockItem>();
         ptr->lineno = currentToken().lineno;
 
         if (tokenStream_.peekType(0, {Token::INTTK, Token::CHARTK, Token::CONSTTK})) {
-            ptr->item = std::move(parseDecl());
+            ptr->item = parseDecl();
         } else {
-            ptr->item = std::move(parseStmt());
+            ptr->item = parseStmt();
         }
         submit(ptr);
         return ptr;
     }
 
-    std::unique_ptr<Stmt> Parser::parseStmt() {
-        auto ptr = std::make_unique<Stmt>();
+    std::shared_ptr<Stmt> Parser::parseStmt() {
+        auto ptr = std::make_shared<Stmt>();
         ptr->lineno = currentToken().lineno;
 
         if (tokenStream_.peekType(Token::LBRACE)) {
-            ptr->stmt = std::move(parseBlock());
+            ptr->stmt = parseBlock();
         } else if (tryMatch(Token::IFTK)) {
             match(Token::LPARENT);
-            auto cond = std::move(parseCond());
+            auto cond = parseCond();
             match(Token::RPARENT);
-            auto stmt = std::move(parseStmt());
-            std::unique_ptr<Stmt> elseStmt;
+            auto stmt = parseStmt();
+            std::shared_ptr<Stmt> elseStmt;
             if (tryMatch(Token::ELSETK)) {
-                elseStmt = std::move(parseStmt());
+                elseStmt = parseStmt();
             }
-            ptr->stmt = Stmt::StmtIf(std::move(cond), std::move(stmt), std::move(elseStmt));
+            ptr->stmt = Stmt::StmtIf(cond, stmt, elseStmt);
         } else if (tryMatch(Token::FORTK)) {
-            std::unique_ptr<ForStmt> initStmt, updateStmt;
-            std::unique_ptr<Cond> cond;
+            std::shared_ptr<ForStmt> initStmt, updateStmt;
+            std::shared_ptr<Cond> cond;
             match(Token::LPARENT);
             if (!tryMatch(Token::SEMICN)) {
-                initStmt = std::move(parseForStmt());
+                initStmt = parseForStmt();
                 match(Token::SEMICN);
             }
             if (!tryMatch(Token::SEMICN)) {
-                cond = std::move(parseCond());
+                cond = parseCond();
                 match(Token::SEMICN);
             }
             if (!tryMatch(Token::RPARENT)) {
-                updateStmt = std::move(parseForStmt());
+                updateStmt = parseForStmt();
                 match(Token::RPARENT);
             }
             auto stmt = parseStmt();
-            ptr->stmt = Stmt::StmtFor(std::move(initStmt), std::move(cond), std::move(updateStmt), std::move(stmt));
+            ptr->stmt = Stmt::StmtFor(initStmt, cond, updateStmt, stmt);
         } else if (tryMatch(Token::BREAKTK)) {
             match(Token::BREAKTK);
             match(Token::SEMICN);
@@ -365,27 +365,27 @@ namespace thm {
             match(Token::SEMICN);
             ptr->stmt = Stmt::CONTINUE;
         } else if (tryMatch(Token::RETURNTK)) {
-            std::unique_ptr<Exp> returnExp;
+            std::shared_ptr<Exp> returnExp;
             if (stepExp(0)) {
-                returnExp = std::move(parseExp());
+                returnExp = parseExp();
                 match(Token::SEMICN);
             } else {
                 match(Token::SEMICN);
             }
-            ptr->stmt = Stmt::StmtReturn(std::move(returnExp));
+            ptr->stmt = Stmt::StmtReturn(returnExp);
         } else if (tokenStream_.peekType(Token::PRINTFTK)) {
             Token printfTk = currentToken();
             nextToken();
             match(Token::LPARENT);
             std::string fmt = currentToken().content;
             match(Token::STRCON);
-            std::vector<std::unique_ptr<Exp>> args;
+            std::vector<std::shared_ptr<Exp>> args;
             while (tryMatch(Token::COMMA)) {
-                args.push_back(std::move(parseExp()));
+                args.push_back(parseExp());
             }
             match(Token::RPARENT);
             match(Token::SEMICN);
-            ptr->stmt = Stmt::StmtPrintf(std::move(fmt), args, printfTk);
+            ptr->stmt = Stmt::StmtPrintf(fmt, args, printfTk);
         } else {
             if (!tryMatch(Token::SEMICN)) {
                 int offset = stepExp(0);
@@ -405,39 +405,39 @@ namespace thm {
                         nextToken();
                         match(Token::LPARENT);
                         match(Token::RPARENT);
-                        ptr->stmt = Stmt::StmtRead(std::move(lVal), type);
+                        ptr->stmt = Stmt::StmtRead(lVal, type);
                     } else {
-                        ptr->stmt = Stmt::StmtAssign(std::move(lVal), std::move(parseExp()));
+                        ptr->stmt = Stmt::StmtAssign(lVal, parseExp());
                     }
                 } else {
-                    ptr->stmt = std::move(parseExp());
+                    ptr->stmt = parseExp();
                 }
                 match(Token::SEMICN);
             } else {
-                ptr->stmt = std::unique_ptr<Exp>();
+                ptr->stmt = std::shared_ptr<Exp>();
             }
         }
         submit(ptr);
         return ptr;
     }
 
-    std::unique_ptr<ForStmt> Parser::parseForStmt() {
-        auto ptr = std::make_unique<ForStmt>();
+    std::shared_ptr<ForStmt> Parser::parseForStmt() {
+        auto ptr = std::make_shared<ForStmt>();
         ptr->lineno = currentToken().lineno;
 
-        ptr->lVal = std::move(parseLVal());
+        ptr->lVal = parseLVal();
         match(Token::ASSIGN);
-        ptr->exp = std::move(parseExp());
+        ptr->exp = parseExp();
         submit(ptr);
         return ptr;
     }
 
-    std::unique_ptr<Exp> Parser::parseExp() {
-        auto ptr = std::make_unique<Exp>();
+    std::shared_ptr<Exp> Parser::parseExp() {
+        auto ptr = std::make_shared<Exp>();
         ptr->len = stepExp(0);
         ptr->lineno = currentToken().lineno;
 
-        ptr->addExp = std::move(parseAddExp());
+        ptr->addExp = parseAddExp();
         submit(ptr);
         return ptr;
     }
@@ -446,17 +446,17 @@ namespace thm {
         return stepAddExp(offset);
     }
 
-    std::unique_ptr<Cond> Parser::parseCond() {
-        auto ptr = std::make_unique<Cond>();
+    std::shared_ptr<Cond> Parser::parseCond() {
+        auto ptr = std::make_shared<Cond>();
         ptr->lineno = currentToken().lineno;
 
-        ptr->lOrExp = std::move(parseLOrExp());
+        ptr->lOrExp = parseLOrExp();
         submit(ptr);
         return ptr;
     }
 
-    std::unique_ptr<LVal> Parser::parseLVal() {
-        auto ptr = std::make_unique<LVal>();
+    std::shared_ptr<LVal> Parser::parseLVal() {
+        auto ptr = std::make_shared<LVal>();
         ptr->lineno = currentToken().lineno;
         ptr->ident = currentToken();
         match(Token::IDENFR);
@@ -480,18 +480,18 @@ namespace thm {
         return offset;
     }
 
-    std::unique_ptr<PrimaryExp> Parser::parsePrimaryExp() {
-        auto ptr = std::make_unique<PrimaryExp>();
+    std::shared_ptr<PrimaryExp> Parser::parsePrimaryExp() {
+        auto ptr = std::make_shared<PrimaryExp>();
         ptr->lineno = currentToken().lineno;
         if (tryMatch(Token::LPARENT)) {
-            ptr->primaryExp = std::move(parseExp());
+            ptr->primaryExp = parseExp();
             match(Token::RPARENT);
         } else if (tokenStream_.peekType(Token::IDENFR)) {
-            ptr->primaryExp = std::move(parseLVal());
+            ptr->primaryExp = parseLVal();
         } else if (tokenStream_.peekType(Token::INTCON)) {
-            ptr->primaryExp = std::move(parseNumber());
+            ptr->primaryExp = parseNumber();
         } else {
-            ptr->primaryExp = std::move(parseCharacter());
+            ptr->primaryExp = parseCharacter();
         }
         submit(ptr);
         return ptr;
@@ -513,8 +513,8 @@ namespace thm {
         return offset;
     }
 
-    std::unique_ptr<Number> Parser::parseNumber() {
-        auto ptr = std::make_unique<Number>();
+    std::shared_ptr<Number> Parser::parseNumber() {
+        auto ptr = std::make_shared<Number>();
         ptr->lineno = currentToken().lineno;
         int v = atoi(currentToken().content.c_str());
         match(Token::INTCON);
@@ -529,8 +529,8 @@ namespace thm {
         return offset;
     }
 
-    std::unique_ptr<Character> Parser::parseCharacter() {
-        auto ptr = std::make_unique<Character>();
+    std::shared_ptr<Character> Parser::parseCharacter() {
+        auto ptr = std::make_shared<Character>();
         char v = currentToken().content[0];
         ptr->lineno = currentToken().lineno;
         match(Token::CHRCON);
@@ -545,17 +545,17 @@ namespace thm {
         return offset;
     }
 
-    std::unique_ptr<UnaryExp> Parser::parseUnaryExp() {
-        auto ptr = std::make_unique<UnaryExp>();
+    std::shared_ptr<UnaryExp> Parser::parseUnaryExp() {
+        auto ptr = std::make_shared<UnaryExp>();
         ptr->lineno = currentToken().lineno;
         if (tokenStream_.peekType(Token::IDENFR) && tokenStream_.peekType(1, Token::LPARENT)) {
             Token ident = currentToken();
             nextToken();
             nextToken();
             if (stepExp(0)) {
-                ptr->exp = UnaryExp::FuncExp(ident, std::move(parseFuncRParams()));
+                ptr->exp = UnaryExp::FuncExp(ident, parseFuncRParams());
             } else {
-                ptr->exp = UnaryExp::FuncExp(ident, std::unique_ptr<FuncRParams>());
+                ptr->exp = UnaryExp::FuncExp(ident, std::shared_ptr<FuncRParams>());
             }
             match(Token::RPARENT);
             submit(ptr);
@@ -563,9 +563,9 @@ namespace thm {
         }
         if (tokenStream_.peekType(0, {Token::PLUS, Token::MINU, Token::NOT})) {
             auto op = parseUnaryOp();
-            ptr->exp = UnaryExp::OpExp(std::move(op), std::move(parseUnaryExp()));
+            ptr->exp = UnaryExp::OpExp(op, parseUnaryExp());
         } else {
-            ptr->exp = std::move(parsePrimaryExp());
+            ptr->exp = parsePrimaryExp();
         }
         submit(ptr);
         return ptr;
@@ -590,8 +590,8 @@ namespace thm {
         return offset;
     }
 
-    std::unique_ptr<FuncRParams> Parser::parseFuncRParams() {
-        auto ptr = std::make_unique<FuncRParams>();
+    std::shared_ptr<FuncRParams> Parser::parseFuncRParams() {
+        auto ptr = std::make_shared<FuncRParams>();
         ptr->lineno = currentToken().lineno;
         ptr->params.push_back(parseExp());
         while (tryMatch(Token::COMMA)) {
@@ -610,13 +610,13 @@ namespace thm {
         return offset;
     }
 
-    std::unique_ptr<MulExp> Parser::parseMulExp() {
-        auto ptr = std::make_unique<MulExp>();
+    std::shared_ptr<MulExp> Parser::parseMulExp() {
+        auto ptr = std::make_shared<MulExp>();
         ptr->lineno = currentToken().lineno;
-        ptr->exp = std::move(parseUnaryExp());
+        ptr->exp = parseUnaryExp();
         submit(ptr);
         while (tokenStream_.peekType(0, {Token::MULT, Token::DIV, Token::MOD})) {
-            auto mul = std::make_unique<MulExp>();
+            auto mul = std::make_shared<MulExp>();
             MulExp::OpExp::Op op = MulExp::OpExp::MUL;
             switch (currentToken().type) {
                 case Token::MULT:
@@ -631,8 +631,8 @@ namespace thm {
             }
             nextToken();
             mul->lineno = ptr->lineno;
-            mul->exp = MulExp::OpExp(std::move(ptr), op, std::move(parseUnaryExp()));
-            ptr = std::move(mul);
+            mul->exp = MulExp::OpExp(ptr, op, parseUnaryExp());
+            ptr = mul;
             submit(ptr);
         }
         return ptr;
@@ -647,13 +647,13 @@ namespace thm {
         return offset;
     }
 
-    std::unique_ptr<AddExp> Parser::parseAddExp() {
-        auto ptr = std::make_unique<AddExp>();
-        ptr->exp = std::move(parseMulExp());
+    std::shared_ptr<AddExp> Parser::parseAddExp() {
+        auto ptr = std::make_shared<AddExp>();
+        ptr->exp = parseMulExp();
         ptr->lineno = currentToken().lineno;
         submit(ptr);
         while (tokenStream_.peekType(0, {Token::PLUS, Token::MINU})) {
-            auto add = std::make_unique<AddExp>();
+            auto add = std::make_shared<AddExp>();
             AddExp::OpExp::Op op;
             switch (currentToken().type) {
                 case Token::PLUS:
@@ -667,8 +667,8 @@ namespace thm {
             }
             nextToken();
             add->lineno = ptr->lineno;
-            add->exp = AddExp::OpExp(std::move(ptr), op, std::move(parseMulExp()));
-            ptr = std::move(add);
+            add->exp = AddExp::OpExp(ptr, op, parseMulExp());
+            ptr = add;
             submit(ptr);
         }
         return ptr;
@@ -683,14 +683,14 @@ namespace thm {
         return offset;
     }
 
-    std::unique_ptr<RelExp> Parser::parseRelExp() {
-        auto ptr = std::make_unique<RelExp>();
+    std::shared_ptr<RelExp> Parser::parseRelExp() {
+        auto ptr = std::make_shared<RelExp>();
         ptr->lineno = currentToken().lineno;
-        ptr->exp = std::move(parseAddExp());
+        ptr->exp = parseAddExp();
         submit(ptr);
 
         while (tokenStream_.peekType(0, {Token::LSS, Token::LEQ, Token::GEQ, Token::GRE})) {
-            auto rel = std::make_unique<RelExp>();
+            auto rel = std::make_shared<RelExp>();
             RelExp::OpExp::Op op = RelExp::OpExp::LT;
             switch (currentToken().type) {
                 case Token::LSS:
@@ -708,71 +708,71 @@ namespace thm {
             }
             nextToken();
             rel->lineno = ptr->lineno;
-            rel->exp = RelExp::OpExp(std::move(ptr), op, std::move(parseAddExp()));
-            ptr = std::move(rel);
+            rel->exp = RelExp::OpExp(ptr, op, parseAddExp());
+            ptr = rel;
             submit(ptr);
         }
         return ptr;
     }
 
-    std::unique_ptr<EqExp> Parser::parseEqExp() {
-        auto ptr = std::make_unique<EqExp>();
+    std::shared_ptr<EqExp> Parser::parseEqExp() {
+        auto ptr = std::make_shared<EqExp>();
         ptr->lineno = currentToken().lineno;
-        ptr->exp = std::move(parseRelExp());
+        ptr->exp = parseRelExp();
         submit(ptr);
         while (tokenStream_.peekType(0, {Token::EQL, Token::NEQ})) {
-            auto eq = std::make_unique<EqExp>();
+            auto eq = std::make_shared<EqExp>();
             eq->lineno = ptr->lineno;
             Token::TokenType type = currentToken().type;
             nextToken();
-            eq->exp = EqExp::OpExp(std::move(ptr), type ==Token:: EQL ? EqExp::OpExp::EQ : EqExp::OpExp::NEQ,
-                                   std::move(parseRelExp()));
-            ptr = std::move(eq);
+            eq->exp = EqExp::OpExp(ptr, type ==Token:: EQL ? EqExp::OpExp::EQ : EqExp::OpExp::NEQ,
+                                   parseRelExp());
+            ptr = eq;
             submit(ptr);
         }
         return ptr;
     }
 
-    std::unique_ptr<LAndExp> Parser::parseLAndExp() {
-        auto ptr = std::make_unique<LAndExp>();
+    std::shared_ptr<LAndExp> Parser::parseLAndExp() {
+        auto ptr = std::make_shared<LAndExp>();
         ptr->lineno = currentToken().lineno;
-        ptr->exp = std::move(parseEqExp());
+        ptr->exp = parseEqExp();
         submit(ptr);
         while (tryMatch(Token::AND)) {
-            auto lAnd = std::make_unique<LAndExp>();
+            auto lAnd = std::make_shared<LAndExp>();
             lAnd->lineno = ptr->lineno;
-            lAnd->exp = LAndExp::OpExp(std::move(ptr), std::move(parseEqExp()));
-            ptr = std::move(lAnd);
+            lAnd->exp = LAndExp::OpExp(ptr, parseEqExp());
+            ptr = lAnd;
             submit(ptr);
         }
         return ptr;
     }
 
-    std::unique_ptr<LOrExp> Parser::parseLOrExp() {
-        auto ptr = std::make_unique<LOrExp>();
+    std::shared_ptr<LOrExp> Parser::parseLOrExp() {
+        auto ptr = std::make_shared<LOrExp>();
         ptr->lineno = currentToken().lineno;
-        ptr->exp = std::move(parseLAndExp());
+        ptr->exp = parseLAndExp();
         submit(ptr);
         while (tryMatch(Token::OR)) {
-            auto lOr = std::make_unique<LOrExp>();
+            auto lOr = std::make_shared<LOrExp>();
             lOr->lineno = ptr->lineno;
-            lOr->exp = LOrExp::OpExp(std::move(ptr), std::move(parseLAndExp()));
-            ptr = std::move(lOr);
+            lOr->exp = LOrExp::OpExp(ptr, parseLAndExp());
+            ptr = lOr;
             submit(ptr);
         }
         return ptr;
     }
 
-    std::unique_ptr<ConstExp> Parser::parseConstExp() {
-        auto ptr = std::make_unique<ConstExp>();
+    std::shared_ptr<ConstExp> Parser::parseConstExp() {
+        auto ptr = std::make_shared<ConstExp>();
         ptr->lineno = currentToken().lineno;
         ptr->addExp = parseAddExp();
         submit(ptr);
         return ptr;
     }
 
-    std::unique_ptr<UnaryOp> Parser::parseUnaryOp() {
-        auto ptr = std::make_unique<UnaryOp>();
+    std::shared_ptr<UnaryOp> Parser::parseUnaryOp() {
+        auto ptr = std::make_shared<UnaryOp>();
         ptr->lineno = currentToken().lineno;
         switch (currentToken().type) {
             case Token::PLUS:

@@ -42,19 +42,19 @@ namespace thm {
         return true;
     }
 
-    std::shared_ptr<VariableSymbol> SymbolTableBuilder::getArray(std::unique_ptr<Exp> &exp) const {
+    std::shared_ptr<VariableSymbol> SymbolTableBuilder::getArray(std::shared_ptr<Exp> &exp) const {
         std::shared_ptr<VariableSymbol> result = nullptr;
         std::visit(overloaded{
-            [&](std::unique_ptr<MulExp>& mulExp) {
+            [&](std::shared_ptr<MulExp>& mulExp) {
                 std::visit(overloaded{
-                    [&](std::unique_ptr<UnaryExp>& unaryExp) {
+                    [&](std::shared_ptr<UnaryExp>& unaryExp) {
                         std::visit(overloaded{
-                            [&](std::unique_ptr<PrimaryExp>& primaryExp) {
+                            [&](std::shared_ptr<PrimaryExp>& primaryExp) {
                                 std::visit(overloaded{
-                                    [&](std::unique_ptr<Exp>& exp) {
+                                    [&](std::shared_ptr<Exp>& exp) {
                                         result = getArray(exp);
                                     },
-                                    [&](std::unique_ptr<LVal>& lVal) {
+                                    [&](std::shared_ptr<LVal>& lVal) {
                                         std::shared_ptr<Symbol> symbol = currentScope->symbolTable->findSymbol(lVal->ident.content);
                                         if (lVal->exp == nullptr && symbol != nullptr && symbol->symbolType() == Symbol::VARIABLE) {
                                             std::shared_ptr<VariableSymbol> variableSymbol = std::static_pointer_cast<VariableSymbol>(symbol);
@@ -63,10 +63,10 @@ namespace thm {
                                             }
                                         }
                                     },
-                                    [&](std::unique_ptr<Number>& number) {
+                                    [&](std::shared_ptr<Number>& number) {
 
                                     },
-                                    [&](std::unique_ptr<Character>& character) {
+                                    [&](std::shared_ptr<Character>& character) {
 
                                     }
                                 }, primaryExp->primaryExp);
@@ -83,12 +83,12 @@ namespace thm {
         return result;
     }
 
-    bool SymbolTableBuilder::endWithReturn(std::unique_ptr<Block> &block) const {
+    bool SymbolTableBuilder::endWithReturn(std::shared_ptr<Block> &block) const {
         if (block->items.empty()) return false;
         auto const& last = block->items.back();
         bool result = false;
         std::visit(overloaded{
-            [&](std::unique_ptr<Stmt>& stmt) {
+            [&](std::shared_ptr<Stmt>& stmt) {
                 std::visit(overloaded{
                     [&](Stmt::StmtAssign& assign) {},
                     [&](Stmt::StmtIf& stmtIf) {},
@@ -99,17 +99,17 @@ namespace thm {
                     },
                     [&](Stmt::StmtRead& stmtRead) {},
                     [&](Stmt::StmtPrintf& stmtPrintf) {},
-                    [&](std::unique_ptr<Exp>& exp) {},
-                    [&](std::unique_ptr<Block>& block) {}
+                    [&](std::shared_ptr<Exp>& exp) {},
+                    [&](std::shared_ptr<Block>& block) {}
                 }, stmt->stmt);
             },
-            [&](std::unique_ptr<Decl>& decl) {}
+            [&](std::shared_ptr<Decl>& decl) {}
         }, last->item);
         return result;
     }
 
 
-    void SymbolTableBuilder::visitConstDecl(std::unique_ptr<ConstDecl> &constDecl) {
+    void SymbolTableBuilder::visitConstDecl(std::shared_ptr<ConstDecl> &constDecl) {
         for (auto const& def : constDecl->constDefs) {
             std::shared_ptr<VariableSymbol> symbol = std::make_shared<VariableSymbol>();
             symbol->id = ++symbolNum;
@@ -132,7 +132,7 @@ namespace thm {
         ASTVisitor::visitConstDecl(constDecl);
     }
 
-    void SymbolTableBuilder::visitVarDecl(std::unique_ptr<VarDecl> &varDecl) {
+    void SymbolTableBuilder::visitVarDecl(std::shared_ptr<VarDecl> &varDecl) {
         for (auto const& def : varDecl->varDefs) {
             std::shared_ptr<VariableSymbol> symbol = std::make_shared<VariableSymbol>();
             symbol->id = ++symbolNum;
@@ -154,7 +154,7 @@ namespace thm {
         ASTVisitor::visitVarDecl(varDecl);
     }
 
-    void SymbolTableBuilder::visitFuncDef(std::unique_ptr<FuncDef> &funcDef) {
+    void SymbolTableBuilder::visitFuncDef(std::shared_ptr<FuncDef> &funcDef) {
         std::shared_ptr<FunctionSymbol> symbol = std::make_shared<FunctionSymbol>();
         symbol->id = ++symbolNum;
         symbol->scopeId = currentScope->scopeId;
@@ -190,7 +190,7 @@ namespace thm {
         popScope();
     }
 
-    void SymbolTableBuilder::visitMainFuncDef(std::unique_ptr<MainFuncDef> &mainFuncDef) {
+    void SymbolTableBuilder::visitMainFuncDef(std::shared_ptr<MainFuncDef> &mainFuncDef) {
         pushScope(true, true);
         mainFuncDef->block->visitChildren(shared_from_this());
         if (currentScope->requireReturnValue && !endWithReturn(mainFuncDef->block)) {
@@ -199,7 +199,7 @@ namespace thm {
         popScope();
     }
 
-    void SymbolTableBuilder::visitStmt(std::unique_ptr<Stmt> &stmt) {
+    void SymbolTableBuilder::visitStmt(std::shared_ptr<Stmt> &stmt) {
         std::visit(overloaded{
             [&](Stmt::StmtAssign& assign) {
                 auto symbol = currentScope->symbolTable->findSymbol(assign.lVal->ident.content);
@@ -248,8 +248,8 @@ namespace thm {
                     errorReporter_.error(CompilerException(MISMATCHED_PRINTF_PARAMS, stmtPrintf.printfToken.lineno));
                 }
             },
-            [&](std::unique_ptr<Exp>& exp) {},
-            [&](std::unique_ptr<Block>& block) {}
+            [&](std::shared_ptr<Exp>& exp) {},
+            [&](std::shared_ptr<Block>& block) {}
         }, stmt->stmt);
         ASTVisitor::visitStmt(stmt);
         std::visit(overloaded{
@@ -262,12 +262,12 @@ namespace thm {
             [&](Stmt::StmtReturn& stmtReturn) {},
             [&](Stmt::StmtRead& stmtRead) {},
             [&](Stmt::StmtPrintf& stmtPrintf) {},
-            [&](std::unique_ptr<Exp>& exp) {},
-            [&](std::unique_ptr<Block>& block) {}
+            [&](std::shared_ptr<Exp>& exp) {},
+            [&](std::shared_ptr<Block>& block) {}
         }, stmt->stmt);
     }
 
-    void SymbolTableBuilder::visitForStmt(std::unique_ptr<ForStmt> &forStmt) {
+    void SymbolTableBuilder::visitForStmt(std::shared_ptr<ForStmt> &forStmt) {
         auto symbol = currentScope->symbolTable->findSymbol(forStmt->lVal->ident.content);
         if (symbol != nullptr && symbol->symbolType() == Symbol::VARIABLE) {
             std::shared_ptr<VariableSymbol> variableSymbol = std::static_pointer_cast<VariableSymbol>(symbol);
@@ -278,25 +278,25 @@ namespace thm {
         ASTVisitor::visitForStmt(forStmt);
     }
 
-    void SymbolTableBuilder::visitCompUnit(std::unique_ptr<CompUnit> &compUnit) {
+    void SymbolTableBuilder::visitCompUnit(std::shared_ptr<CompUnit> &compUnit) {
         pushScope(false, false);
         ASTVisitor::visitCompUnit(compUnit);
     }
 
-    void SymbolTableBuilder::visitBlock(std::unique_ptr<Block> &block) {
+    void SymbolTableBuilder::visitBlock(std::shared_ptr<Block> &block) {
         pushScope(false, false);
         ASTVisitor::visitBlock(block);
         popScope();
     }
 
-    void SymbolTableBuilder::visitLVal(std::unique_ptr<LVal> &lval) {
+    void SymbolTableBuilder::visitLVal(std::shared_ptr<LVal> &lval) {
         tryAccessSymbol(lval->ident);
         ASTVisitor::visitLVal(lval);
     }
 
-    void SymbolTableBuilder::visitUnaryExp(std::unique_ptr<UnaryExp> &unaryExp) {
+    void SymbolTableBuilder::visitUnaryExp(std::shared_ptr<UnaryExp> &unaryExp) {
         std::visit(overloaded{
-            [&](std::unique_ptr<PrimaryExp>& exp) {},
+            [&](std::shared_ptr<PrimaryExp>& exp) {},
             [&](UnaryExp::FuncExp& exp) {
                 if (tryAccessSymbol(exp.ident)) {
                     auto symbol = currentScope->symbolTable->findSymbol(exp.ident.content);

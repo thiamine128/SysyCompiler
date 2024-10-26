@@ -46,10 +46,10 @@ namespace thm {
 
     void Decl::visitChildren(std::shared_ptr<ASTVisitor> visitor) {
         std::visit(overloaded{
-            [&](std::unique_ptr<ConstDecl>& constDecl) {
+            [&](std::shared_ptr<ConstDecl>& constDecl) {
                 visitor->visitConstDecl(constDecl);
             },
-            [&](std::unique_ptr<VarDecl>& varDecl) {
+            [&](std::shared_ptr<VarDecl>& varDecl) {
                 visitor->visitVarDecl(varDecl);
             }}, decl);
         ASTNode::visitChildren(visitor);
@@ -165,10 +165,10 @@ namespace thm {
 
     void BlockItem::visitChildren(std::shared_ptr<ASTVisitor> visitor) {
         std::visit(overloaded{
-            [&](std::unique_ptr<Decl>& decl) {
+            [&](std::shared_ptr<Decl>& decl) {
                 visitor->visitDecl(decl);
             },
-            [&](std::unique_ptr<Stmt>& stmt) {
+            [&](std::shared_ptr<Stmt>& stmt) {
                 visitor->visitStmt(stmt);
             }
         }, item);
@@ -211,11 +211,11 @@ namespace thm {
                     visitor->visitExp(exp);
                 }
             },
-            [&](std::unique_ptr<Exp>& exp) {
+            [&](std::shared_ptr<Exp>& exp) {
                 if (exp != nullptr)
                     visitor->visitExp(exp);
             },
-            [&](std::unique_ptr<Block>& block) {
+            [&](std::shared_ptr<Block>& block) {
                 visitor->visitBlock(block);
             }
         }, stmt);
@@ -260,16 +260,16 @@ namespace thm {
 
     void PrimaryExp::visitChildren(std::shared_ptr<ASTVisitor> visitor) {
         std::visit(overloaded{
-            [&](std::unique_ptr<Exp>& exp) {
+            [&](std::shared_ptr<Exp>& exp) {
                 visitor->visitExp(exp);
             },
-            [&](std::unique_ptr<LVal>& lVal) {
+            [&](std::shared_ptr<LVal>& lVal) {
                 visitor->visitLVal(lVal);
             },
-            [&](std::unique_ptr<Number>& number) {
+            [&](std::shared_ptr<Number>& number) {
                 visitor->visitNumber(number);
             },
-            [&](std::unique_ptr<Character>& character) {
+            [&](std::shared_ptr<Character>& character) {
                 visitor->visitCharacter(character);
             }
         }, primaryExp);
@@ -277,17 +277,17 @@ namespace thm {
 
     void PrimaryExp::evalConst() {
         std::visit(overloaded{
-            [&](std::unique_ptr<Exp>& exp) {
+            [&](std::shared_ptr<Exp>& exp) {
                 //constVal = exp->evalConst();
             },
-            [&](std::unique_ptr<LVal>& lVal) {
+            [&](std::shared_ptr<LVal>& lVal) {
                 //lVal->evalConst();
                 //constVal = lVal->constVal;
             },
-            [&](std::unique_ptr<Number>& number) {
+            [&](std::shared_ptr<Number>& number) {
                 constVal = number->num;
             },
-            [&](std::unique_ptr<Character>& character) {
+            [&](std::shared_ptr<Character>& character) {
                 constVal = character->ch;
             }
         }, primaryExp);
@@ -303,7 +303,7 @@ namespace thm {
 
     void UnaryExp::visitChildren(std::shared_ptr<ASTVisitor> visitor) {
         std::visit(overloaded{
-            [&](std::unique_ptr<PrimaryExp>& exp) {
+            [&](std::shared_ptr<PrimaryExp>& exp) {
                 visitor->visitPrimaryExp(exp);
             },
             [&](FuncExp& funcExp) {
@@ -332,7 +332,7 @@ namespace thm {
 
     void MulExp::visitChildren(std::shared_ptr<ASTVisitor> visitor) {
         std::visit(overloaded{
-            [&](std::unique_ptr<UnaryExp>& exp) {
+            [&](std::shared_ptr<UnaryExp>& exp) {
                 visitor->visitUnaryExp(exp);
             },
             [&](OpExp& opExp) {
@@ -348,7 +348,7 @@ namespace thm {
 
     void AddExp::visitChildren(std::shared_ptr<ASTVisitor> visitor) {
         std::visit(overloaded{
-            [&](std::unique_ptr<MulExp>& exp) {
+            [&](std::shared_ptr<MulExp>& exp) {
                 visitor->visitMulExp(exp);
             },
             [&](OpExp& opExp) {
@@ -364,7 +364,7 @@ namespace thm {
 
     void RelExp::visitChildren(std::shared_ptr<ASTVisitor> visitor) {
         std::visit(overloaded{
-            [&](std::unique_ptr<AddExp>& exp) {
+            [&](std::shared_ptr<AddExp>& exp) {
                 visitor->visitAddExp(exp);
             },
             [&](OpExp& opExp) {
@@ -376,7 +376,7 @@ namespace thm {
 
     void EqExp::visitChildren(std::shared_ptr<ASTVisitor> visitor) {
         std::visit(overloaded{
-            [&](std::unique_ptr<RelExp>& exp) {
+            [&](std::shared_ptr<RelExp>& exp) {
                 visitor->visitRelExp(exp);
             },
             [&](OpExp& opExp) {
@@ -388,7 +388,7 @@ namespace thm {
 
     void LAndExp::visitChildren(std::shared_ptr<ASTVisitor> visitor) {
         std::visit(overloaded{
-            [&](std::unique_ptr<EqExp>& exp) {
+            [&](std::shared_ptr<EqExp>& exp) {
                 visitor->visitEqExp(exp);
             },
             [&](OpExp& opExp) {
@@ -400,7 +400,7 @@ namespace thm {
 
     void LOrExp::visitChildren(std::shared_ptr<ASTVisitor> visitor) {
         std::visit(overloaded{
-            [&](std::unique_ptr<LAndExp>& exp) {
+            [&](std::shared_ptr<LAndExp>& exp) {
                 visitor->visitLAndExp(exp);
             },
             [&](OpExp& opExp) {

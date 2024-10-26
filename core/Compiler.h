@@ -21,7 +21,7 @@ namespace thm {
         ErrorReporter errorReporter_;
         std::unique_ptr<Lexer> lexer_;
         std::unique_ptr<Parser> parser_;
-        std::unique_ptr<CompUnit> compUnit_;
+        std::shared_ptr<CompUnit> compUnit_;
 
     public:
         Compiler(std::string const &source);
