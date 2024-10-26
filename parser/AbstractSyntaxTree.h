@@ -55,7 +55,7 @@ namespace thm {
     ASTNODES
 #undef X
 
-    class ASTNode {
+    class ASTNode : public std::enable_shared_from_this<ASTNode> {
     public:
         enum ASTNodeType {
 #define X(a, b, c) c,
@@ -68,7 +68,7 @@ namespace thm {
         void consume(std::vector<Token>& tokens);
         virtual ASTNodeType nodeType() const { return ASTNode::DEFAULT; }
         virtual ~ASTNode() = default;
-        virtual void visitChildren(std::shared_ptr<ASTVisitor> visitor) {};
+        virtual void visit(std::shared_ptr<ASTVisitor> visitor) {};
     };
 
     std::ostream& operator<<(std::ostream& os, const ASTNode& node);
@@ -82,27 +82,27 @@ namespace thm {
         std::shared_ptr<MainFuncDef> mainFuncDef;
 
         ASTNodeType nodeType() const override {return ASTNode::COMPUNIT;}
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class Decl : public ASTNode {
     public:
         std::variant<std::shared_ptr<ConstDecl>, std::shared_ptr<VarDecl>> decl;
 
         ASTNodeType nodeType() const override {return ASTNode::DECL;}
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class ConstDecl : public ASTNode {
     public:
         std::shared_ptr<BType> bType;
         std::vector<std::shared_ptr<ConstDef>> constDefs;
         ASTNodeType nodeType() const override {return ASTNode::CONSTDECL;}
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class BType : public ASTNode {
     public:
         VariableType::Type type;
         ASTNodeType nodeType() const override {return ASTNode::BTYPE;}
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class ConstDef : public ASTNode {
     public:
@@ -122,7 +122,7 @@ namespace thm {
         std::variant<ConstDefBasic, ConstDefArray> def;
         std::shared_ptr<ConstInitVal> val;
         ASTNodeType nodeType() const override {return ASTNode::CONSTDEF;}
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class ConstInitVal : public ASTNode {
     public:
@@ -140,7 +140,7 @@ namespace thm {
         };
         std::variant<ConstInitValBasic, ConstInitValArray, std::string> val;
         ASTNodeType nodeType() const override {return ASTNode::CONSTINITVAL;}
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class VarDecl : public ASTNode {
     public:
@@ -148,7 +148,7 @@ namespace thm {
         std::vector<std::shared_ptr<VarDef>> varDefs;
 
         ASTNodeType nodeType() const override {return ASTNode::VARDECL;}
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class VarDef : public ASTNode {
     public:
@@ -166,7 +166,7 @@ namespace thm {
         std::variant<VarDefBasic, VarDefArray> def;
         std::shared_ptr<InitVal> val;
         ASTNodeType nodeType() const override {return ASTNode::VARDEF;}
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class InitVal : public ASTNode {
     public:
@@ -182,7 +182,7 @@ namespace thm {
         };
         std::variant<InitValBasic, InitValArray, std::string> val;
         ASTNodeType nodeType() const override {return ASTNode::INITVAL;}
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class FuncDef : public ASTNode {
     public:
@@ -192,25 +192,25 @@ namespace thm {
         std::shared_ptr<Block> block;
 
         ASTNodeType nodeType() const override {return ASTNode::FUNCDEF;}
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class MainFuncDef : public ASTNode {
     public:
         std::shared_ptr<Block> block;
         ASTNodeType nodeType() const override {return ASTNode::MAINFUNCDEF;}
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class FuncType : public ASTNode {
     public:
         FunctionSymbol::Type type;
         ASTNodeType nodeType() const override {return ASTNode::FUNCTYPE;}
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class FuncFParams : public ASTNode {
     public:
         std::vector<std::shared_ptr<FuncFParam>> params;
         ASTNodeType nodeType() const override {return ASTNode::FUNCFPARAMS;}
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class FuncFParam : public ASTNode {
     public:
@@ -218,20 +218,20 @@ namespace thm {
         Token ident;
         bool isArray;
         ASTNodeType nodeType() const override {return ASTNode::FUNCFPARAM;}
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class Block : public ASTNode {
     public:
         std::vector<std::shared_ptr<BlockItem>> items;
         Token rBrace;
         ASTNodeType nodeType() const override {return ASTNode::BLOCK;}
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class BlockItem : public ASTNode {
     public:
         std::variant<std::shared_ptr<Decl>, std::shared_ptr<Stmt>> item;
         ASTNodeType nodeType() const override {return ASTNode::BLOCKITEM;}
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class Stmt : public ASTNode {
     public:
@@ -299,14 +299,14 @@ namespace thm {
             StmtRead,
             StmtPrintf> stmt;
         ASTNodeType nodeType() const override { return ASTNodeType::STMT; }
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class ForStmt : public ASTNode {
     public:
         std::shared_ptr<LVal> lVal;
         std::shared_ptr<Exp> exp;
         ASTNodeType nodeType() const override { return ASTNodeType::FORSTMT; }
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class Exp : public ASTNode {
     public:
@@ -315,14 +315,14 @@ namespace thm {
         bool isConst;
         int constVal;
         ASTNodeType nodeType() const override { return ASTNode::EXP; }
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
         void evalConst(std::shared_ptr<SymbolTable> symbolTable);
     };
     class Cond : public ASTNode {
     public:
         std::shared_ptr<LOrExp> lOrExp;
         ASTNodeType nodeType() const override { return ASTNode::COND; }
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class LVal : public ASTNode {
     public:
@@ -332,29 +332,33 @@ namespace thm {
         int constVal = 0;
 
         ASTNodeType nodeType() const override { return ASTNode::LVAL; }
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
         void evalConst(std::shared_ptr<SymbolTable> symbolTable);
     };
     class PrimaryExp : public ASTNode {
     public:
-        std::variant<std::shared_ptr<Exp>, std::shared_ptr<LVal>, std::shared_ptr<Number>, std::shared_ptr<Character>> primaryExp;
+        std::variant<
+            std::shared_ptr<Exp>,
+            std::shared_ptr<LVal>,
+            std::shared_ptr<Number>,
+            std::shared_ptr<Character>> primaryExp;
         bool isConst = false;
         int constVal = 0;
         ASTNodeType nodeType() const override { return ASTNode::PRIMARYEXP; }
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
         void evalConst();
     };
     class Number : public ASTNode {
     public:
         int num;
         ASTNodeType nodeType() const override { return ASTNode::NUMBER; }
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class Character : public ASTNode {
     public:
         char ch;
         ASTNodeType nodeType() const override { return ASTNode::CHARACTER; }
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class UnaryExp : public ASTNode {
     public:
@@ -375,7 +379,7 @@ namespace thm {
         int constVal = 0;
 
         ASTNodeType nodeType() const override { return ASTNode::UNARYEXP; }
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
         void evalConst();
     };
     class UnaryOp : public ASTNode {
@@ -384,13 +388,13 @@ namespace thm {
             PLUS, MINUS, NOT
         } type;
         ASTNodeType nodeType() const override { return ASTNode::UNARYOP; }
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class FuncRParams : public ASTNode {
     public:
         std::vector<std::shared_ptr<Exp>> params;
         ASTNodeType nodeType() const override { return ASTNode::FUNCRPARAMS; }
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class MulExp : public ASTNode {
     public:
@@ -407,7 +411,7 @@ namespace thm {
         bool isConst = false;
         int constVal = 0;
         ASTNodeType nodeType() const override { return ASTNode::MULEXP; }
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
         void evalConst();
     };
     class AddExp : public ASTNode {
@@ -424,7 +428,7 @@ namespace thm {
         bool isConst = false;
         int constVal = 0;
         ASTNodeType nodeType() const override { return ASTNode::ADDEXP; }
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
         void evalConst();
     };
     class RelExp : public ASTNode {
@@ -440,7 +444,7 @@ namespace thm {
         };
         std::variant<std::shared_ptr<AddExp>, OpExp> exp;
         ASTNodeType nodeType() const override { return ASTNode::RELEXP; }
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class EqExp : public ASTNode {
     public:
@@ -455,7 +459,7 @@ namespace thm {
         };
         std::variant<std::shared_ptr<RelExp>, OpExp> exp;
         ASTNodeType nodeType() const override { return ASTNode::EQEXP; }
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class LAndExp : public ASTNode {
     public:
@@ -467,7 +471,7 @@ namespace thm {
         };
         std::variant<std::shared_ptr<EqExp>, OpExp> exp;
         ASTNodeType nodeType() const override { return ASTNode::LANDEXP; }
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class LOrExp : public ASTNode {
     public:
@@ -479,7 +483,7 @@ namespace thm {
         };
         std::variant<std::shared_ptr<LAndExp>, OpExp> exp;
         ASTNodeType nodeType() const override { return ASTNode::LOREXP; }
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
     };
     class ConstExp : public ASTNode {
     public:
@@ -488,7 +492,7 @@ namespace thm {
         bool isConst = true;
 
         ASTNodeType nodeType() const override { return ASTNode::CONSTEXP; }
-        void visitChildren(std::shared_ptr<ASTVisitor> visitor) override;
+        void visit(std::shared_ptr<ASTVisitor> visitor) override;
         void evalConst(std::shared_ptr<SymbolTable> symbolTable);
     };
     class AbstractSyntaxTree {

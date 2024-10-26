@@ -13,6 +13,7 @@
 
 namespace thm {
     SymbolTableBuilder::SymbolTableBuilder(ErrorReporter &errorReporter) : errorReporter_(errorReporter) {
+
     }
 
     void SymbolTableBuilder::pushScope(bool isReturnScope, bool requireReturnValue) {
@@ -42,7 +43,7 @@ namespace thm {
         return true;
     }
 
-    std::shared_ptr<VariableSymbol> SymbolTableBuilder::getArray(std::shared_ptr<Exp> &exp) const {
+    std::shared_ptr<VariableSymbol> SymbolTableBuilder::getArray(std::shared_ptr<Exp> exp) const {
         std::shared_ptr<VariableSymbol> result = nullptr;
         std::visit(overloaded{
             [&](std::shared_ptr<MulExp>& mulExp) {
@@ -83,7 +84,7 @@ namespace thm {
         return result;
     }
 
-    bool SymbolTableBuilder::endWithReturn(std::shared_ptr<Block> &block) const {
+    bool SymbolTableBuilder::endWithReturn(std::shared_ptr<Block> block) const {
         if (block->items.empty()) return false;
         auto const& last = block->items.back();
         bool result = false;
@@ -109,7 +110,8 @@ namespace thm {
     }
 
 
-    void SymbolTableBuilder::visitConstDecl(std::shared_ptr<ConstDecl> &constDecl) {
+    void SymbolTableBuilder::visitConstDecl(std::shared_ptr<ConstDecl> constDecl) {
+        constDecl->bType->visit(shared_from_this());
         for (auto const& def : constDecl->constDefs) {
             std::shared_ptr<VariableSymbol> symbol = std::make_shared<VariableSymbol>();
             symbol->id = ++symbolNum;
@@ -128,11 +130,12 @@ namespace thm {
                 }
             }, def->def);
             submitSymbol(symbol);
+            def->visit(shared_from_this());
         }
-        ASTVisitor::visitConstDecl(constDecl);
     }
 
-    void SymbolTableBuilder::visitVarDecl(std::shared_ptr<VarDecl> &varDecl) {
+    void SymbolTableBuilder::visitVarDecl(std::shared_ptr<VarDecl> varDecl) {
+        varDecl->bType->visit(shared_from_this());
         for (auto const& def : varDecl->varDefs) {
             std::shared_ptr<VariableSymbol> symbol = std::make_shared<VariableSymbol>();
             symbol->id = ++symbolNum;
@@ -150,17 +153,19 @@ namespace thm {
                 }
             }, def->def);
             submitSymbol(symbol);
+
+            def->visit(shared_from_this());
         }
-        ASTVisitor::visitVarDecl(varDecl);
     }
 
-    void SymbolTableBuilder::visitFuncDef(std::shared_ptr<FuncDef> &funcDef) {
+    void SymbolTableBuilder::visitFuncDef(std::shared_ptr<FuncDef> funcDef) {
+        funcDef->funcType->visit(shared_from_this());
         std::shared_ptr<FunctionSymbol> symbol = std::make_shared<FunctionSymbol>();
         symbol->id = ++symbolNum;
         symbol->scopeId = currentScope->scopeId;
         symbol->type = funcDef->funcType->type;
         symbol->ident = funcDef->ident;
-        if (funcDef->params != nullptr)
+        if (funcDef->params != nullptr) {
             for (auto const& param : funcDef->params->params) {
                 VariableType paramType;
                 paramType.type = param->bType->type;
@@ -168,6 +173,8 @@ namespace thm {
                 paramType.isArray =  param->isArray;
                 symbol->paramTypes.push_back(paramType);
             }
+            funcDef->params->visit(shared_from_this());
+        }
         submitSymbol(symbol);
         pushScope(true, symbol->type != FunctionSymbol::VOID);
         if (funcDef->params != nullptr) {
@@ -183,23 +190,27 @@ namespace thm {
                 submitSymbol(paramSymbol);
             }
         }
-        funcDef->block->visitChildren(shared_from_this());
+
+        ASTVisitor::visitBlock(funcDef->block);
+
         if (currentScope->requireReturnValue && !endWithReturn(funcDef->block)) {
             errorReporter_.error(CompilerException(RETURN_NOT_FOUND, funcDef->block->rBrace.lineno));
         }
         popScope();
     }
 
-    void SymbolTableBuilder::visitMainFuncDef(std::shared_ptr<MainFuncDef> &mainFuncDef) {
+    void SymbolTableBuilder::visitMainFuncDef(std::shared_ptr<MainFuncDef> mainFuncDef) {
         pushScope(true, true);
-        mainFuncDef->block->visitChildren(shared_from_this());
+
+        ASTVisitor::visitBlock(mainFuncDef->block);
+
         if (currentScope->requireReturnValue && !endWithReturn(mainFuncDef->block)) {
             errorReporter_.error(CompilerException(RETURN_NOT_FOUND, mainFuncDef->block->rBrace.lineno));
         }
         popScope();
     }
 
-    void SymbolTableBuilder::visitStmt(std::shared_ptr<Stmt> &stmt) {
+    void SymbolTableBuilder::visitStmt(std::shared_ptr<Stmt> stmt) {
         std::visit(overloaded{
             [&](Stmt::StmtAssign& assign) {
                 auto symbol = currentScope->symbolTable->findSymbol(assign.lVal->ident.content);
@@ -267,7 +278,7 @@ namespace thm {
         }, stmt->stmt);
     }
 
-    void SymbolTableBuilder::visitForStmt(std::shared_ptr<ForStmt> &forStmt) {
+    void SymbolTableBuilder::visitForStmt(std::shared_ptr<ForStmt> forStmt) {
         auto symbol = currentScope->symbolTable->findSymbol(forStmt->lVal->ident.content);
         if (symbol != nullptr && symbol->symbolType() == Symbol::VARIABLE) {
             std::shared_ptr<VariableSymbol> variableSymbol = std::static_pointer_cast<VariableSymbol>(symbol);
@@ -278,23 +289,23 @@ namespace thm {
         ASTVisitor::visitForStmt(forStmt);
     }
 
-    void SymbolTableBuilder::visitCompUnit(std::shared_ptr<CompUnit> &compUnit) {
+    void SymbolTableBuilder::visitCompUnit(std::shared_ptr<CompUnit> compUnit) {
         pushScope(false, false);
         ASTVisitor::visitCompUnit(compUnit);
     }
 
-    void SymbolTableBuilder::visitBlock(std::shared_ptr<Block> &block) {
+    void SymbolTableBuilder::visitBlock(std::shared_ptr<Block> block) {
         pushScope(false, false);
         ASTVisitor::visitBlock(block);
         popScope();
     }
 
-    void SymbolTableBuilder::visitLVal(std::shared_ptr<LVal> &lval) {
+    void SymbolTableBuilder::visitLVal(std::shared_ptr<LVal> lval) {
         tryAccessSymbol(lval->ident);
         ASTVisitor::visitLVal(lval);
     }
 
-    void SymbolTableBuilder::visitUnaryExp(std::shared_ptr<UnaryExp> &unaryExp) {
+    void SymbolTableBuilder::visitUnaryExp(std::shared_ptr<UnaryExp> unaryExp) {
         std::visit(overloaded{
             [&](std::shared_ptr<PrimaryExp>& exp) {},
             [&](UnaryExp::FuncExp& exp) {

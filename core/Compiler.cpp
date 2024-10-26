@@ -40,7 +40,7 @@ namespace thm {
 
     void Compiler::buildSymbolTables() {
         std::shared_ptr<SymbolTableBuilder> builder = std::make_shared<SymbolTableBuilder>(errorReporter_);
-        builder->visitCompUnit(compUnit_);
+        compUnit_->visit(builder);
 #ifdef PRINT_SYMBOL
         std::shared_ptr<Logger> logger = std::make_shared<Logger>("symbol.txt");
         for (auto& scope : builder->scopes) {
