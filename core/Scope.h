@@ -6,7 +6,7 @@
 #define SCOPE_H
 #include <memory>
 
-#include "../symbol/SymbolTable.h"
+#include "../semantic/SymbolTable.h"
 
 namespace thm {
 

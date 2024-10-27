@@ -2,7 +2,7 @@
 // Created by slty5 on 24-10-11.
 //
 
-#include "SymbolTableBuilder.h"
+#include "SemanticVisitor.h"
 
 #include <iostream>
 #include <bits/locale_facets_nonio.h>
@@ -12,11 +12,11 @@
 #include "../util/util.h"
 
 namespace thm {
-    SymbolTableBuilder::SymbolTableBuilder(ErrorReporter &errorReporter) : errorReporter_(errorReporter) {
+    SemanticVisitor::SemanticVisitor(ErrorReporter &errorReporter) : errorReporter_(errorReporter) {
 
     }
 
-    void SymbolTableBuilder::pushScope(bool isReturnScope, bool requireReturnValue) {
+    void SemanticVisitor::pushScope(bool isReturnScope, bool requireReturnValue) {
         ++scopeNum;
 
         scopeStack.push(std::make_shared<Scope>(scopeNum, currentScope, std::make_shared<SymbolTable>(scopeNum, currentScope == nullptr ? nullptr : currentScope->symbolTable), isReturnScope, requireReturnValue));
@@ -24,18 +24,18 @@ namespace thm {
         scopes.push_back(currentScope);
     }
 
-    void SymbolTableBuilder::popScope() {
+    void SemanticVisitor::popScope() {
         scopeStack.pop();
         currentScope = scopeStack.top();
     }
 
-    void SymbolTableBuilder::submitSymbol(std::shared_ptr<Symbol> symbol) {
+    void SemanticVisitor::submitSymbol(std::shared_ptr<Symbol> symbol) {
         if (!currentScope->symbolTable->addSymbol(symbol)) {
             errorReporter_.error(CompilerException(ErrorType::REDEFINITION, symbol->ident.lineno));
         }
     }
 
-    bool SymbolTableBuilder::tryAccessSymbol(Token const &ident) const {
+    bool SemanticVisitor::tryAccessSymbol(Token const &ident) const {
         if (!currentScope->symbolTable->findSymbol(ident.content)) {
             errorReporter_.error(CompilerException(ErrorType::UNDEFINED_IDENTIFIER, ident.lineno));
             return false;
@@ -43,7 +43,7 @@ namespace thm {
         return true;
     }
 
-    std::shared_ptr<VariableSymbol> SymbolTableBuilder::getArray(std::shared_ptr<Exp> exp) const {
+    std::shared_ptr<VariableSymbol> SemanticVisitor::getArray(std::shared_ptr<Exp> exp) const {
         std::shared_ptr<VariableSymbol> result = nullptr;
         std::visit(overloaded{
             [&](std::shared_ptr<MulExp>& mulExp) {
@@ -84,7 +84,7 @@ namespace thm {
         return result;
     }
 
-    bool SymbolTableBuilder::endWithReturn(std::shared_ptr<Block> block) const {
+    bool SemanticVisitor::endWithReturn(std::shared_ptr<Block> block) const {
         if (block->items.empty()) return false;
         auto const& last = block->items.back();
         bool result = false;
@@ -110,55 +110,26 @@ namespace thm {
     }
 
 
-    void SymbolTableBuilder::visitConstDecl(std::shared_ptr<ConstDecl> constDecl) {
+    void SemanticVisitor::visitConstDecl(std::shared_ptr<ConstDecl> constDecl) {
+        constDecl->scope = currentScope;
         constDecl->bType->visit(shared_from_this());
         for (auto const& def : constDecl->constDefs) {
-            std::shared_ptr<VariableSymbol> symbol = std::make_shared<VariableSymbol>();
-            symbol->id = ++symbolNum;
-            symbol->scopeId = currentScope->scopeId;
-            symbol->type.isConst = true;
-            symbol->type.type = constDecl->bType->type;
-
-            std::visit(overloaded{
-                [&](ConstDef::ConstDefBasic& basic) {
-                    symbol->ident = basic.ident;
-                    symbol->type.isArray = false;
-                },
-                [&](ConstDef::ConstDefArray& array) {
-                    symbol->ident = array.ident;
-                    symbol->type.isArray = true;
-                }
-            }, def->def);
-            submitSymbol(symbol);
+            def->type = constDecl->bType->type;
             def->visit(shared_from_this());
         }
     }
 
-    void SymbolTableBuilder::visitVarDecl(std::shared_ptr<VarDecl> varDecl) {
+    void SemanticVisitor::visitVarDecl(std::shared_ptr<VarDecl> varDecl) {
+        varDecl->scope = currentScope;
         varDecl->bType->visit(shared_from_this());
         for (auto const& def : varDecl->varDefs) {
-            std::shared_ptr<VariableSymbol> symbol = std::make_shared<VariableSymbol>();
-            symbol->id = ++symbolNum;
-            symbol->scopeId = currentScope->scopeId;
-            symbol->type.isConst = false;
-            symbol->type.type = varDecl->bType->type;
-            std::visit(overloaded{
-                [&](VarDef::VarDefBasic& basic) {
-                    symbol->ident = basic.ident;
-                    symbol->type.isArray = false;
-                },
-                [&](VarDef::VarDefArray& array) {
-                    symbol->ident = array.ident;
-                    symbol->type.isArray = true;
-                }
-            }, def->def);
-            submitSymbol(symbol);
-
+            def->type = varDecl->bType->type;
             def->visit(shared_from_this());
         }
     }
 
-    void SymbolTableBuilder::visitFuncDef(std::shared_ptr<FuncDef> funcDef) {
+    void SemanticVisitor::visitFuncDef(std::shared_ptr<FuncDef> funcDef) {
+        funcDef->scope = currentScope;
         funcDef->funcType->visit(shared_from_this());
         std::shared_ptr<FunctionSymbol> symbol = std::make_shared<FunctionSymbol>();
         symbol->id = ++symbolNum;
@@ -188,9 +159,11 @@ namespace thm {
                 paramSymbol->ident = param->ident;
 
                 submitSymbol(paramSymbol);
+                param->visit(shared_from_this());
             }
         }
 
+        funcDef->block->scope = currentScope;
         ASTVisitor::visitBlock(funcDef->block);
 
         if (currentScope->requireReturnValue && !endWithReturn(funcDef->block)) {
@@ -199,9 +172,11 @@ namespace thm {
         popScope();
     }
 
-    void SymbolTableBuilder::visitMainFuncDef(std::shared_ptr<MainFuncDef> mainFuncDef) {
+    void SemanticVisitor::visitMainFuncDef(std::shared_ptr<MainFuncDef> mainFuncDef) {
+        mainFuncDef->scope = currentScope;
         pushScope(true, true);
 
+        mainFuncDef->block->scope = currentScope;
         ASTVisitor::visitBlock(mainFuncDef->block);
 
         if (currentScope->requireReturnValue && !endWithReturn(mainFuncDef->block)) {
@@ -210,7 +185,8 @@ namespace thm {
         popScope();
     }
 
-    void SymbolTableBuilder::visitStmt(std::shared_ptr<Stmt> stmt) {
+    void SemanticVisitor::visitStmt(std::shared_ptr<Stmt> stmt) {
+        stmt->scope = currentScope;
         std::visit(overloaded{
             [&](Stmt::StmtAssign& assign) {
                 auto symbol = currentScope->symbolTable->findSymbol(assign.lVal->ident.content);
@@ -278,7 +254,8 @@ namespace thm {
         }, stmt->stmt);
     }
 
-    void SymbolTableBuilder::visitForStmt(std::shared_ptr<ForStmt> forStmt) {
+    void SemanticVisitor::visitForStmt(std::shared_ptr<ForStmt> forStmt) {
+        forStmt->scope = currentScope;
         auto symbol = currentScope->symbolTable->findSymbol(forStmt->lVal->ident.content);
         if (symbol != nullptr && symbol->symbolType() == Symbol::VARIABLE) {
             std::shared_ptr<VariableSymbol> variableSymbol = std::static_pointer_cast<VariableSymbol>(symbol);
@@ -289,23 +266,27 @@ namespace thm {
         ASTVisitor::visitForStmt(forStmt);
     }
 
-    void SymbolTableBuilder::visitCompUnit(std::shared_ptr<CompUnit> compUnit) {
+    void SemanticVisitor::visitCompUnit(std::shared_ptr<CompUnit> compUnit) {
         pushScope(false, false);
+        compUnit->scope = currentScope;
         ASTVisitor::visitCompUnit(compUnit);
     }
 
-    void SymbolTableBuilder::visitBlock(std::shared_ptr<Block> block) {
+    void SemanticVisitor::visitBlock(std::shared_ptr<Block> block) {
         pushScope(false, false);
+        block->scope = currentScope;
         ASTVisitor::visitBlock(block);
         popScope();
     }
 
-    void SymbolTableBuilder::visitLVal(std::shared_ptr<LVal> lval) {
+    void SemanticVisitor::visitLVal(std::shared_ptr<LVal> lval) {
+        lval->scope = currentScope;
         tryAccessSymbol(lval->ident);
         ASTVisitor::visitLVal(lval);
     }
 
-    void SymbolTableBuilder::visitUnaryExp(std::shared_ptr<UnaryExp> unaryExp) {
+    void SemanticVisitor::visitUnaryExp(std::shared_ptr<UnaryExp> unaryExp) {
+        unaryExp->scope = currentScope;
         std::visit(overloaded{
             [&](std::shared_ptr<PrimaryExp>& exp) {},
             [&](UnaryExp::FuncExp& exp) {
@@ -335,5 +316,155 @@ namespace thm {
             },
         }, unaryExp->exp);
         ASTVisitor::visitUnaryExp(unaryExp);
+    }
+
+    void SemanticVisitor::visitDecl(std::shared_ptr<Decl> decl) {
+        decl->scope = currentScope;
+        ASTVisitor::visitDecl(decl);
+    }
+
+    void SemanticVisitor::visitBType(std::shared_ptr<BType> bType) {
+        bType->scope = currentScope;
+        ASTVisitor::visitBType(bType);
+    }
+
+    void SemanticVisitor::visitConstDef(std::shared_ptr<ConstDef> constDef) {
+        constDef->scope = currentScope;
+        std::shared_ptr<VariableSymbol> symbol = std::make_shared<VariableSymbol>();
+        symbol->id = ++symbolNum;
+        symbol->scopeId = currentScope->scopeId;
+        symbol->type.isConst = true;
+        symbol->type.type = constDef->type;
+        symbol->ident = constDef->ident;
+        std::visit(overloaded{
+            [&](ConstDef::ConstDefBasic& basic) {
+                symbol->type.isArray = false;
+            },
+            [&](ConstDef::ConstDefArray& array) {
+                symbol->type.isArray = true;
+            }
+        }, constDef->def);
+        submitSymbol(symbol);
+        ASTVisitor::visitConstDef(constDef);
+    }
+
+    void SemanticVisitor::visitConstInitVal(std::shared_ptr<ConstInitVal> constInitVal) {
+        constInitVal->scope = currentScope;
+        ASTVisitor::visitConstInitVal(constInitVal);
+    }
+
+    void SemanticVisitor::visitVarDef(std::shared_ptr<VarDef> varDef) {
+        varDef->scope = currentScope;
+        std::shared_ptr<VariableSymbol> symbol = std::make_shared<VariableSymbol>();
+        symbol->id = ++symbolNum;
+        symbol->scopeId = currentScope->scopeId;
+        symbol->type.isConst = false;
+        symbol->type.type = varDef->type;
+        symbol->ident = varDef->ident;
+        std::visit(overloaded{
+            [&](VarDef::VarDefBasic& basic) {
+                symbol->type.isArray = false;
+            },
+            [&](VarDef::VarDefArray& array) {
+                symbol->type.isArray = true;
+            }
+        }, varDef->def);
+        submitSymbol(symbol);
+        ASTVisitor::visitVarDef(varDef);
+    }
+
+    void SemanticVisitor::visitInitVal(std::shared_ptr<InitVal> initVal) {
+        initVal->scope = currentScope;
+        ASTVisitor::visitInitVal(initVal);
+    }
+
+    void SemanticVisitor::visitFuncType(std::shared_ptr<FuncType> funcType) {
+        funcType->scope = currentScope;
+        ASTVisitor::visitFuncType(funcType);
+    }
+
+    void SemanticVisitor::visitFuncFParams(std::shared_ptr<FuncFParams> funcFParams) {
+        funcFParams->scope = currentScope;
+        ASTVisitor::visitFuncFParams(funcFParams);
+    }
+
+    void SemanticVisitor::visitFuncFParam(std::shared_ptr<FuncFParam> funcFParam) {
+        funcFParam->scope = currentScope;
+        ASTVisitor::visitFuncFParam(funcFParam);
+    }
+
+    void SemanticVisitor::visitBlockItem(std::shared_ptr<BlockItem> blockItem) {
+        blockItem->scope = currentScope;
+        ASTVisitor::visitBlockItem(blockItem);
+    }
+
+    void SemanticVisitor::visitExp(std::shared_ptr<Exp> exp) {
+        exp->scope = currentScope;
+        ASTVisitor::visitExp(exp);
+    }
+
+    void SemanticVisitor::visitCond(std::shared_ptr<Cond> cond) {
+        cond->scope = currentScope;
+        ASTVisitor::visitCond(cond);
+    }
+
+    void SemanticVisitor::visitPrimaryExp(std::shared_ptr<PrimaryExp> primaryExp) {
+        primaryExp->scope = currentScope;
+        ASTVisitor::visitPrimaryExp(primaryExp);
+    }
+
+    void SemanticVisitor::visitNumber(std::shared_ptr<Number> number) {
+        number->scope = currentScope;
+        ASTVisitor::visitNumber(number);
+    }
+
+    void SemanticVisitor::visitCharacter(std::shared_ptr<Character> character) {
+        character->scope = currentScope;
+        ASTVisitor::visitCharacter(character);
+    }
+
+    void SemanticVisitor::visitUnaryOp(std::shared_ptr<UnaryOp> unaryOp) {
+        unaryOp->scope = currentScope;
+        ASTVisitor::visitUnaryOp(unaryOp);
+    }
+
+    void SemanticVisitor::visitFuncRParams(std::shared_ptr<FuncRParams> funcRParams) {
+        funcRParams->scope = currentScope;
+        ASTVisitor::visitFuncRParams(funcRParams);
+    }
+
+    void SemanticVisitor::visitMulExp(std::shared_ptr<MulExp> mulExp) {
+        mulExp->scope = currentScope;
+        ASTVisitor::visitMulExp(mulExp);
+    }
+
+    void SemanticVisitor::visitAddExp(std::shared_ptr<AddExp> addExp) {
+        addExp->scope = currentScope;
+        ASTVisitor::visitAddExp(addExp);
+    }
+
+    void SemanticVisitor::visitRelExp(std::shared_ptr<RelExp> relExp) {
+        relExp->scope = currentScope;
+        ASTVisitor::visitRelExp(relExp);
+    }
+
+    void SemanticVisitor::visitEqExp(std::shared_ptr<EqExp> eqExp) {
+        eqExp->scope = currentScope;
+        ASTVisitor::visitEqExp(eqExp);
+    }
+
+    void SemanticVisitor::visitLAndExp(std::shared_ptr<LAndExp> landExp) {
+        landExp->scope = currentScope;
+        ASTVisitor::visitLAndExp(landExp);
+    }
+
+    void SemanticVisitor::visitLOrExp(std::shared_ptr<LOrExp> lorExp) {
+        lorExp->scope = currentScope;
+        ASTVisitor::visitLOrExp(lorExp);
+    }
+
+    void SemanticVisitor::visitConstExp(std::shared_ptr<ConstExp> constExp) {
+        constExp->scope = currentScope;
+        ASTVisitor::visitConstExp(constExp);
     }
 } // thm

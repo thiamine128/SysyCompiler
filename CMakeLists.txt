@@ -25,15 +25,19 @@ add_executable(Compiler main.cpp
         parser/ASTVisitor.cpp
         parser/ASTVisitor.h
         util/util.h
-        symbol/Symbol.cpp
-        symbol/Symbol.h
-        symbol/SymbolTable.cpp
-        symbol/SymbolTable.h
-        symbol/SymbolTableBuilder.cpp
-        symbol/SymbolTableBuilder.h
+        semantic/Symbol.cpp
+        semantic/Symbol.h
+        semantic/SymbolTable.cpp
+        semantic/SymbolTable.h
+        semantic/SemanticVisitor.cpp
+        semantic/SemanticVisitor.h
         core/Scope.cpp
         core/Scope.h
         util/util.cpp
+        llvm/LLVM.cpp
+        llvm/LLVM.h
+        llvm/IRBuilder.cpp
+        llvm/IRBuilder.h
 )
 
 add_definitions(-DPRINT_LEXER)

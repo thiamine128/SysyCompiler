@@ -111,17 +111,17 @@ namespace thm {
     std::shared_ptr<ConstDef> Parser::parseConstDef() {
         auto ptr = std::make_shared<ConstDef>();
         ptr->lineno = currentToken().lineno;
-        Token ident = currentToken();
+        ptr->ident = currentToken();
         match(Token::IDENFR);
         if (tryMatch(Token::LBRACK)) {
             std::shared_ptr<ConstExp> len;
             if (!tryMatch(Token::RBRACK)) {
                 len = parseConstExp();
             }
-            ptr->def = ConstDef::ConstDefArray(ident, len);
+            ptr->def = ConstDef::ConstDefArray(len);
             match(Token::RBRACK);
         } else {
-            ptr->def = ConstDef::ConstDefBasic(ident);
+            ptr->def = ConstDef::ConstDefBasic();
         }
         match(Token::ASSIGN);
         ptr->val = parseConstInitVal();
@@ -171,7 +171,7 @@ namespace thm {
         auto ptr = std::make_shared<VarDef>();
         ptr->lineno = currentToken().lineno;
 
-        Token ident = currentToken();
+        ptr->ident = currentToken();
         match(Token::IDENFR);
 
         if (tryMatch(Token::LBRACK)) {
@@ -179,10 +179,10 @@ namespace thm {
             if (!tokenStream_.peekType(Token::RBRACK)) {
                 len = parseConstExp();
             }
-            ptr->def = VarDef::VarDefArray(ident, len);
+            ptr->def = VarDef::VarDefArray(len);
             match(Token::RBRACK);
         } else {
-            ptr->def = VarDef::VarDefBasic(ident);
+            ptr->def = VarDef::VarDefBasic();
         }
         std::shared_ptr<InitVal> initVal;
         if (tryMatch(Token::ASSIGN)) {

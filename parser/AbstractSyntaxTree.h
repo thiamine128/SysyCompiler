@@ -8,8 +8,9 @@
 #include <variant>
 #include <vector>
 
+#include "../core/Scope.h"
 #include "../lexer/Token.h"
-#include "../symbol/Symbol.h"
+#include "../semantic/Symbol.h"
 
 #define ASTNODES \
     X(Default, "Default", DEFAULT) \
@@ -63,7 +64,7 @@ namespace thm {
 #undef X
         };
         int lineno;
-        std::vector<Token> tokens;
+        std::shared_ptr<Scope> scope;
 
         void consume(std::vector<Token>& tokens);
         virtual ASTNodeType nodeType() const { return ASTNode::DEFAULT; }
@@ -106,19 +107,15 @@ namespace thm {
     };
     class ConstDef : public ASTNode {
     public:
-        struct ConstDefBasic {
-            Token ident;
-
-            ConstDefBasic(Token const& ident) : ident(ident) {}
-            ConstDefBasic() {}
-        };
+        struct ConstDefBasic {};
         struct ConstDefArray {
-            Token ident;
             std::shared_ptr<ConstExp> size;
 
-            ConstDefArray(Token const& ident, std::shared_ptr<ConstExp> size) : ident(ident), size(size) {}
+            ConstDefArray(std::shared_ptr<ConstExp> size) : size(size) {}
             ConstDefArray() {}
         };
+        VariableType::Type type;
+        Token ident;
         std::variant<ConstDefBasic, ConstDefArray> def;
         std::shared_ptr<ConstInitVal> val;
         ASTNodeType nodeType() const override {return ASTNode::CONSTDEF;}
@@ -126,13 +123,13 @@ namespace thm {
     };
     class ConstInitVal : public ASTNode {
     public:
-        struct  ConstInitValBasic {
+        struct ConstInitValBasic {
             std::shared_ptr<ConstExp> exp;
 
             ConstInitValBasic(std::shared_ptr<ConstExp> exp) : exp(exp) {}
             ConstInitValBasic() {}
         };
-        struct  ConstInitValArray {
+        struct ConstInitValArray {
             std::vector<std::shared_ptr<ConstExp>> exps;
 
             ConstInitValArray(std::vector<std::shared_ptr<ConstExp>>& exps) : exps(exps) {}
@@ -152,17 +149,14 @@ namespace thm {
     };
     class VarDef : public ASTNode {
     public:
-        struct  VarDefBasic {
-            Token ident;
-            VarDefBasic(Token const& ident) : ident(ident) {}
-            VarDefBasic() {}
-        };
-        struct  VarDefArray {
-            Token ident;
+        struct VarDefBasic {};
+        struct VarDefArray {
             std::shared_ptr<ConstExp> size;
-            VarDefArray(Token const& ident, std::shared_ptr<ConstExp> size) : ident(ident), size(size) {}
+            VarDefArray(std::shared_ptr<ConstExp> size) : size(size) {}
             VarDefArray() {}
         };
+        VariableType::Type type;
+        Token ident;
         std::variant<VarDefBasic, VarDefArray> def;
         std::shared_ptr<InitVal> val;
         ASTNodeType nodeType() const override {return ASTNode::VARDEF;}
@@ -235,14 +229,14 @@ namespace thm {
     };
     class Stmt : public ASTNode {
     public:
-        struct  StmtAssign {
+        struct StmtAssign {
             std::shared_ptr<LVal> lVal;
             std::shared_ptr<Exp> exp;
 
             StmtAssign(std::shared_ptr<LVal> lVal, std::shared_ptr<Exp> exp) : lVal(lVal), exp(exp) {}
             StmtAssign() {}
         };
-        struct  StmtIf {
+        struct StmtIf {
             std::shared_ptr<Cond> cond;
             std::shared_ptr<Stmt> stmt;
             std::shared_ptr<Stmt> elseStmt;
@@ -250,7 +244,7 @@ namespace thm {
             StmtIf(std::shared_ptr<Cond> cond, std::shared_ptr<Stmt> stmt, std::shared_ptr<Stmt> elseStmt) : cond(cond), stmt(stmt), elseStmt(elseStmt) {}
             StmtIf() {}
         };
-        struct  StmtFor {
+        struct StmtFor {
             std::shared_ptr<ForStmt> initStmt;
             std::shared_ptr<Cond> cond;
             std::shared_ptr<ForStmt> updateStmt;
@@ -263,13 +257,13 @@ namespace thm {
             BREAK,
             CONTINUE
         };
-        struct  StmtReturn {
+        struct StmtReturn {
             std::shared_ptr<Exp> exp;
 
             StmtReturn(std::shared_ptr<Exp> exp) : exp(exp) {}
             StmtReturn() {}
         };
-        struct  StmtRead {
+        struct StmtRead {
             std::shared_ptr<LVal> lVal;
             enum ReadType {
                 INT,
@@ -279,7 +273,7 @@ namespace thm {
             StmtRead(std::shared_ptr<LVal> lVal, ReadType type) : lVal(lVal), type(type) {}
             StmtRead() {}
         };
-        struct  StmtPrintf {
+        struct StmtPrintf {
             std::string fmt;
             std::vector<std::shared_ptr<Exp>> exps;
             Token printfToken;
@@ -362,13 +356,13 @@ namespace thm {
     };
     class UnaryExp : public ASTNode {
     public:
-        struct  FuncExp {
+        struct FuncExp {
             Token ident;
             std::shared_ptr<FuncRParams> params;
 
             FuncExp(Token const& ident, std::shared_ptr<FuncRParams> params) : ident(ident), params(params) {}
         };
-        struct  OpExp {
+        struct OpExp {
             std::shared_ptr<UnaryOp> op;
             std::shared_ptr<UnaryExp> exp;
 
@@ -398,7 +392,7 @@ namespace thm {
     };
     class MulExp : public ASTNode {
     public:
-        struct  OpExp {
+        struct OpExp {
             std::shared_ptr<MulExp> mulExp;
             enum Op {
                 MUL, DIV, MOD

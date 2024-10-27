@@ -7,12 +7,11 @@
 #include <ostream>
 
 #include "ASTVisitor.h"
-#include "../symbol/SymbolTable.h"
+#include "../semantic/SymbolTable.h"
 #include "../util/util.h"
 
 namespace thm {
     void ASTNode::consume(std::vector<Token> &tokens) {
-        this->tokens = tokens;
         tokens.clear();
     }
 

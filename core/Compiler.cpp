@@ -10,7 +10,7 @@
 
 #include "Scope.h"
 #include "../error/CompilerException.h"
-#include "../symbol/SymbolTableBuilder.h"
+#include "../semantic/SemanticVisitor.h"
 
 namespace thm {
     Compiler::Compiler(std::string const &source) : source_(source) {
@@ -39,7 +39,7 @@ namespace thm {
     }
 
     void Compiler::buildSymbolTables() {
-        std::shared_ptr<SymbolTableBuilder> builder = std::make_shared<SymbolTableBuilder>(errorReporter_);
+        std::shared_ptr<SemanticVisitor> builder = std::make_shared<SemanticVisitor>(errorReporter_);
         compUnit_->visit(builder);
 #ifdef PRINT_SYMBOL
         std::shared_ptr<Logger> logger = std::make_shared<Logger>("symbol.txt");
