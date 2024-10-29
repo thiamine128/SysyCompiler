@@ -13,6 +13,8 @@ namespace thm {
 
 class Symbol {
 public:
+    virtual ~Symbol() = default;
+
     enum Type {
         VARIABLE,
         FUNCTION
@@ -33,13 +35,15 @@ public:
     } type;
     bool isConst;
     bool isArray;
+    int arrayLen;
 };
 
 class VariableSymbol : public Symbol {
 public:
     VariableType type;
-    int constVal;
-    std::vector<int> constVals;
+    bool hasInit;
+    int initVal;
+    std::vector<int> initVals;
 
     std::string typeString() const override;
     Type symbolType() const override;

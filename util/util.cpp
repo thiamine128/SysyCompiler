@@ -22,7 +22,7 @@ std::unordered_map<char, char> slashMap = {
 
 std::string fromRaw(char const* raw) {
     std::string result;
-    for (int i = 0; raw[i]; ++i) {
+    for (int i = 1; raw[i + 1]; ++i) {
         if (raw[i] == '\\') {
             i++;
             result += slashMap[raw[i]];

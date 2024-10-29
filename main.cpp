@@ -9,6 +9,7 @@ int main() {
     compiler.lexer();
     compiler.parse();
     compiler.buildSymbolTables();
+    compiler.buildIR();
     compiler.printErrors();
     return 0;
 }

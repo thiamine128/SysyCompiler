@@ -10,7 +10,7 @@
 
 
 namespace thm {
-    Parser::Parser(TokenStream &tokenStream, ErrorReporter& errorReporter): currentLine_(0), tokenStream_(tokenStream), errorReporter_(errorReporter) {
+    Parser::Parser(TokenStream &tokenStream, ErrorReporter& errorReporter) : tokenStream_(tokenStream), errorReporter_(errorReporter), currentLine_(0) {
 
     }
 
@@ -47,8 +47,8 @@ namespace thm {
         return true;
     }
 
-    std::shared_ptr<CompUnit> Parser::parseCompUnit() {
-        auto ptr = std::make_shared<CompUnit>();
+    CompUnit* Parser::parseCompUnit() {
+        auto ptr = new CompUnit();
         ptr->lineno = currentToken().lineno;
 
 
@@ -73,8 +73,8 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<Decl> Parser::parseDecl() {
-        auto ptr = std::make_shared<Decl>();
+    Decl* Parser::parseDecl() {
+        auto ptr = new Decl();
         ptr->lineno = currentToken().lineno;
 
         if (tokenStream_.peekType(Token::CONSTTK)) ptr->decl = parseConstDecl();
@@ -83,8 +83,8 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<ConstDecl> Parser::parseConstDecl() {
-        auto ptr = std::make_shared<ConstDecl>();
+    ConstDecl* Parser::parseConstDecl() {
+        auto ptr = new ConstDecl();
         ptr->lineno = currentToken().lineno;
 
         match(Token::CONSTTK);
@@ -98,8 +98,8 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<BType> Parser::parseBType() {
-        auto ptr = std::make_shared<BType>();
+    BType* Parser::parseBType() {
+        auto ptr = new BType();
         ptr->lineno = currentToken().lineno;
         ptr->type = currentToken().type == Token::INTTK ? VariableType::INT : VariableType::CHAR;
         nextToken();
@@ -108,13 +108,13 @@ namespace thm {
     }
 
 
-    std::shared_ptr<ConstDef> Parser::parseConstDef() {
-        auto ptr = std::make_shared<ConstDef>();
+    ConstDef* Parser::parseConstDef() {
+        auto ptr = new ConstDef();
         ptr->lineno = currentToken().lineno;
         ptr->ident = currentToken();
         match(Token::IDENFR);
         if (tryMatch(Token::LBRACK)) {
-            std::shared_ptr<ConstExp> len;
+            ConstExp* len = nullptr;
             if (!tryMatch(Token::RBRACK)) {
                 len = parseConstExp();
             }
@@ -129,14 +129,14 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<ConstInitVal> Parser::parseConstInitVal() {
-        auto ptr = std::make_shared<ConstInitVal>();
+    ConstInitVal* Parser::parseConstInitVal() {
+        auto ptr = new ConstInitVal();
         ptr->lineno = currentToken().lineno;
 
         if (tokenStream_.peekType(0, {Token::PLUS, Token::MINU, Token::NOT, Token::IDENFR, Token::LPARENT, Token::INTCON, Token::CHRCON})) {
             ptr->val = ConstInitVal::ConstInitValBasic(parseConstExp());
         } else if (tryMatch(Token::LBRACE)) {
-            std::vector<std::shared_ptr<ConstExp> > exps;
+            std::vector<ConstExp* > exps;
             if (tokenStream_.peekType(0, {Token::PLUS, Token::MINU, Token::NOT, Token::IDENFR, Token::LPARENT, Token::INTCON, Token::CHRCON})) {
                 exps.push_back(parseConstExp());
                 while (tryMatch(Token::COMMA)) {
@@ -153,8 +153,8 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<VarDecl> Parser::parseVarDecl() {
-        auto ptr = std::make_shared<VarDecl>();
+    VarDecl* Parser::parseVarDecl() {
+        auto ptr = new VarDecl();
         ptr->lineno = currentToken().lineno;
 
         ptr->bType = parseBType();
@@ -167,15 +167,15 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<VarDef> Parser::parseVarDef() {
-        auto ptr = std::make_shared<VarDef>();
+    VarDef* Parser::parseVarDef() {
+        auto ptr = new VarDef();
         ptr->lineno = currentToken().lineno;
 
         ptr->ident = currentToken();
         match(Token::IDENFR);
 
         if (tryMatch(Token::LBRACK)) {
-            std::shared_ptr<ConstExp> len;
+            ConstExp* len = nullptr;
             if (!tokenStream_.peekType(Token::RBRACK)) {
                 len = parseConstExp();
             }
@@ -184,7 +184,7 @@ namespace thm {
         } else {
             ptr->def = VarDef::VarDefBasic();
         }
-        std::shared_ptr<InitVal> initVal;
+        InitVal* initVal = nullptr;
         if (tryMatch(Token::ASSIGN)) {
             initVal = parseInitVal();
         }
@@ -193,14 +193,14 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<InitVal> Parser::parseInitVal() {
-        auto ptr = std::make_shared<InitVal>();
+    InitVal* Parser::parseInitVal() {
+        auto ptr = new InitVal();
         ptr->lineno = currentToken().lineno;
 
         if (tokenStream_.peekType(0, {Token::PLUS, Token::MINU, Token::NOT, Token::IDENFR, Token::LPARENT, Token::INTCON, Token::CHRCON})) {
             ptr->val = InitVal::InitValBasic(parseExp());
         } else if (tryMatch(Token::LBRACE)) {
-            std::vector<std::shared_ptr<Exp> > exps;
+            std::vector<Exp* > exps;
             if (tokenStream_.peekType(0, {Token::PLUS, Token::MINU, Token::NOT, Token::IDENFR, Token::LPARENT, Token::INTCON, Token::CHRCON})) {
                 exps.push_back(parseExp());
                 while (tryMatch(Token::COMMA)) {
@@ -217,8 +217,8 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<FuncDef> Parser::parseFuncDef() {
-        auto ptr = std::make_shared<FuncDef>();
+    FuncDef* Parser::parseFuncDef() {
+        auto ptr = new FuncDef();
         ptr->lineno = currentToken().lineno;
 
         ptr->funcType = parseFuncType();
@@ -234,8 +234,8 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<MainFuncDef> Parser::parseMainFuncDef() {
-        auto ptr = std::make_shared<MainFuncDef>();
+    MainFuncDef* Parser::parseMainFuncDef() {
+        auto ptr = new MainFuncDef();
         ptr->lineno = currentToken().lineno;
 
         match(Token::INTTK);
@@ -247,8 +247,8 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<FuncType> Parser::parseFuncType() {
-        auto ptr = std::make_shared<FuncType>();
+    FuncType* Parser::parseFuncType() {
+        auto ptr = new FuncType();
         ptr->lineno = currentToken().lineno;
 
         if (tokenStream_.peekType(Token::INTTK)) {
@@ -263,8 +263,8 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<FuncFParams> Parser::parseFuncFParams() {
-        auto ptr = std::make_shared<FuncFParams>();
+    FuncFParams* Parser::parseFuncFParams() {
+        auto ptr = new FuncFParams();
         ptr->lineno = currentToken().lineno;
 
         ptr->params.push_back(parseFuncFParam());
@@ -275,8 +275,8 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<FuncFParam> Parser::parseFuncFParam() {
-        auto ptr = std::make_shared<FuncFParam>();
+    FuncFParam* Parser::parseFuncFParam() {
+        auto ptr = new FuncFParam();
         ptr->lineno = currentToken().lineno;
 
         ptr->bType = parseBType();
@@ -291,8 +291,8 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<Block> Parser::parseBlock() {
-        auto ptr = std::make_shared<Block>();
+    Block* Parser::parseBlock() {
+        auto ptr = new Block();
         ptr->lineno = currentToken().lineno;
         match(Token::LBRACE);
 
@@ -310,8 +310,8 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<BlockItem> Parser::parseBlockItem() {
-        auto ptr = std::make_shared<BlockItem>();
+    BlockItem* Parser::parseBlockItem() {
+        auto ptr = new BlockItem();
         ptr->lineno = currentToken().lineno;
 
         if (tokenStream_.peekType(0, {Token::INTTK, Token::CHARTK, Token::CONSTTK})) {
@@ -323,8 +323,8 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<Stmt> Parser::parseStmt() {
-        auto ptr = std::make_shared<Stmt>();
+    Stmt* Parser::parseStmt() {
+        auto ptr = new Stmt();
         ptr->lineno = currentToken().lineno;
 
         if (tokenStream_.peekType(Token::LBRACE)) {
@@ -334,14 +334,14 @@ namespace thm {
             auto cond = parseCond();
             match(Token::RPARENT);
             auto stmt = parseStmt();
-            std::shared_ptr<Stmt> elseStmt;
+            Stmt* elseStmt = nullptr;
             if (tryMatch(Token::ELSETK)) {
                 elseStmt = parseStmt();
             }
             ptr->stmt = Stmt::StmtIf(cond, stmt, elseStmt);
         } else if (tryMatch(Token::FORTK)) {
-            std::shared_ptr<ForStmt> initStmt, updateStmt;
-            std::shared_ptr<Cond> cond;
+            ForStmt *initStmt = nullptr, *updateStmt = nullptr;
+            Cond* cond = nullptr;
             match(Token::LPARENT);
             if (!tryMatch(Token::SEMICN)) {
                 initStmt = parseForStmt();
@@ -365,7 +365,7 @@ namespace thm {
             match(Token::SEMICN);
             ptr->stmt = Stmt::CONTINUE;
         } else if (tryMatch(Token::RETURNTK)) {
-            std::shared_ptr<Exp> returnExp;
+            Exp* returnExp = nullptr;
             if (stepExp(0)) {
                 returnExp = parseExp();
                 match(Token::SEMICN);
@@ -379,7 +379,7 @@ namespace thm {
             match(Token::LPARENT);
             std::string fmt = currentToken().content;
             match(Token::STRCON);
-            std::vector<std::shared_ptr<Exp>> args;
+            std::vector<Exp*> args;
             while (tryMatch(Token::COMMA)) {
                 args.push_back(parseExp());
             }
@@ -414,15 +414,15 @@ namespace thm {
                 }
                 match(Token::SEMICN);
             } else {
-                ptr->stmt = std::shared_ptr<Exp>();
+                ptr->stmt = static_cast<Exp*>(nullptr);
             }
         }
         submit(ptr);
         return ptr;
     }
 
-    std::shared_ptr<ForStmt> Parser::parseForStmt() {
-        auto ptr = std::make_shared<ForStmt>();
+    ForStmt* Parser::parseForStmt() {
+        auto ptr = new ForStmt();
         ptr->lineno = currentToken().lineno;
 
         ptr->lVal = parseLVal();
@@ -432,8 +432,8 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<Exp> Parser::parseExp() {
-        auto ptr = std::make_shared<Exp>();
+    Exp* Parser::parseExp() {
+        auto ptr = new Exp();
         ptr->len = stepExp(0);
         ptr->lineno = currentToken().lineno;
 
@@ -446,8 +446,8 @@ namespace thm {
         return stepAddExp(offset);
     }
 
-    std::shared_ptr<Cond> Parser::parseCond() {
-        auto ptr = std::make_shared<Cond>();
+    Cond* Parser::parseCond() {
+        auto ptr = new Cond();
         ptr->lineno = currentToken().lineno;
 
         ptr->lOrExp = parseLOrExp();
@@ -455,8 +455,8 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<LVal> Parser::parseLVal() {
-        auto ptr = std::make_shared<LVal>();
+    LVal* Parser::parseLVal() {
+        auto ptr = new LVal();
         ptr->lineno = currentToken().lineno;
         ptr->ident = currentToken();
         match(Token::IDENFR);
@@ -480,8 +480,8 @@ namespace thm {
         return offset;
     }
 
-    std::shared_ptr<PrimaryExp> Parser::parsePrimaryExp() {
-        auto ptr = std::make_shared<PrimaryExp>();
+    PrimaryExp* Parser::parsePrimaryExp() {
+        auto ptr = new PrimaryExp();
         ptr->lineno = currentToken().lineno;
         if (tryMatch(Token::LPARENT)) {
             ptr->primaryExp = parseExp();
@@ -513,8 +513,8 @@ namespace thm {
         return offset;
     }
 
-    std::shared_ptr<Number> Parser::parseNumber() {
-        auto ptr = std::make_shared<Number>();
+    Number* Parser::parseNumber() {
+        auto ptr = new Number();
         ptr->lineno = currentToken().lineno;
         int v = atoi(currentToken().content.c_str());
         match(Token::INTCON);
@@ -523,14 +523,14 @@ namespace thm {
         return ptr;
     }
 
-    int Parser::stepNumber(int offset) {
+    int Parser::stepNumber(int offset) const {
         if (tokenStream_.peekType(offset, Token::INTCON))
             offset += 1;
         return offset;
     }
 
-    std::shared_ptr<Character> Parser::parseCharacter() {
-        auto ptr = std::make_shared<Character>();
+    Character* Parser::parseCharacter() {
+        auto ptr = new Character();
         char v = currentToken().content[0];
         ptr->lineno = currentToken().lineno;
         match(Token::CHRCON);
@@ -539,14 +539,14 @@ namespace thm {
         return ptr;
     }
 
-    int Parser::stepCharacter(int offset) {
+    int Parser::stepCharacter(int offset) const {
         if (tokenStream_.peekType(offset, Token::CHRCON))
             offset += 1;
         return offset;
     }
 
-    std::shared_ptr<UnaryExp> Parser::parseUnaryExp() {
-        auto ptr = std::make_shared<UnaryExp>();
+    UnaryExp* Parser::parseUnaryExp() {
+        auto ptr = new UnaryExp();
         ptr->lineno = currentToken().lineno;
         if (tokenStream_.peekType(Token::IDENFR) && tokenStream_.peekType(1, Token::LPARENT)) {
             Token ident = currentToken();
@@ -555,7 +555,7 @@ namespace thm {
             if (stepExp(0)) {
                 ptr->exp = UnaryExp::FuncExp(ident, parseFuncRParams());
             } else {
-                ptr->exp = UnaryExp::FuncExp(ident, std::shared_ptr<FuncRParams>());
+                ptr->exp = UnaryExp::FuncExp(ident, nullptr);
             }
             match(Token::RPARENT);
             submit(ptr);
@@ -590,8 +590,8 @@ namespace thm {
         return offset;
     }
 
-    std::shared_ptr<FuncRParams> Parser::parseFuncRParams() {
-        auto ptr = std::make_shared<FuncRParams>();
+    FuncRParams* Parser::parseFuncRParams() {
+        auto ptr = new FuncRParams();
         ptr->lineno = currentToken().lineno;
         ptr->params.push_back(parseExp());
         while (tryMatch(Token::COMMA)) {
@@ -610,13 +610,13 @@ namespace thm {
         return offset;
     }
 
-    std::shared_ptr<MulExp> Parser::parseMulExp() {
-        auto ptr = std::make_shared<MulExp>();
+    MulExp* Parser::parseMulExp() {
+        auto ptr = new MulExp();
         ptr->lineno = currentToken().lineno;
         ptr->exp = parseUnaryExp();
         submit(ptr);
         while (tokenStream_.peekType(0, {Token::MULT, Token::DIV, Token::MOD})) {
-            auto mul = std::make_shared<MulExp>();
+            MulExp* mul = new MulExp();
             MulExp::OpExp::Op op = MulExp::OpExp::MUL;
             switch (currentToken().type) {
                 case Token::MULT:
@@ -628,6 +628,7 @@ namespace thm {
                 case Token::MOD:
                     op = MulExp::OpExp::MOD;
                     break;
+                default: ;
             }
             nextToken();
             mul->lineno = ptr->lineno;
@@ -647,13 +648,13 @@ namespace thm {
         return offset;
     }
 
-    std::shared_ptr<AddExp> Parser::parseAddExp() {
-        auto ptr = std::make_shared<AddExp>();
+    AddExp* Parser::parseAddExp() {
+        auto ptr = new AddExp();
         ptr->exp = parseMulExp();
         ptr->lineno = currentToken().lineno;
         submit(ptr);
         while (tokenStream_.peekType(0, {Token::PLUS, Token::MINU})) {
-            auto add = std::make_shared<AddExp>();
+            auto add = new AddExp();
             AddExp::OpExp::Op op;
             switch (currentToken().type) {
                 case Token::PLUS:
@@ -683,14 +684,14 @@ namespace thm {
         return offset;
     }
 
-    std::shared_ptr<RelExp> Parser::parseRelExp() {
-        auto ptr = std::make_shared<RelExp>();
+    RelExp* Parser::parseRelExp() {
+        auto ptr = new RelExp();
         ptr->lineno = currentToken().lineno;
         ptr->exp = parseAddExp();
         submit(ptr);
 
         while (tokenStream_.peekType(0, {Token::LSS, Token::LEQ, Token::GEQ, Token::GRE})) {
-            auto rel = std::make_shared<RelExp>();
+            auto rel = new RelExp();
             RelExp::OpExp::Op op = RelExp::OpExp::LT;
             switch (currentToken().type) {
                 case Token::LSS:
@@ -705,6 +706,7 @@ namespace thm {
                 case Token::GEQ:
                     op = RelExp::OpExp::GE;
                     break;
+                default: ;
             }
             nextToken();
             rel->lineno = ptr->lineno;
@@ -715,13 +717,13 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<EqExp> Parser::parseEqExp() {
-        auto ptr = std::make_shared<EqExp>();
+    EqExp* Parser::parseEqExp() {
+        auto ptr = new EqExp();
         ptr->lineno = currentToken().lineno;
         ptr->exp = parseRelExp();
         submit(ptr);
         while (tokenStream_.peekType(0, {Token::EQL, Token::NEQ})) {
-            auto eq = std::make_shared<EqExp>();
+            auto eq = new EqExp();
             eq->lineno = ptr->lineno;
             Token::TokenType type = currentToken().type;
             nextToken();
@@ -733,13 +735,13 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<LAndExp> Parser::parseLAndExp() {
-        auto ptr = std::make_shared<LAndExp>();
+    LAndExp* Parser::parseLAndExp() {
+        auto ptr = new LAndExp();
         ptr->lineno = currentToken().lineno;
         ptr->exp = parseEqExp();
         submit(ptr);
         while (tryMatch(Token::AND)) {
-            auto lAnd = std::make_shared<LAndExp>();
+            auto lAnd = new LAndExp();
             lAnd->lineno = ptr->lineno;
             lAnd->exp = LAndExp::OpExp(ptr, parseEqExp());
             ptr = lAnd;
@@ -748,13 +750,13 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<LOrExp> Parser::parseLOrExp() {
-        auto ptr = std::make_shared<LOrExp>();
+    LOrExp* Parser::parseLOrExp() {
+        auto ptr = new LOrExp();
         ptr->lineno = currentToken().lineno;
         ptr->exp = parseLAndExp();
         submit(ptr);
         while (tryMatch(Token::OR)) {
-            auto lOr = std::make_shared<LOrExp>();
+            auto lOr = new LOrExp();
             lOr->lineno = ptr->lineno;
             lOr->exp = LOrExp::OpExp(ptr, parseLAndExp());
             ptr = lOr;
@@ -763,16 +765,16 @@ namespace thm {
         return ptr;
     }
 
-    std::shared_ptr<ConstExp> Parser::parseConstExp() {
-        auto ptr = std::make_shared<ConstExp>();
+    ConstExp* Parser::parseConstExp() {
+        auto ptr = new ConstExp();
         ptr->lineno = currentToken().lineno;
         ptr->addExp = parseAddExp();
         submit(ptr);
         return ptr;
     }
 
-    std::shared_ptr<UnaryOp> Parser::parseUnaryOp() {
-        auto ptr = std::make_shared<UnaryOp>();
+    UnaryOp* Parser::parseUnaryOp() {
+        auto ptr = new UnaryOp();
         ptr->lineno = currentToken().lineno;
         switch (currentToken().type) {
             case Token::PLUS:
@@ -784,13 +786,14 @@ namespace thm {
             case Token::NOT:
                 ptr->type = UnaryOp::NOT;
                 break;
+            default: ;
         }
         nextToken();
         submit(ptr);
         return ptr;
     }
 
-    int Parser::stepUnaryOp(int offset) {
+    int Parser::stepUnaryOp(int offset) const {
         if (tokenStream_.peekType(offset, {Token::PLUS, Token::MINU, Token::NOT})) {
             offset += 1;
         }

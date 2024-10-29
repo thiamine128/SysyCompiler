@@ -39,13 +39,18 @@ namespace thm {
     }
 
     void Compiler::buildSymbolTables() {
-        std::shared_ptr<SemanticVisitor> builder = std::make_shared<SemanticVisitor>(errorReporter_);
-        compUnit_->visit(builder);
+        semanticVisitor = new SemanticVisitor(errorReporter_);
+        compUnit_->visit(semanticVisitor);
 #ifdef PRINT_SYMBOL
         std::shared_ptr<Logger> logger = std::make_shared<Logger>("symbol.txt");
-        for (auto& scope : builder->scopes) {
+        for (auto& scope : semanticVisitor->scopes) {
             scope->symbolTable->print(logger->stream());
         }
+    }
+
+    void Compiler::buildIR() {
+        irBuilder = new IRBuilder();
+        compUnit_->visit(irBuilder);
     }
 #endif
     void Compiler::printErrors() {

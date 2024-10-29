@@ -13,14 +13,14 @@ namespace thm {
 class Scope {
 public:
     int scopeId;
-    std::shared_ptr<Scope> parent;
-    std::shared_ptr<Scope> returnScope;
-    std::shared_ptr<SymbolTable> symbolTable;
-    std::shared_ptr<SymbolTable> loopScope;
+    Scope* parent;
+    Scope* returnScope;
+    SymbolTable* symbolTable;
+    SymbolTable* loopScope;
     bool isReturnScope;
     bool requireReturnValue;
 
-    Scope(int scopeId, std::shared_ptr<Scope> parent, std::shared_ptr<SymbolTable> symbolTable, bool isReturnScope, bool requireReturnValue);
+    Scope(int scopeId, Scope* parent, SymbolTable* symbolTable, bool isReturnScope, bool requireReturnValue);
 
     bool canReturnWithValue();
 };

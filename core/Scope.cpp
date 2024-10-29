@@ -8,7 +8,7 @@
 #include "../util/util.h"
 
 namespace thm {
-    Scope::Scope(int scopeId, std::shared_ptr<Scope> parent, std::shared_ptr<SymbolTable> symbolTable, bool isReturnScope, bool requireReturnValue) : scopeId(scopeId), parent(parent), symbolTable(symbolTable), requireReturnValue(requireReturnValue), isReturnScope(isReturnScope) {
+    Scope::Scope(int scopeId, Scope* parent, SymbolTable* symbolTable, bool isReturnScope, bool requireReturnValue) : scopeId(scopeId), parent(parent), symbolTable(symbolTable), requireReturnValue(requireReturnValue), isReturnScope(isReturnScope) {
         if (!isReturnScope && parent != nullptr) {
             if (parent->isReturnScope) {
                 returnScope = parent;

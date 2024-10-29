@@ -12,7 +12,7 @@ namespace thm {
         return symbols_.find(ident) != symbols_.end();
     }
 
-    std::shared_ptr<Symbol> SymbolTable::findSymbol(const std::string &ident) const {
+    Symbol* SymbolTable::findSymbol(const std::string &ident) const {
         auto it = symbols_.find(ident);
         if (it != symbols_.end()) {
             return it->second;
@@ -23,18 +23,18 @@ namespace thm {
         return nullptr;
     }
 
-    bool SymbolTable::addSymbol(std::shared_ptr<Symbol> symbol) {
+    bool SymbolTable::addSymbol(Symbol* symbol) {
         if (hasSymbolInScope(symbol->ident.content)) return false;
         symbols_[symbol->ident.content] = symbol;
         return true;
     }
 
     void SymbolTable::print(std::ostream &out) const {
-        std::vector<std::shared_ptr<Symbol>> symbols;
+        std::vector<Symbol*> symbols;
         for (auto it = symbols_.begin(); it != symbols_.end(); ++it) {
             symbols.push_back(it->second);
         }
-        std::sort(symbols.begin(), symbols.end(), [](std::shared_ptr<Symbol> a, std::shared_ptr<Symbol> b) {
+        std::sort(symbols.begin(), symbols.end(), [](const Symbol* a, const Symbol* b) {
             return a->id < b->id;
         });
         for (auto it = symbols.begin(); it != symbols.end(); ++it) {

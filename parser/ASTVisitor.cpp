@@ -9,58 +9,58 @@
 #include "../util/util.h"
 
 namespace thm {
-    void ASTVisitor::visitCompUnit(std::shared_ptr<CompUnit> compUnit) {
+    void ASTVisitor::visitCompUnit(CompUnit* compUnit) {
         for (auto decl : compUnit->decls) {
-            decl->visit(shared_from_this());
+            decl->visit(this);
         }
         for (auto funcDef : compUnit->funcDefs) {
-            funcDef->visit(shared_from_this());
+            funcDef->visit(this);
         }
-        compUnit->mainFuncDef->visit(shared_from_this());
+        compUnit->mainFuncDef->visit(this);
     }
 
-    void ASTVisitor::visitDecl(std::shared_ptr<Decl> decl) {
+    void ASTVisitor::visitDecl(Decl* decl) {
         std::visit(overloaded{
-            [&](std::shared_ptr<ConstDecl> constDecl) {
-                constDecl->visit(shared_from_this());
+            [&](ConstDecl* constDecl) {
+                constDecl->visit(this);
             },
-            [&](std::shared_ptr<VarDecl> varDecl) {
-                varDecl->visit(shared_from_this());
+            [&](VarDecl* varDecl) {
+                varDecl->visit(this);
             },
         }, decl->decl);
     }
 
-    void ASTVisitor::visitConstDecl(std::shared_ptr<ConstDecl> constDecl) {
-        constDecl->bType->visit(shared_from_this());
+    void ASTVisitor::visitConstDecl(ConstDecl* constDecl) {
+        constDecl->bType->visit(this);
         for (auto constDef : constDecl->constDefs) {
-            constDef->visit(shared_from_this());
+            constDef->visit(this);
         }
     }
 
-    void ASTVisitor::visitBType(std::shared_ptr<BType> bType) {
+    void ASTVisitor::visitBType(BType* bType) {
 
     }
 
-    void ASTVisitor::visitConstDef(std::shared_ptr<ConstDef> constDef) {
+    void ASTVisitor::visitConstDef(ConstDef* constDef) {
         std::visit(overloaded{
             [&](ConstDef::ConstDefBasic& basic) {},
-            [&](ConstDef::ConstDefArray& array) {
+            [&](const ConstDef::ConstDefArray& array) {
                 if (array.size != nullptr) {
-                    array.size->visit(shared_from_this());
+                    array.size->visit(this);
                 }
             }
         }, constDef->def);
-        constDef->val->visit(shared_from_this());
+        constDef->val->visit(this);
     }
 
-    void ASTVisitor::visitConstInitVal(std::shared_ptr<ConstInitVal> constInitVal) {
+    void ASTVisitor::visitConstInitVal(ConstInitVal* constInitVal) {
         std::visit(overloaded{
-            [&](ConstInitVal::ConstInitValBasic& basic) {
-                basic.exp->visit(shared_from_this());
+            [&](const ConstInitVal::ConstInitValBasic& basic) {
+                basic.exp->visit(this);
             },
             [&](ConstInitVal::ConstInitValArray& array) {
                 for (auto exp : array.exps) {
-                    exp->visit(shared_from_this());
+                    exp->visit(this);
                 }
             },
             [&](std::string& str) {
@@ -69,37 +69,37 @@ namespace thm {
         }, constInitVal->val);
     }
 
-    void ASTVisitor::visitVarDecl(std::shared_ptr<VarDecl> varDecl) {
-        varDecl->bType->visit(shared_from_this());
+    void ASTVisitor::visitVarDecl(VarDecl* varDecl) {
+        varDecl->bType->visit(this);
         for (auto def : varDecl->varDefs) {
-            def->visit(shared_from_this());
+            def->visit(this);
         }
     }
 
-    void ASTVisitor::visitVarDef(std::shared_ptr<VarDef> varDef) {
+    void ASTVisitor::visitVarDef(VarDef* varDef) {
         std::visit(overloaded{
             [&](VarDef::VarDefBasic& basic) {
 
             },
-            [&](VarDef::VarDefArray& array) {
+            [&](const VarDef::VarDefArray& array) {
                 if (array.size != nullptr) {
-                    array.size->visit(shared_from_this());
+                    array.size->visit(this);
                 }
             }
         }, varDef->def);
         if (varDef->val != nullptr) {
-            varDef->val->visit(shared_from_this());
+            varDef->val->visit(this);
         }
     }
 
-    void ASTVisitor::visitInitVal(std::shared_ptr<InitVal> initVal) {
+    void ASTVisitor::visitInitVal(InitVal* initVal) {
         std::visit(overloaded{
-            [&](InitVal::InitValBasic& basic) {
-                basic.exp->visit(shared_from_this());
+            [&](const InitVal::InitValBasic& basic) {
+                basic.exp->visit(this);
             },
             [&](InitVal::InitValArray& array) {
                 for (auto exp : array.exps) {
-                    exp->visit(shared_from_this());
+                    exp->visit(this);
                 }
             },
             [&](std::string& str) {
@@ -108,242 +108,242 @@ namespace thm {
         }, initVal->val);
     }
 
-    void ASTVisitor::visitFuncDef(std::shared_ptr<FuncDef> funcDef) {
-        funcDef->funcType->visit(shared_from_this());
+    void ASTVisitor::visitFuncDef(FuncDef* funcDef) {
+        funcDef->funcType->visit(this);
         if (funcDef->params != nullptr) {
-            funcDef->params->visit(shared_from_this());
+            funcDef->params->visit(this);
         }
-        funcDef->block->visit(shared_from_this());
+        funcDef->block->visit(this);
     }
 
-    void ASTVisitor::visitMainFuncDef(std::shared_ptr<MainFuncDef> mainFuncDef) {
-        mainFuncDef->block->visit(shared_from_this());
+    void ASTVisitor::visitMainFuncDef(MainFuncDef* mainFuncDef) {
+        mainFuncDef->block->visit(this);
     }
 
-    void ASTVisitor::visitFuncType(std::shared_ptr<FuncType> funcType) {
+    void ASTVisitor::visitFuncType(FuncType* funcType) {
 
     }
 
-    void ASTVisitor::visitFuncFParams(std::shared_ptr<FuncFParams> funcFParams) {
+    void ASTVisitor::visitFuncFParams(FuncFParams* funcFParams) {
         for (auto funcFParam : funcFParams->params) {
-            funcFParam->visit(shared_from_this());
+            funcFParam->visit(this);
         }
     }
 
-    void ASTVisitor::visitFuncFParam(std::shared_ptr<FuncFParam> funcFParam) {
-        funcFParam->bType->visit(shared_from_this());
+    void ASTVisitor::visitFuncFParam(FuncFParam* funcFParam) {
+        funcFParam->bType->visit(this);
     }
 
-    void ASTVisitor::visitBlock(std::shared_ptr<Block> block) {
+    void ASTVisitor::visitBlock(Block* block) {
         for (auto item : block->items) {
-            item->visit(shared_from_this());
+            item->visit(this);
         }
     }
 
-    void ASTVisitor::visitBlockItem(std::shared_ptr<BlockItem> blockItem) {
+    void ASTVisitor::visitBlockItem(BlockItem* blockItem) {
         std::visit(overloaded{
-            [&](std::shared_ptr<Decl> decl) {
-                decl->visit(shared_from_this());
+            [&](Decl* decl) {
+                decl->visit(this);
             },
-            [&](std::shared_ptr<Stmt> stmt) {
-                stmt->visit(shared_from_this());
+            [&](Stmt* stmt) {
+                stmt->visit(this);
             }
         }, blockItem->item);
     }
 
-    void ASTVisitor::visitStmt(std::shared_ptr<Stmt> stmt) {
+    void ASTVisitor::visitStmt(Stmt* stmt) {
         std::visit(overloaded{
-            [&](Stmt::StmtAssign& stmtAssign) {
-                stmtAssign.lVal->visit(shared_from_this());
-                stmtAssign.exp->visit(shared_from_this());
+            [&](const Stmt::StmtAssign& stmtAssign) {
+                stmtAssign.lVal->visit(this);
+                stmtAssign.exp->visit(this);
             },
-            [&](std::shared_ptr<Exp> exp) {
+            [&](Exp* exp) {
                 if (exp != nullptr)
-                    exp->visit(shared_from_this());
+                    exp->visit(this);
             },
-            [&](std::shared_ptr<Block> block) {
-                block->visit(shared_from_this());
+            [&](Block* block) {
+                block->visit(this);
             },
-            [&](Stmt::StmtIf& stmtIf) {
-                stmtIf.cond->visit(shared_from_this());
-                stmtIf.stmt->visit(shared_from_this());
+            [&](const Stmt::StmtIf& stmtIf) {
+                stmtIf.cond->visit(this);
+                stmtIf.stmt->visit(this);
                 if (stmtIf.elseStmt != nullptr) {
-                    stmtIf.elseStmt->visit(shared_from_this());
+                    stmtIf.elseStmt->visit(this);
                 }
             },
-            [&](Stmt::StmtFor& stmtFor) {
+            [&](const Stmt::StmtFor& stmtFor) {
                 if (stmtFor.initStmt != nullptr) {
-                    stmtFor.initStmt->visit(shared_from_this());
+                    stmtFor.initStmt->visit(this);
                 }
                 if (stmtFor.cond != nullptr) {
-                    stmtFor.cond->visit(shared_from_this());
+                    stmtFor.cond->visit(this);
                 }
                 if (stmtFor.updateStmt != nullptr) {
-                    stmtFor.updateStmt->visit(shared_from_this());
+                    stmtFor.updateStmt->visit(this);
                 }
-                stmtFor.stmt->visit(shared_from_this());
+                stmtFor.stmt->visit(this);
             },
             [&](Stmt::BreakOrContinue& breakOrContinue) {
 
             },
-            [&](Stmt::StmtReturn& stmtReturn) {
+            [&](const Stmt::StmtReturn& stmtReturn) {
                 if (stmtReturn.exp != nullptr)
-                    stmtReturn.exp->visit(shared_from_this());
+                    stmtReturn.exp->visit(this);
             },
-            [&](Stmt::StmtRead& stmtRead) {
-                stmtRead.lVal->visit(shared_from_this());
+            [&](const Stmt::StmtRead& stmtRead) {
+                stmtRead.lVal->visit(this);
             },
             [&](Stmt::StmtPrintf& stmtPrintf) {
                 for (auto exp : stmtPrintf.exps) {
-                    exp->visit(shared_from_this());
+                    exp->visit(this);
                 }
             },
         }, stmt->stmt);
     }
 
-    void ASTVisitor::visitForStmt(std::shared_ptr<ForStmt> forStmt) {
-        forStmt->lVal->visit(shared_from_this());
-        forStmt->exp->visit(shared_from_this());
+    void ASTVisitor::visitForStmt(ForStmt* forStmt) {
+        forStmt->lVal->visit(this);
+        forStmt->exp->visit(this);
     }
 
-    void ASTVisitor::visitExp(std::shared_ptr<Exp> exp) {
-        exp->addExp->visit(shared_from_this());
+    void ASTVisitor::visitExp(Exp* exp) {
+        exp->addExp->visit(this);
     }
 
-    void ASTVisitor::visitCond(std::shared_ptr<Cond> cond) {
-        cond->lOrExp->visit(shared_from_this());
+    void ASTVisitor::visitCond(Cond* cond) {
+        cond->lOrExp->visit(this);
     }
 
-    void ASTVisitor::visitLVal(std::shared_ptr<LVal> lVal) {
+    void ASTVisitor::visitLVal(LVal* lVal) {
         if (lVal->exp != nullptr) {
-            lVal->exp->visit(shared_from_this());
+            lVal->exp->visit(this);
         }
     }
 
-    void ASTVisitor::visitPrimaryExp(std::shared_ptr<PrimaryExp> primaryExp) {
+    void ASTVisitor::visitPrimaryExp(PrimaryExp* primaryExp) {
         std::visit(overloaded{
-            [&](std::shared_ptr<Exp> exp) {
-                exp->visit(shared_from_this());
+            [&](Exp* exp) {
+                exp->visit(this);
             },
-            [&](std::shared_ptr<LVal> lVal) {
-                lVal->visit(shared_from_this());
+            [&](LVal* lVal) {
+                lVal->visit(this);
             },
-            [&](std::shared_ptr<Number> number) {
-                number->visit(shared_from_this());
+            [&](Number* number) {
+                number->visit(this);
             },
-            [&](std::shared_ptr<Character> character) {
-                character->visit(shared_from_this());
+            [&](Character* character) {
+                character->visit(this);
             }
         }, primaryExp->primaryExp);
     }
 
-    void ASTVisitor::visitNumber(std::shared_ptr<Number> number) {
+    void ASTVisitor::visitNumber(Number* number) {
 
     }
 
-    void ASTVisitor::visitCharacter(std::shared_ptr<Character> character) {
+    void ASTVisitor::visitCharacter(Character* character) {
 
     }
 
-    void ASTVisitor::visitUnaryExp(std::shared_ptr<UnaryExp> unaryExp) {
+    void ASTVisitor::visitUnaryExp(UnaryExp* unaryExp) {
         std::visit(overloaded{
-            [&](std::shared_ptr<PrimaryExp> primaryExp) {
-                primaryExp->visit(shared_from_this());
+            [&](PrimaryExp* primaryExp) {
+                primaryExp->visit(this);
             },
-            [&](UnaryExp::FuncExp& funcExp) {
+            [&](const UnaryExp::FuncExp& funcExp) {
                 if (funcExp.params != nullptr)
-                    funcExp.params->visit(shared_from_this());
+                    funcExp.params->visit(this);
             },
-            [&](UnaryExp::OpExp& opExp) {
-                opExp.op->visit(shared_from_this());
-                opExp.exp->visit(shared_from_this());
+            [&](const UnaryExp::OpExp& opExp) {
+                opExp.op->visit(this);
+                opExp.exp->visit(this);
             }
         }, unaryExp->exp);
     }
 
-    void ASTVisitor::visitUnaryOp(std::shared_ptr<UnaryOp> unaryOp) {
+    void ASTVisitor::visitUnaryOp(UnaryOp* unaryOp) {
 
     }
 
-    void ASTVisitor::visitFuncRParams(std::shared_ptr<FuncRParams> funcRParams) {
+    void ASTVisitor::visitFuncRParams(FuncRParams* funcRParams) {
         for (auto param : funcRParams->params) {
-            param->visit(shared_from_this());
+            param->visit(this);
         }
     }
 
-    void ASTVisitor::visitMulExp(std::shared_ptr<MulExp> mulExp) {
+    void ASTVisitor::visitMulExp(MulExp* mulExp) {
         std::visit(overloaded{
-            [&](std::shared_ptr<UnaryExp> unaryExp) {
-                unaryExp->visit(shared_from_this());
+            [&](UnaryExp* unaryExp) {
+                unaryExp->visit(this);
             },
-            [&](MulExp::OpExp& opExp) {
-                opExp.mulExp->visit(shared_from_this());
-                opExp.unaryExp->visit(shared_from_this());
+            [&](const MulExp::OpExp& opExp) {
+                opExp.mulExp->visit(this);
+                opExp.unaryExp->visit(this);
             }
         }, mulExp->exp);
     }
 
-    void ASTVisitor::visitAddExp(std::shared_ptr<AddExp> addExp) {
+    void ASTVisitor::visitAddExp(AddExp* addExp) {
         std::visit(overloaded{
-            [&](std::shared_ptr<MulExp> mulExp) {
-                mulExp->visit(shared_from_this());
+            [&](MulExp* mulExp) {
+                mulExp->visit(this);
             },
-            [&](AddExp::OpExp& opExp) {
-                opExp.addExp->visit(shared_from_this());
-                opExp.mulExp->visit(shared_from_this());
+            [&](const AddExp::OpExp& opExp) {
+                opExp.addExp->visit(this);
+                opExp.mulExp->visit(this);
             }
         }, addExp->exp);
     }
 
-    void ASTVisitor::visitRelExp(std::shared_ptr<RelExp> relExp) {
+    void ASTVisitor::visitRelExp(RelExp* relExp) {
         std::visit(overloaded{
-            [&](std::shared_ptr<AddExp> addExp) {
-                addExp->visit(shared_from_this());
+            [&](AddExp* addExp) {
+                addExp->visit(this);
             },
-            [&](RelExp::OpExp& opExp) {
-                opExp.relExp->visit(shared_from_this());
-                opExp.addExp->visit(shared_from_this());
+            [&](const RelExp::OpExp& opExp) {
+                opExp.relExp->visit(this);
+                opExp.addExp->visit(this);
             }
         }, relExp->exp);
     }
 
-    void ASTVisitor::visitEqExp(std::shared_ptr<EqExp> eqExp) {
+    void ASTVisitor::visitEqExp(EqExp* eqExp) {
         std::visit(overloaded{
-            [&](std::shared_ptr<RelExp> relExp) {
-                relExp->visit(shared_from_this());
+            [&](RelExp* relExp) {
+                relExp->visit(this);
             },
-            [&](EqExp::OpExp& opExp) {
-                opExp.eqExp->visit(shared_from_this());
-                opExp.relExp->visit(shared_from_this());
+            [&](const EqExp::OpExp& opExp) {
+                opExp.eqExp->visit(this);
+                opExp.relExp->visit(this);
             }
         }, eqExp->exp);
     }
 
-    void ASTVisitor::visitLAndExp(std::shared_ptr<LAndExp> lAndExp) {
+    void ASTVisitor::visitLAndExp(LAndExp* lAndExp) {
         std::visit(overloaded{
-            [&](std::shared_ptr<EqExp> eqExp) {
-                eqExp->visit(shared_from_this());
+            [&](EqExp* eqExp) {
+                eqExp->visit(this);
             },
-            [&](LAndExp::OpExp& opExp) {
-                opExp.lAndExp->visit(shared_from_this());
-                opExp.eqExp->visit(shared_from_this());
+            [&](const LAndExp::OpExp& opExp) {
+                opExp.lAndExp->visit(this);
+                opExp.eqExp->visit(this);
             }
         }, lAndExp->exp);
     }
 
-    void ASTVisitor::visitLOrExp(std::shared_ptr<LOrExp> lOrExp) {
+    void ASTVisitor::visitLOrExp(LOrExp* lOrExp) {
         std::visit(overloaded{
-            [&](std::shared_ptr<LAndExp> lAndExp) {
-                lAndExp->visit(shared_from_this());
+            [&](LAndExp* lAndExp) {
+                lAndExp->visit(this);
             },
-            [&](LOrExp::OpExp& opExp) {
-                opExp.lOrExp->visit(shared_from_this());
-                opExp.lAndExp->visit(shared_from_this());
+            [&](const LOrExp::OpExp& opExp) {
+                opExp.lOrExp->visit(this);
+                opExp.lAndExp->visit(this);
             }
         }, lOrExp->exp);
     }
 
-    void ASTVisitor::visitConstExp(std::shared_ptr<ConstExp> constExp) {
-        constExp->addExp->visit(shared_from_this());
+    void ASTVisitor::visitConstExp(ConstExp* constExp) {
+        constExp->addExp->visit(this);
     }
 } // thm

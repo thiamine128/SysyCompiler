@@ -11,9 +11,12 @@
 #include "../lexer/Lexer.h"
 #include "../error/CompilerException.h"
 #include "../error/ErrorReporter.h"
+#include "../llvm/IRBuilder.h"
 #include "../parser/Parser.h"
 
 namespace thm {
+    class SemanticVisitor;
+
     class Compiler {
     protected:
         std::string source_;
@@ -21,7 +24,9 @@ namespace thm {
         ErrorReporter errorReporter_;
         std::unique_ptr<Lexer> lexer_;
         std::unique_ptr<Parser> parser_;
-        std::shared_ptr<CompUnit> compUnit_;
+        CompUnit* compUnit_;
+        SemanticVisitor* semanticVisitor;
+        IRBuilder* irBuilder;
 
     public:
         Compiler(std::string const &source);
@@ -31,6 +36,8 @@ namespace thm {
         void parse();
 
         void buildSymbolTables();
+
+        void buildIR();
 
         void printErrors();
     };

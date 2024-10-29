@@ -4,14 +4,12 @@
 
 #include "IRBuilder.h"
 
-#include "../util/util.h"
-
 namespace thm {
     IRBuilder::IRBuilder() {
-        module = std::make_shared<Module>();
+        module = new Module();
     }
 
-    void IRBuilder::visitConstDecl(std::shared_ptr<ConstDecl> constDecl) {
+    void IRBuilder::visitConstDecl(ConstDecl* constDecl) {
         for (auto& def : constDecl->constDefs) {
             if (def->scope->scopeId == 1) {
                 // replace const variables with value
@@ -22,10 +20,10 @@ namespace thm {
         ASTVisitor::visitConstDecl(constDecl);
     }
 
-    void IRBuilder::visitVarDecl(std::shared_ptr<VarDecl> varDecl) {
+    void IRBuilder::visitVarDecl(VarDecl* varDecl) {
         for (auto& def : varDecl->varDefs) {
             if (def->scope->scopeId == 1) {
-                module->variables.push_back(std::make_shared<GlobalVariable>(def->scope->symbolTable->findSymbol(def->ident.content)));
+                //module->variables.push_back(new GlobalVariable(static_cast<VariableSymbol*>(def->scope->symbolTable->findSymbol(def->ident.content))));
             } else {
 
             }
@@ -33,131 +31,131 @@ namespace thm {
         ASTVisitor::visitVarDecl(varDecl);
     }
 
-    void IRBuilder::visitFuncDef(std::shared_ptr<FuncDef> funcDef) {
+    void IRBuilder::visitFuncDef(FuncDef* funcDef) {
         ASTVisitor::visitFuncDef(funcDef);
     }
 
-    void IRBuilder::visitMainFuncDef(std::shared_ptr<MainFuncDef> mainFuncDef) {
+    void IRBuilder::visitMainFuncDef(MainFuncDef* mainFuncDef) {
         ASTVisitor::visitMainFuncDef(mainFuncDef);
     }
 
-    void IRBuilder::visitStmt(std::shared_ptr<Stmt> stmt) {
+    void IRBuilder::visitStmt(Stmt* stmt) {
         ASTVisitor::visitStmt(stmt);
     }
 
-    void IRBuilder::visitForStmt(std::shared_ptr<ForStmt> forStmt) {
+    void IRBuilder::visitForStmt(ForStmt* forStmt) {
         ASTVisitor::visitForStmt(forStmt);
     }
 
-    void IRBuilder::visitCompUnit(std::shared_ptr<CompUnit> compUnit) {
+    void IRBuilder::visitCompUnit(CompUnit* compUnit) {
         ASTVisitor::visitCompUnit(compUnit);
     }
 
-    void IRBuilder::visitBlock(std::shared_ptr<Block> block) {
+    void IRBuilder::visitBlock(Block* block) {
         ASTVisitor::visitBlock(block);
     }
 
-    void IRBuilder::visitLVal(std::shared_ptr<LVal> lVal) {
+    void IRBuilder::visitLVal(LVal* lVal) {
         ASTVisitor::visitLVal(lVal);
     }
 
-    void IRBuilder::visitUnaryExp(std::shared_ptr<UnaryExp> unaryExp) {
+    void IRBuilder::visitUnaryExp(UnaryExp* unaryExp) {
         ASTVisitor::visitUnaryExp(unaryExp);
     }
 
-    void IRBuilder::visitDecl(std::shared_ptr<Decl> decl) {
+    void IRBuilder::visitDecl(Decl* decl) {
         ASTVisitor::visitDecl(decl);
     }
 
-    void IRBuilder::visitBType(std::shared_ptr<BType> bType) {
+    void IRBuilder::visitBType(BType* bType) {
         ASTVisitor::visitBType(bType);
     }
 
-    void IRBuilder::visitConstDef(std::shared_ptr<ConstDef> constDef) {
+    void IRBuilder::visitConstDef(ConstDef* constDef) {
         ASTVisitor::visitConstDef(constDef);
     }
 
-    void IRBuilder::visitConstInitVal(std::shared_ptr<ConstInitVal> constInitVal) {
+    void IRBuilder::visitConstInitVal(ConstInitVal* constInitVal) {
         ASTVisitor::visitConstInitVal(constInitVal);
     }
 
-    void IRBuilder::visitVarDef(std::shared_ptr<VarDef> varDef) {
+    void IRBuilder::visitVarDef(VarDef* varDef) {
         ASTVisitor::visitVarDef(varDef);
     }
 
-    void IRBuilder::visitInitVal(std::shared_ptr<InitVal> initVal) {
+    void IRBuilder::visitInitVal(InitVal* initVal) {
         ASTVisitor::visitInitVal(initVal);
     }
 
-    void IRBuilder::visitFuncType(std::shared_ptr<FuncType> funcType) {
+    void IRBuilder::visitFuncType(FuncType* funcType) {
         ASTVisitor::visitFuncType(funcType);
     }
 
-    void IRBuilder::visitFuncFParams(std::shared_ptr<FuncFParams> funcFParams) {
+    void IRBuilder::visitFuncFParams(FuncFParams* funcFParams) {
         ASTVisitor::visitFuncFParams(funcFParams);
     }
 
-    void IRBuilder::visitFuncFParam(std::shared_ptr<FuncFParam> funcFParam) {
+    void IRBuilder::visitFuncFParam(FuncFParam* funcFParam) {
         ASTVisitor::visitFuncFParam(funcFParam);
     }
 
-    void IRBuilder::visitBlockItem(std::shared_ptr<BlockItem> blockItem) {
+    void IRBuilder::visitBlockItem(BlockItem* blockItem) {
         ASTVisitor::visitBlockItem(blockItem);
     }
 
-    void IRBuilder::visitExp(std::shared_ptr<Exp> exp) {
+    void IRBuilder::visitExp(Exp* exp) {
         ASTVisitor::visitExp(exp);
     }
 
-    void IRBuilder::visitCond(std::shared_ptr<Cond> cond) {
+    void IRBuilder::visitCond(Cond* cond) {
         ASTVisitor::visitCond(cond);
     }
 
-    void IRBuilder::visitPrimaryExp(std::shared_ptr<PrimaryExp> primaryExp) {
+    void IRBuilder::visitPrimaryExp(PrimaryExp* primaryExp) {
         ASTVisitor::visitPrimaryExp(primaryExp);
     }
 
-    void IRBuilder::visitNumber(std::shared_ptr<Number> number) {
+    void IRBuilder::visitNumber(Number* number) {
         ASTVisitor::visitNumber(number);
     }
 
-    void IRBuilder::visitCharacter(std::shared_ptr<Character> character) {
+    void IRBuilder::visitCharacter(Character* character) {
         ASTVisitor::visitCharacter(character);
     }
 
-    void IRBuilder::visitUnaryOp(std::shared_ptr<UnaryOp> unaryOp) {
+    void IRBuilder::visitUnaryOp(UnaryOp* unaryOp) {
         ASTVisitor::visitUnaryOp(unaryOp);
     }
 
-    void IRBuilder::visitFuncRParams(std::shared_ptr<FuncRParams> funcRParams) {
+    void IRBuilder::visitFuncRParams(FuncRParams* funcRParams) {
         ASTVisitor::visitFuncRParams(funcRParams);
     }
 
-    void IRBuilder::visitMulExp(std::shared_ptr<MulExp> mulExp) {
+    void IRBuilder::visitMulExp(MulExp* mulExp) {
         ASTVisitor::visitMulExp(mulExp);
     }
 
-    void IRBuilder::visitAddExp(std::shared_ptr<AddExp> addExp) {
+    void IRBuilder::visitAddExp(AddExp* addExp) {
         ASTVisitor::visitAddExp(addExp);
     }
 
-    void IRBuilder::visitRelExp(std::shared_ptr<RelExp> relExp) {
+    void IRBuilder::visitRelExp(RelExp* relExp) {
         ASTVisitor::visitRelExp(relExp);
     }
 
-    void IRBuilder::visitEqExp(std::shared_ptr<EqExp> eqExp) {
+    void IRBuilder::visitEqExp(EqExp* eqExp) {
         ASTVisitor::visitEqExp(eqExp);
     }
 
-    void IRBuilder::visitLAndExp(std::shared_ptr<LAndExp> lAndExp) {
+    void IRBuilder::visitLAndExp(LAndExp* lAndExp) {
         ASTVisitor::visitLAndExp(lAndExp);
     }
 
-    void IRBuilder::visitLOrExp(std::shared_ptr<LOrExp> lOrExp) {
+    void IRBuilder::visitLOrExp(LOrExp* lOrExp) {
         ASTVisitor::visitLOrExp(lOrExp);
     }
 
-    void IRBuilder::visitConstExp(std::shared_ptr<ConstExp> constExp) {
+    void IRBuilder::visitConstExp(ConstExp* constExp) {
         ASTVisitor::visitConstExp(constExp);
     }
 } // thm

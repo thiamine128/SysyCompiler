@@ -38,6 +38,8 @@ add_executable(Compiler main.cpp
         llvm/LLVM.h
         llvm/IRBuilder.cpp
         llvm/IRBuilder.h
+        llvm/SlotTracker.cpp
+        llvm/SlotTracker.h
 )
 
 add_definitions(-DPRINT_LEXER)

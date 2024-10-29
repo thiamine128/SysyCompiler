@@ -4,8 +4,9 @@
 
 #include "SemanticVisitor.h"
 
+#include <cmath>
 #include <iostream>
-#include <bits/locale_facets_nonio.h>
+#include <math.h>
 
 #include "../core/Scope.h"
 #include "../error/ErrorReporter.h"
@@ -13,13 +14,12 @@
 
 namespace thm {
     SemanticVisitor::SemanticVisitor(ErrorReporter &errorReporter) : errorReporter_(errorReporter) {
-
     }
 
     void SemanticVisitor::pushScope(bool isReturnScope, bool requireReturnValue) {
         ++scopeNum;
 
-        scopeStack.push(std::make_shared<Scope>(scopeNum, currentScope, std::make_shared<SymbolTable>(scopeNum, currentScope == nullptr ? nullptr : currentScope->symbolTable), isReturnScope, requireReturnValue));
+        scopeStack.push(new Scope(scopeNum, currentScope, new SymbolTable(scopeNum, currentScope == nullptr ? nullptr : currentScope->symbolTable), isReturnScope, requireReturnValue));
         currentScope = scopeStack.top();
         scopes.push_back(currentScope);
     }
@@ -29,7 +29,7 @@ namespace thm {
         currentScope = scopeStack.top();
     }
 
-    void SemanticVisitor::submitSymbol(std::shared_ptr<Symbol> symbol) {
+    void SemanticVisitor::submitSymbol(Symbol* symbol) const {
         if (!currentScope->symbolTable->addSymbol(symbol)) {
             errorReporter_.error(CompilerException(ErrorType::REDEFINITION, symbol->ident.lineno));
         }
@@ -43,31 +43,31 @@ namespace thm {
         return true;
     }
 
-    std::shared_ptr<VariableSymbol> SemanticVisitor::getArray(std::shared_ptr<Exp> exp) const {
-        std::shared_ptr<VariableSymbol> result = nullptr;
+    VariableSymbol* SemanticVisitor::getArray(const Exp* exp) const {
+        VariableSymbol* result = nullptr;
         std::visit(overloaded{
-            [&](std::shared_ptr<MulExp>& mulExp) {
+            [&](MulExp* mulExp) {
                 std::visit(overloaded{
-                    [&](std::shared_ptr<UnaryExp>& unaryExp) {
+                    [&](UnaryExp* unaryExp) {
                         std::visit(overloaded{
-                            [&](std::shared_ptr<PrimaryExp>& primaryExp) {
+                            [&](PrimaryExp* primaryExp) {
                                 std::visit(overloaded{
-                                    [&](std::shared_ptr<Exp>& exp) {
-                                        result = getArray(exp);
+                                    [&](const Exp* subExp) {
+                                        result = getArray(subExp);
                                     },
-                                    [&](std::shared_ptr<LVal>& lVal) {
-                                        std::shared_ptr<Symbol> symbol = currentScope->symbolTable->findSymbol(lVal->ident.content);
+                                    [&](const LVal* lVal) {
+                                        Symbol* symbol = currentScope->symbolTable->findSymbol(lVal->ident.content);
                                         if (lVal->exp == nullptr && symbol != nullptr && symbol->symbolType() == Symbol::VARIABLE) {
-                                            std::shared_ptr<VariableSymbol> variableSymbol = std::static_pointer_cast<VariableSymbol>(symbol);
+                                            VariableSymbol* variableSymbol = static_cast<VariableSymbol*>(symbol);
                                             if (variableSymbol->type.isArray) {
                                                 result = variableSymbol;
                                             }
                                         }
                                     },
-                                    [&](std::shared_ptr<Number>& number) {
+                                    [&](Number* number) {
 
                                     },
-                                    [&](std::shared_ptr<Character>& character) {
+                                    [&](Character* character) {
 
                                     }
                                 }, primaryExp->primaryExp);
@@ -84,12 +84,12 @@ namespace thm {
         return result;
     }
 
-    bool SemanticVisitor::endWithReturn(std::shared_ptr<Block> block) const {
+    bool SemanticVisitor::endWithReturn(const Block* block) {
         if (block->items.empty()) return false;
         auto const& last = block->items.back();
         bool result = false;
         std::visit(overloaded{
-            [&](std::shared_ptr<Stmt>& stmt) {
+            [&](Stmt* stmt) {
                 std::visit(overloaded{
                     [&](Stmt::StmtAssign& assign) {},
                     [&](Stmt::StmtIf& stmtIf) {},
@@ -100,38 +100,38 @@ namespace thm {
                     },
                     [&](Stmt::StmtRead& stmtRead) {},
                     [&](Stmt::StmtPrintf& stmtPrintf) {},
-                    [&](std::shared_ptr<Exp>& exp) {},
-                    [&](std::shared_ptr<Block>& block) {}
+                    [&](Exp* exp) {},
+                    [&](Block* subBlock) {}
                 }, stmt->stmt);
             },
-            [&](std::shared_ptr<Decl>& decl) {}
+            [&](Decl* decl) {}
         }, last->item);
         return result;
     }
 
 
-    void SemanticVisitor::visitConstDecl(std::shared_ptr<ConstDecl> constDecl) {
+    void SemanticVisitor::visitConstDecl(ConstDecl* constDecl) {
         constDecl->scope = currentScope;
-        constDecl->bType->visit(shared_from_this());
+        constDecl->bType->visit(this);
         for (auto const& def : constDecl->constDefs) {
             def->type = constDecl->bType->type;
-            def->visit(shared_from_this());
+            def->visit(this);
         }
     }
 
-    void SemanticVisitor::visitVarDecl(std::shared_ptr<VarDecl> varDecl) {
+    void SemanticVisitor::visitVarDecl(VarDecl* varDecl) {
         varDecl->scope = currentScope;
-        varDecl->bType->visit(shared_from_this());
+        varDecl->bType->visit(this);
         for (auto const& def : varDecl->varDefs) {
             def->type = varDecl->bType->type;
-            def->visit(shared_from_this());
+            def->visit(this);
         }
     }
 
-    void SemanticVisitor::visitFuncDef(std::shared_ptr<FuncDef> funcDef) {
+    void SemanticVisitor::visitFuncDef(FuncDef* funcDef) {
         funcDef->scope = currentScope;
-        funcDef->funcType->visit(shared_from_this());
-        std::shared_ptr<FunctionSymbol> symbol = std::make_shared<FunctionSymbol>();
+        funcDef->funcType->visit(this);
+        FunctionSymbol* symbol = new FunctionSymbol();
         symbol->id = ++symbolNum;
         symbol->scopeId = currentScope->scopeId;
         symbol->type = funcDef->funcType->type;
@@ -144,40 +144,29 @@ namespace thm {
                 paramType.isArray =  param->isArray;
                 symbol->paramTypes.push_back(paramType);
             }
-            funcDef->params->visit(shared_from_this());
         }
         submitSymbol(symbol);
+
         pushScope(true, symbol->type != FunctionSymbol::VOID);
         if (funcDef->params != nullptr) {
-            for (auto& param : funcDef->params->params) {
-                std::shared_ptr<VariableSymbol> paramSymbol = std::make_shared<VariableSymbol>();
-                paramSymbol->id = ++symbolNum;
-                paramSymbol->scopeId = currentScope->scopeId;
-                paramSymbol->type.isConst = false;
-                paramSymbol->type.type = param->bType->type;
-                paramSymbol->type.isArray = param->isArray;
-                paramSymbol->ident = param->ident;
-
-                submitSymbol(paramSymbol);
-                param->visit(shared_from_this());
-            }
+            funcDef->params->scope = currentScope;
+            funcDef->params->visit(this);
         }
-
         funcDef->block->scope = currentScope;
-        ASTVisitor::visitBlock(funcDef->block);
+        funcDef->block->visit(this);
+        popScope();
 
-        if (currentScope->requireReturnValue && !endWithReturn(funcDef->block)) {
+        if (funcDef->block->scope->requireReturnValue && !endWithReturn(funcDef->block)) {
             errorReporter_.error(CompilerException(RETURN_NOT_FOUND, funcDef->block->rBrace.lineno));
         }
-        popScope();
     }
 
-    void SemanticVisitor::visitMainFuncDef(std::shared_ptr<MainFuncDef> mainFuncDef) {
+    void SemanticVisitor::visitMainFuncDef(MainFuncDef* mainFuncDef) {
         mainFuncDef->scope = currentScope;
         pushScope(true, true);
 
         mainFuncDef->block->scope = currentScope;
-        ASTVisitor::visitBlock(mainFuncDef->block);
+        mainFuncDef->block->visit(this);
 
         if (currentScope->requireReturnValue && !endWithReturn(mainFuncDef->block)) {
             errorReporter_.error(CompilerException(RETURN_NOT_FOUND, mainFuncDef->block->rBrace.lineno));
@@ -185,13 +174,13 @@ namespace thm {
         popScope();
     }
 
-    void SemanticVisitor::visitStmt(std::shared_ptr<Stmt> stmt) {
+    void SemanticVisitor::visitStmt(Stmt* stmt) {
         stmt->scope = currentScope;
         std::visit(overloaded{
-            [&](Stmt::StmtAssign& assign) {
+            [&](const Stmt::StmtAssign& assign) {
                 auto symbol = currentScope->symbolTable->findSymbol(assign.lVal->ident.content);
                 if (symbol != nullptr && symbol->symbolType() == Symbol::VARIABLE) {
-                    std::shared_ptr<VariableSymbol> variableSymbol = std::static_pointer_cast<VariableSymbol>(symbol);
+                    VariableSymbol* variableSymbol = static_cast<VariableSymbol*>(symbol);
                     if (variableSymbol->type.isConst) {
                         errorReporter_.error(CompilerException(ASSIGN_TO_CONST, assign.lVal->lineno));
                     }
@@ -206,37 +195,40 @@ namespace thm {
                     errorReporter_.error(CompilerException(UNEXPECTED_BREAK_CONTINUE, stmt->lineno));
                 }
             },
-            [&](Stmt::StmtReturn& stmtReturn) {
+            [&](const Stmt::StmtReturn& stmtReturn) {
                 if (!currentScope->canReturnWithValue() && stmtReturn.exp != nullptr) {
                     errorReporter_.error(CompilerException(VOID_RETURN_VAL, stmt->lineno));
                 }
             },
-            [&](Stmt::StmtRead& stmtRead) {
+            [&](const Stmt::StmtRead& stmtRead) {
                 auto symbol = currentScope->symbolTable->findSymbol(stmtRead.lVal->ident.content);
                 if (symbol != nullptr && symbol->symbolType() == Symbol::VARIABLE) {
-                    std::shared_ptr<VariableSymbol> variableSymbol = std::static_pointer_cast<VariableSymbol>(symbol);
+                    VariableSymbol* variableSymbol = static_cast<VariableSymbol*>(symbol);
                     if (variableSymbol->type.isConst) {
                         errorReporter_.error(CompilerException(ASSIGN_TO_CONST, stmtRead.lVal->lineno));
                     }
                 }
             },
-            [&](Stmt::StmtPrintf& stmtPrintf) {
-                int exprs = 0;
+            [&](const Stmt::StmtPrintf& stmtPrintf) {
+                int expressions = 0;
                 for (int i = 0; i < stmtPrintf.fmt.size(); i++) {
                     if (stmtPrintf.fmt[i] == '\\') {
                         i += 1;
                         continue;
                     }
                     if (stmtPrintf.fmt[i] == '%' && i + 1 < stmtPrintf.fmt.size() && (stmtPrintf.fmt[i + 1] == 'c' || stmtPrintf.fmt[i + 1] == 'd')) {
-                        exprs++;
+                        expressions++;
                     }
                 }
-                if (exprs != stmtPrintf.exps.size()) {
+                if (expressions != stmtPrintf.exps.size()) {
                     errorReporter_.error(CompilerException(MISMATCHED_PRINTF_PARAMS, stmtPrintf.printfToken.lineno));
                 }
             },
-            [&](std::shared_ptr<Exp>& exp) {},
-            [&](std::shared_ptr<Block>& block) {}
+            [&](Exp* exp) {},
+            [&](Block* block) {
+                pushScope(false, false);
+                block->scope = currentScope;
+            }
         }, stmt->stmt);
         ASTVisitor::visitStmt(stmt);
         std::visit(overloaded{
@@ -249,16 +241,18 @@ namespace thm {
             [&](Stmt::StmtReturn& stmtReturn) {},
             [&](Stmt::StmtRead& stmtRead) {},
             [&](Stmt::StmtPrintf& stmtPrintf) {},
-            [&](std::shared_ptr<Exp>& exp) {},
-            [&](std::shared_ptr<Block>& block) {}
+            [&](Exp* exp) {},
+            [&](Block* block) {
+                popScope();
+            }
         }, stmt->stmt);
     }
 
-    void SemanticVisitor::visitForStmt(std::shared_ptr<ForStmt> forStmt) {
+    void SemanticVisitor::visitForStmt(ForStmt* forStmt) {
         forStmt->scope = currentScope;
         auto symbol = currentScope->symbolTable->findSymbol(forStmt->lVal->ident.content);
         if (symbol != nullptr && symbol->symbolType() == Symbol::VARIABLE) {
-            std::shared_ptr<VariableSymbol> variableSymbol = std::static_pointer_cast<VariableSymbol>(symbol);
+            VariableSymbol* variableSymbol = static_cast<VariableSymbol*>(symbol);
             if (variableSymbol->type.isConst) {
                 errorReporter_.error(CompilerException(ASSIGN_TO_CONST, forStmt->lVal->lineno));
             }
@@ -266,40 +260,41 @@ namespace thm {
         ASTVisitor::visitForStmt(forStmt);
     }
 
-    void SemanticVisitor::visitCompUnit(std::shared_ptr<CompUnit> compUnit) {
+    void SemanticVisitor::visitCompUnit(CompUnit* compUnit) {
         pushScope(false, false);
         compUnit->scope = currentScope;
         ASTVisitor::visitCompUnit(compUnit);
     }
 
-    void SemanticVisitor::visitBlock(std::shared_ptr<Block> block) {
-        pushScope(false, false);
-        block->scope = currentScope;
+    void SemanticVisitor::visitBlock(Block* block) {
         ASTVisitor::visitBlock(block);
-        popScope();
     }
 
-    void SemanticVisitor::visitLVal(std::shared_ptr<LVal> lval) {
-        lval->scope = currentScope;
-        tryAccessSymbol(lval->ident);
-        ASTVisitor::visitLVal(lval);
+    void SemanticVisitor::visitLVal(LVal* lVal) {
+        lVal->scope = currentScope;
+        tryAccessSymbol(lVal->ident);
+        ASTVisitor::visitLVal(lVal);
+        lVal->evalConst();
     }
 
-    void SemanticVisitor::visitUnaryExp(std::shared_ptr<UnaryExp> unaryExp) {
+    void SemanticVisitor::visitUnaryExp(UnaryExp* unaryExp) {
         unaryExp->scope = currentScope;
         std::visit(overloaded{
-            [&](std::shared_ptr<PrimaryExp>& exp) {},
-            [&](UnaryExp::FuncExp& exp) {
+            [&](PrimaryExp* exp) {},
+            [&](const UnaryExp::FuncExp& exp) {
                 if (tryAccessSymbol(exp.ident)) {
                     auto symbol = currentScope->symbolTable->findSymbol(exp.ident.content);
                     if (symbol->symbolType() == Symbol::FUNCTION) {
-                        std::shared_ptr<FunctionSymbol> functionSymbol = std::static_pointer_cast<FunctionSymbol>(symbol);
+                        FunctionSymbol* functionSymbol = static_cast<FunctionSymbol*>(symbol);
                         if ((exp.params == nullptr && functionSymbol->paramTypes.size() != 0) || (exp.params != nullptr && exp.params->params.size() != functionSymbol->paramTypes.size())) {
                             errorReporter_.error(CompilerException(ErrorType::MISMATCHED_PARAMS, exp.ident.lineno));
-                        } else {
+                        } else if (exp.params != nullptr) {
                             for (size_t idx = 0; idx < functionSymbol->paramTypes.size(); idx++) {
                                 auto array = getArray(exp.params->params[idx]);
-                                bool isArray = array != nullptr && array->type.isArray;
+                                bool isArray = false;
+                                if (array != nullptr) {
+                                    isArray = array->type.isArray;
+                                }
 
                                 if (functionSymbol->paramTypes[idx].isArray ^ isArray) {
                                     errorReporter_.error(CompilerException(ErrorType::MISMATCHED_TYPE, exp.ident.lineno));
@@ -316,155 +311,273 @@ namespace thm {
             },
         }, unaryExp->exp);
         ASTVisitor::visitUnaryExp(unaryExp);
+        unaryExp->evalConst();
     }
 
-    void SemanticVisitor::visitDecl(std::shared_ptr<Decl> decl) {
+    void SemanticVisitor::visitDecl(Decl* decl) {
         decl->scope = currentScope;
         ASTVisitor::visitDecl(decl);
     }
 
-    void SemanticVisitor::visitBType(std::shared_ptr<BType> bType) {
+    void SemanticVisitor::visitBType(BType* bType) {
         bType->scope = currentScope;
         ASTVisitor::visitBType(bType);
     }
 
-    void SemanticVisitor::visitConstDef(std::shared_ptr<ConstDef> constDef) {
+    void SemanticVisitor::visitConstDef(ConstDef* constDef) {
         constDef->scope = currentScope;
-        std::shared_ptr<VariableSymbol> symbol = std::make_shared<VariableSymbol>();
+        ASTVisitor::visitConstDef(constDef);
+        VariableSymbol* symbol = new VariableSymbol();
         symbol->id = ++symbolNum;
         symbol->scopeId = currentScope->scopeId;
         symbol->type.isConst = true;
         symbol->type.type = constDef->type;
         symbol->ident = constDef->ident;
+        bool lazyArrayLen = false;
         std::visit(overloaded{
             [&](ConstDef::ConstDefBasic& basic) {
                 symbol->type.isArray = false;
             },
             [&](ConstDef::ConstDefArray& array) {
                 symbol->type.isArray = true;
+                if (array.size != nullptr) {
+                    symbol->type.arrayLen = array.size->constVal;
+                } else {
+                    lazyArrayLen = true;
+                }
             }
         }, constDef->def);
         submitSymbol(symbol);
-        ASTVisitor::visitConstDef(constDef);
+        if (constDef->val != nullptr) {
+            symbol->hasInit = true;
+            std::visit(overloaded{
+                [&](ConstInitVal::ConstInitValBasic& basic) {
+                    symbol->initVal = basic.exp->constVal;
+                    if (symbol->type.type == VariableType::CHAR) {
+                        symbol->initVal &= 0xff;
+                    }
+                },
+                [&](ConstInitVal::ConstInitValArray& array) {
+                    if (!lazyArrayLen) {
+                        symbol->initVals.resize(symbol->type.arrayLen);
+                    } else {
+                        symbol->type.arrayLen = array.exps.size();
+                        symbol->initVals.resize(array.exps.size());
+                    }
+                    for (int i = 0; i < array.exps.size(); i++) {
+                        if (i >= symbol->type.arrayLen) {
+                            break;
+                        }
+                        symbol->initVals[i] = array.exps[i]->constVal;
+                        if (symbol->type.type == VariableType::CHAR) {
+                            symbol->initVals[i] &= 0xff;
+                        }
+                    }
+                },
+                [&](std::string& str) {
+                    std::string escaped = fromRaw(str.c_str());
+                    if (!lazyArrayLen) {
+                        symbol->initVals.resize(symbol->type.arrayLen);
+                    } else {
+                        symbol->type.arrayLen = escaped.size() + 1;
+                        symbol->initVals.resize(escaped.size() + 1);
+                    }
+
+                    for (int i = 0; i < escaped.size(); i++) {
+                        if (i >= symbol->type.arrayLen) {
+                            break;
+                        }
+                        symbol->initVals[i] = escaped[i];
+                    }
+                }
+            }, constDef->val->val);
+        } else {
+            symbol->hasInit = false;
+        }
     }
 
-    void SemanticVisitor::visitConstInitVal(std::shared_ptr<ConstInitVal> constInitVal) {
+    void SemanticVisitor::visitConstInitVal(ConstInitVal* constInitVal) {
         constInitVal->scope = currentScope;
         ASTVisitor::visitConstInitVal(constInitVal);
     }
 
-    void SemanticVisitor::visitVarDef(std::shared_ptr<VarDef> varDef) {
+    void SemanticVisitor::visitVarDef(VarDef* varDef) {
         varDef->scope = currentScope;
-        std::shared_ptr<VariableSymbol> symbol = std::make_shared<VariableSymbol>();
+        ASTVisitor::visitVarDef(varDef);
+        VariableSymbol* symbol = new VariableSymbol();
         symbol->id = ++symbolNum;
         symbol->scopeId = currentScope->scopeId;
         symbol->type.isConst = false;
         symbol->type.type = varDef->type;
         symbol->ident = varDef->ident;
+        bool lazyArrayLen = false;
         std::visit(overloaded{
             [&](VarDef::VarDefBasic& basic) {
                 symbol->type.isArray = false;
             },
             [&](VarDef::VarDefArray& array) {
                 symbol->type.isArray = true;
+                if (array.size != nullptr) {
+                    symbol->type.arrayLen = array.size->constVal;
+                } else {
+                    lazyArrayLen = true;
+                }
             }
         }, varDef->def);
         submitSymbol(symbol);
-        ASTVisitor::visitVarDef(varDef);
+        if (varDef->val != nullptr) {
+            symbol->hasInit = true;
+            std::visit(overloaded{
+                [&](InitVal::InitValBasic& basic) {
+                    if (basic.exp->isConst) {
+                        symbol->initVal = basic.exp->constVal;
+
+                        if (symbol->type.type == VariableType::CHAR) {
+                            symbol->initVal &= 0xff;
+                        }
+                    }
+                },
+                [&](InitVal::InitValArray& array) {
+                    if (!lazyArrayLen) {
+                        symbol->initVals.resize(symbol->type.arrayLen);
+                    } else {
+                        symbol->type.arrayLen = array.exps.size();
+                        symbol->initVals.resize(array.exps.size());
+                    }
+                    for (int i = 0; i < array.exps.size(); i++) {
+                        if (i >= symbol->type.arrayLen) {
+                            break;
+                        }
+                        symbol->initVals[i] = array.exps[i]->constVal;
+                        if (symbol->type.type == VariableType::CHAR) {
+                            symbol->initVals[i] &= 0xff;
+                        }
+                    }
+                },
+                [&](std::string& str) {
+                    std::string escaped = fromRaw(str.c_str());
+                    if (!lazyArrayLen) {
+                        symbol->initVals.resize(symbol->type.arrayLen);
+                    } else {
+                        symbol->type.arrayLen = escaped.size() + 1;
+                        symbol->initVals.resize(escaped.size() + 1);
+                    }
+                    for (int i = 0; i < escaped.size(); i++) {
+                        if (i >= symbol->type.arrayLen) {
+                            break;
+                        }
+                        symbol->initVals[i] = escaped[i];
+                    }
+                }
+            }, varDef->val->val);
+        } else {
+            symbol->hasInit = false;
+        }
     }
 
-    void SemanticVisitor::visitInitVal(std::shared_ptr<InitVal> initVal) {
+    void SemanticVisitor::visitInitVal(InitVal* initVal) {
         initVal->scope = currentScope;
         ASTVisitor::visitInitVal(initVal);
     }
 
-    void SemanticVisitor::visitFuncType(std::shared_ptr<FuncType> funcType) {
+    void SemanticVisitor::visitFuncType(FuncType* funcType) {
         funcType->scope = currentScope;
         ASTVisitor::visitFuncType(funcType);
     }
 
-    void SemanticVisitor::visitFuncFParams(std::shared_ptr<FuncFParams> funcFParams) {
-        funcFParams->scope = currentScope;
+    void SemanticVisitor::visitFuncFParams(FuncFParams* funcFParams) {
         ASTVisitor::visitFuncFParams(funcFParams);
     }
 
-    void SemanticVisitor::visitFuncFParam(std::shared_ptr<FuncFParam> funcFParam) {
-        funcFParam->scope = currentScope;
+    void SemanticVisitor::visitFuncFParam(FuncFParam* funcFParam) {
+        VariableSymbol* paramSymbol = new VariableSymbol();
         ASTVisitor::visitFuncFParam(funcFParam);
+        paramSymbol->id = ++symbolNum;
+        paramSymbol->scopeId = currentScope->scopeId;
+        paramSymbol->type.isConst = false;
+        paramSymbol->type.type = funcFParam->bType->type;
+        paramSymbol->type.isArray = funcFParam->isArray;
+        paramSymbol->ident = funcFParam->ident;
+        submitSymbol(paramSymbol);
     }
 
-    void SemanticVisitor::visitBlockItem(std::shared_ptr<BlockItem> blockItem) {
+    void SemanticVisitor::visitBlockItem(BlockItem* blockItem) {
         blockItem->scope = currentScope;
         ASTVisitor::visitBlockItem(blockItem);
     }
 
-    void SemanticVisitor::visitExp(std::shared_ptr<Exp> exp) {
+    void SemanticVisitor::visitExp(Exp* exp) {
         exp->scope = currentScope;
         ASTVisitor::visitExp(exp);
+        exp->evalConst();
     }
 
-    void SemanticVisitor::visitCond(std::shared_ptr<Cond> cond) {
+    void SemanticVisitor::visitCond(Cond* cond) {
         cond->scope = currentScope;
         ASTVisitor::visitCond(cond);
     }
 
-    void SemanticVisitor::visitPrimaryExp(std::shared_ptr<PrimaryExp> primaryExp) {
+    void SemanticVisitor::visitPrimaryExp(PrimaryExp* primaryExp) {
         primaryExp->scope = currentScope;
         ASTVisitor::visitPrimaryExp(primaryExp);
+        primaryExp->evalConst();
     }
 
-    void SemanticVisitor::visitNumber(std::shared_ptr<Number> number) {
+    void SemanticVisitor::visitNumber(Number* number) {
         number->scope = currentScope;
         ASTVisitor::visitNumber(number);
     }
 
-    void SemanticVisitor::visitCharacter(std::shared_ptr<Character> character) {
+    void SemanticVisitor::visitCharacter(Character* character) {
         character->scope = currentScope;
         ASTVisitor::visitCharacter(character);
     }
 
-    void SemanticVisitor::visitUnaryOp(std::shared_ptr<UnaryOp> unaryOp) {
+    void SemanticVisitor::visitUnaryOp(UnaryOp* unaryOp) {
         unaryOp->scope = currentScope;
         ASTVisitor::visitUnaryOp(unaryOp);
     }
 
-    void SemanticVisitor::visitFuncRParams(std::shared_ptr<FuncRParams> funcRParams) {
+    void SemanticVisitor::visitFuncRParams(FuncRParams* funcRParams) {
         funcRParams->scope = currentScope;
         ASTVisitor::visitFuncRParams(funcRParams);
     }
 
-    void SemanticVisitor::visitMulExp(std::shared_ptr<MulExp> mulExp) {
+    void SemanticVisitor::visitMulExp(MulExp* mulExp) {
         mulExp->scope = currentScope;
         ASTVisitor::visitMulExp(mulExp);
+        mulExp->evalConst();
     }
 
-    void SemanticVisitor::visitAddExp(std::shared_ptr<AddExp> addExp) {
+    void SemanticVisitor::visitAddExp(AddExp* addExp) {
         addExp->scope = currentScope;
         ASTVisitor::visitAddExp(addExp);
+        addExp->evalConst();
     }
 
-    void SemanticVisitor::visitRelExp(std::shared_ptr<RelExp> relExp) {
+    void SemanticVisitor::visitRelExp(RelExp* relExp) {
         relExp->scope = currentScope;
         ASTVisitor::visitRelExp(relExp);
     }
 
-    void SemanticVisitor::visitEqExp(std::shared_ptr<EqExp> eqExp) {
+    void SemanticVisitor::visitEqExp(EqExp* eqExp) {
         eqExp->scope = currentScope;
         ASTVisitor::visitEqExp(eqExp);
     }
 
-    void SemanticVisitor::visitLAndExp(std::shared_ptr<LAndExp> landExp) {
+    void SemanticVisitor::visitLAndExp(LAndExp* landExp) {
         landExp->scope = currentScope;
         ASTVisitor::visitLAndExp(landExp);
     }
 
-    void SemanticVisitor::visitLOrExp(std::shared_ptr<LOrExp> lorExp) {
+    void SemanticVisitor::visitLOrExp(LOrExp* lorExp) {
         lorExp->scope = currentScope;
         ASTVisitor::visitLOrExp(lorExp);
     }
 
-    void SemanticVisitor::visitConstExp(std::shared_ptr<ConstExp> constExp) {
+    void SemanticVisitor::visitConstExp(ConstExp* constExp) {
         constExp->scope = currentScope;
         ASTVisitor::visitConstExp(constExp);
+        constExp->evalConst();
     }
 } // thm
