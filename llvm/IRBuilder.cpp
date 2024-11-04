@@ -173,6 +173,8 @@ namespace thm {
                     stmtFor.cond->ifTrue = stmtBlock;
                     stmtFor.cond->ifFalse = afterBlock;
                     stmtFor.cond->visit(this);
+                } else {
+                    submitInst(new BranchInst(stmtBlock));
                 }
 
                 forBlocks.push_back({initBlock, condBlock, stmtBlock, updateBlock, afterBlock});
