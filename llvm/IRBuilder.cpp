@@ -420,7 +420,7 @@ namespace thm {
                         bin = new BinaryInst(BinaryInst::SUB, new NumericLiteral(0, opExp.exp->getBasicType()->basicType), opExp.exp->value);
                         break;
                     case UnaryOp::NOT:
-                        bin = new BinaryInst(BinaryInst::NE, new NumericLiteral(0, opExp.exp->getBasicType()->basicType), opExp.exp->value);
+                        bin = new BinaryInst(BinaryInst::EQ, new NumericLiteral(0, opExp.exp->getBasicType()->basicType), opExp.exp->value);
                         break;
                 }
                 submitInst(bin);
