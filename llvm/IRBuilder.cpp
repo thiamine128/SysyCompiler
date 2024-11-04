@@ -97,8 +97,8 @@ namespace thm {
         }
 
         funcDef->block->visit(this);
-        if (currentBlock->insts.size() == 0) {
-            currentBlock->addInst(new RetInst(nullptr));
+        if (funcDef->symbol->type == FunctionSymbol::VOID && (currentBlock->insts.empty() || currentBlock->insts.back()->type() != LLVMType::RET_INST)) {
+            submitInst(new RetInst(nullptr));
         }
         submitBlock(currentBlock);
         currentBlock = nullptr;
@@ -140,30 +140,31 @@ namespace thm {
                 stmtIf.cond->ifFalse = new BasicBlock(currentFunction);
                 BasicBlock* after = new BasicBlock(currentFunction);
                 stmtIf.cond->visit(this);
+
                 currentBlock = stmtIf.cond->ifTrue;
                 stmtIf.stmt->visit(this);
                 submitInst(new BranchInst(after));
-                submitBlock(stmtIf.cond->ifTrue);
+                submitBlock(currentBlock);
                 currentBlock = stmtIf.cond->ifFalse;
                 if (stmtIf.elseStmt != nullptr) {
                     stmtIf.elseStmt->visit(this);
                 }
                 submitInst(new BranchInst(after));
-                submitBlock(stmtIf.cond->ifFalse);
+                submitBlock(currentBlock);
                 currentBlock = after;
             },
             [&](const Stmt::StmtFor& stmtFor) {
-                BasicBlock *initBlock = new BasicBlock(currentFunction);
+                BasicBlock *initBlock = currentBlock;
                 BasicBlock *condBlock = new BasicBlock(currentFunction);
                 BasicBlock *stmtBlock = new BasicBlock(currentFunction);
                 BasicBlock *updateBlock = new BasicBlock(currentFunction);
                 BasicBlock *afterBlock = new BasicBlock(currentFunction);
 
-                submitBlock(currentBlock);
                 currentBlock = initBlock;
                 if (stmtFor.initStmt != nullptr) {
                     stmtFor.initStmt->visit(this);
                 }
+                submitInst(new BranchInst(condBlock));
                 submitBlock(currentBlock);
 
                 currentBlock = condBlock;
@@ -172,19 +173,21 @@ namespace thm {
                     stmtFor.cond->ifFalse = afterBlock;
                     stmtFor.cond->visit(this);
                 }
+                submitInst(new BranchInst(stmtBlock));
                 submitBlock(currentBlock);
 
                 forBlocks.push_back({initBlock, condBlock, stmtBlock, updateBlock, afterBlock});
 
                 currentBlock = stmtBlock;
                 stmtFor.stmt->visit(this);
+                submitInst(new BranchInst(updateBlock));
                 submitBlock(currentBlock);
 
                 currentBlock = updateBlock;
                 if (stmtFor.updateStmt != nullptr) {
                     stmtFor.updateStmt->visit(this);
-                    submitInst(new BranchInst(condBlock));
                 }
+                submitInst(new BranchInst(condBlock));
                 submitBlock(currentBlock);
 
                 forBlocks.pop_back();
@@ -220,8 +223,6 @@ namespace thm {
                 }
                 RetInst* retInst = new RetInst(value);
                 submitInst(retInst);
-                submitBlock(currentBlock);
-                currentBlock = new BasicBlock(currentFunction);
             },
             [&](const Stmt::StmtRead& stmtRead) {
                 stmtRead.lVal->visit(this);
