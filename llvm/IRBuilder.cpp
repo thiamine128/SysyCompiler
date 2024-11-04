@@ -726,7 +726,7 @@ namespace thm {
                         op = BinaryInst::SLT;
                         break;
                     case RelExp::OpExp::GE:
-                        op = BinaryInst::SGT;
+                        op = BinaryInst::SGE;
                         break;
                     case RelExp::OpExp::LE:
                         op = BinaryInst::SLE;
