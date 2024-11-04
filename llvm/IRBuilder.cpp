@@ -493,7 +493,7 @@ namespace thm {
             },
             [&](std::string& str) {
                 std::string s = fromRaw(str.c_str());
-                for (int i = 0; i < s.length(); i++) {
+                for (int i = 0; i <= s.length(); i++) {
                     GetElementPtr* getElementPtr = new GetElementPtr(constInitVal->constDef->value, new NumericLiteral(i, BasicValueType::I32));
                     submitInst(getElementPtr);
                     Value* value = new NumericLiteral(s[i], BasicValueType::I8);
@@ -560,7 +560,7 @@ namespace thm {
             },
             [&](std::string& str) {
                 std::string s = fromRaw(str.c_str());
-                for (int i = 0; i < s.length(); i++) {
+                for (int i = 0; i <= s.length(); i++) {
                     GetElementPtr* getElementPtr = new GetElementPtr(initVal->varDef->value, new NumericLiteral(i, BasicValueType::I32));
                     submitInst(getElementPtr);
                     Value* value = new NumericLiteral(s[i], BasicValueType::I8);
