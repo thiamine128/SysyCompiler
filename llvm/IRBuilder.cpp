@@ -386,7 +386,24 @@ namespace thm {
                 if (funcExp.params != nullptr)
                     funcExp.params->visit(this);
                 FunctionSymbol* symbol = static_cast<FunctionSymbol*>(unaryExp->scope->symbolTable->findSymbol(funcExp.ident.content));
-                CallInst* callInst = new CallInst(symbol->type != FunctionSymbol::VOID, symbol->value, funcExp.params == nullptr ? std::vector<Value*>() : funcExp.params->values);
+                std::vector<Value *> params;
+                if (funcExp.params != nullptr) {
+                    for (int i = 0; i < funcExp.params->values.size(); i++) {
+                        BasicValueType *basicType = static_cast<BasicValueType *>(funcExp.params->values[i]->valueType);
+                        if (basicType->basicType == BasicValueType::I32 && symbol->paramTypes[i].type == VariableType::CHAR) {
+                            TruncInst *trunc = new TruncInst(funcExp.params->values[i]);
+                            submitInst(trunc);
+                            params.push_back(trunc);
+                        } else if (basicType->basicType == BasicValueType::I8 && symbol->paramTypes[i].type == VariableType::INT) {
+                            ZextInst *zext = new ZextInst(funcExp.params->values[i]);
+                            submitInst(zext);
+                            params.push_back(zext);
+                        } else {
+                            params.push_back(funcExp.params->values[i]);
+                        }
+                    }
+                }
+                CallInst* callInst = new CallInst(symbol->type != FunctionSymbol::VOID, symbol->value, params);
                 unaryExp->value = callInst;
                 submitInst(callInst);
             },
