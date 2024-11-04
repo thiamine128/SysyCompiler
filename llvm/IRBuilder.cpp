@@ -289,7 +289,7 @@ namespace thm {
                             std::string sep = fmt.substr(last, i - last);
                             if (sep.length() > 0) {
                                 StringLiteral* str = module->addStringLiteral(sep);
-                                GetElementPtr* addr = new GetElementPtr(str, 0);
+                                GetElementPtr* addr = new GetElementPtr(str, new NumericLiteral(0, BasicValueType::I32));
                                 submitInst(addr);
                                 CallInst* putStr = new CallInst(false, module->putStr, {addr});
                                 submitInst(putStr);
