@@ -47,14 +47,14 @@ namespace thm {
         BasicValueType *innerType = lVal->getBasicType();
         if (expType->basicType == BasicValueType::I8 && innerType->basicType == BasicValueType::I32) {
             // assign i8 to i32
-            TruncInst *truncInst = new TruncInst(rVal);
-            submitInst(truncInst);
-            rVal = truncInst;
-        } else if (expType->basicType == BasicValueType::I32 && innerType->basicType == BasicValueType::I8) {
-            // assign i32 to i8
             ZextInst *zexInst = new ZextInst(rVal);
             submitInst(zexInst);
             rVal = zexInst;
+        } else if (expType->basicType == BasicValueType::I32 && innerType->basicType == BasicValueType::I8) {
+            // assign i32 to i8
+            TruncInst *truncInst = new TruncInst(rVal);
+            submitInst(truncInst);
+            rVal = truncInst;
         }
         StoreInst *storeInst = new StoreInst(rVal, lVal->value);
         submitInst(storeInst);
