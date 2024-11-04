@@ -8,6 +8,8 @@
 #include <iostream>
 #include <fstream>
 
+#include "../util/util.h"
+
 
 namespace thm {
     Parser::Parser(TokenStream &tokenStream, ErrorReporter& errorReporter) : tokenStream_(tokenStream), errorReporter_(errorReporter), currentLine_(0) {
@@ -535,9 +537,7 @@ namespace thm {
         if (currentToken().content[1] != '\\')
             v = currentToken().content[1];
         else {
-            int *a = 0;
-            *a = 1;
-            v = currentToken().content[2];
+            v = escape(currentToken().content[2]);
         }
         ptr->lineno = currentToken().lineno;
         match(Token::CHRCON);

@@ -33,3 +33,7 @@ std::string fromRaw(char const* raw) {
     }
     return result;
 }
+
+int escape(char ch) {
+    return slashMap[ch];
+}

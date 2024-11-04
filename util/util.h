@@ -10,5 +10,6 @@ template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
 
 std::string fromRaw(char const* raw);
+int escape(char ch);
 
 #endif //UTIL_H
