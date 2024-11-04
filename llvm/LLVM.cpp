@@ -625,7 +625,7 @@ namespace thm {
         putInt->args.push_back(putIntArg);
         putChar = new Function("putch", BasicValueType::VOID);
         Argument* putCharArg = new Argument();
-        putCharArg->valueType = new BasicValueType(BasicValueType::I8);
+        putCharArg->valueType = new BasicValueType(BasicValueType::I32);
         putChar->args.push_back(putCharArg);
         putStr = new Function("putstr", BasicValueType::VOID);
         Argument* putStrArg = new Argument();

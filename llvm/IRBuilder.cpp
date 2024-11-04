@@ -472,12 +472,21 @@ namespace thm {
                 }
             },
             [&](ConstInitVal::ConstInitValArray& array) {
-                for (int i = 0; i < array.exps.size(); i++) {
-                    array.exps[i]->visit(this);
+                for (int i = 0; i < constInitVal->constDef->symbol->type.arrayLen; i++) {
+                    if (i < array.exps.size())
+                        array.exps[i]->visit(this);
                     GetElementPtr* getElementPtr = new GetElementPtr(constInitVal->constDef->value, new NumericLiteral(i, BasicValueType::I32));
                     submitInst(getElementPtr);
-                    Value* value = array.exps[i]->value;
-                    BasicValueType *basicType = static_cast<BasicValueType *>(array.exps[i]->value->valueType);
+                    Value* value;
+                    BasicValueType *basicType;
+                    if (i < array.exps.size()) {
+                        value = array.exps[i]->value;
+                        basicType = static_cast<BasicValueType *>(array.exps[i]->value->valueType);
+                    } else {
+                        BasicValueType::BasicType basic = constInitVal->constDef->symbol->type.type == VariableType::INT ? BasicValueType::I32 : BasicValueType::I8;
+                        value = new NumericLiteral(0, basic);
+                        basicType = new BasicValueType(basic);
+                    }
                     if (constInitVal->constDef->symbol->type.type == VariableType::INT && basicType->basicType == BasicValueType::I8) {
                         ZextInst *zext = new ZextInst(value);
                         submitInst(zext);
