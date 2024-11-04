@@ -804,5 +804,6 @@ namespace thm {
 
     void IRBuilder::visitConstExp(ConstExp* constExp) {
         ASTVisitor::visitConstExp(constExp);
+        constExp->value = constExp->addExp->value;
     }
 } // thm

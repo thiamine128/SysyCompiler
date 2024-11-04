@@ -51,7 +51,7 @@ namespace thm {
     void Compiler::buildIR() {
         irBuilder = new IRBuilder();
         compUnit_->visit(irBuilder);
-        std::shared_ptr<Logger> logger = std::make_shared<Logger>("llvm.txt");
+        std::shared_ptr<Logger> logger = std::make_shared<Logger>("llvm_ir.txt");
         irBuilder->module->fillSlot();
         irBuilder->module->print(logger->stream());
     }
