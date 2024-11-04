@@ -244,10 +244,10 @@ namespace thm {
                     case Stmt::StmtRead::CHAR:
                         callInst = new CallInst(true, module->getChar, {});
                         submitInst(callInst);
-                        if (basicType->basicType == BasicValueType::I32) {
-                            ZextInst *zextInst = new ZextInst(callInst);
-                            submitInst(zextInst);
-                            rVal = zextInst;
+                        if (basicType->basicType == BasicValueType::I8) {
+                            TruncInst *truncInst = new TruncInst(callInst);
+                            submitInst(truncInst);
+                            rVal = truncInst;
                         } else {
                             rVal = callInst;
                         }
