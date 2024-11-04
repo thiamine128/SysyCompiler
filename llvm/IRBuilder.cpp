@@ -458,12 +458,17 @@ namespace thm {
         std::visit(overloaded{
             [&](const ConstInitVal::ConstInitValBasic& basic) {
                 basic.exp->visit(this);
-                if (constInitVal->constDef->symbol->type.type == VariableType::INT) {
-                    submitInst(new StoreInst(basic.exp->value, constInitVal->constDef->value));
+                BasicValueType *basicType = static_cast<BasicValueType *>(basic.exp->value->valueType);
+                if (constInitVal->constDef->symbol->type.type == VariableType::INT && basicType->basicType == BasicValueType::I8) {
+                    ZextInst *zext = new ZextInst(basic.exp->value);
+                    submitInst(zext);
+                    submitInst(new StoreInst(zext, constInitVal->constDef->value));
+                } else if (constInitVal->constDef->symbol->type.type == VariableType::CHAR && basicType->basicType == BasicValueType::I32) {
+                    TruncInst* trunc = new TruncInst(basic.exp->value);
+                    submitInst(trunc);
+                    submitInst(new StoreInst(trunc, constInitVal->constDef->value));
                 } else {
-                    TruncInst* truncInst = new TruncInst(basic.exp->value);
-                    submitInst(truncInst);
-                    submitInst(new StoreInst(truncInst, constInitVal->constDef->value));
+                    submitInst(new StoreInst(basic.exp->value, constInitVal->constDef->value));
                 }
             },
             [&](ConstInitVal::ConstInitValArray& array) {
@@ -472,10 +477,15 @@ namespace thm {
                     GetElementPtr* getElementPtr = new GetElementPtr(constInitVal->constDef->value, new NumericLiteral(i, BasicValueType::I32));
                     submitInst(getElementPtr);
                     Value* value = array.exps[i]->value;
-                    if (constInitVal->constDef->symbol->type.type == VariableType::CHAR) {
-                        TruncInst* truncInst = new TruncInst(value);
-                        submitInst(truncInst);
-                        value = truncInst;
+                    BasicValueType *basicType = static_cast<BasicValueType *>(array.exps[i]->value->valueType);
+                    if (constInitVal->constDef->symbol->type.type == VariableType::INT && basicType->basicType == BasicValueType::I8) {
+                        ZextInst *zext = new ZextInst(value);
+                        submitInst(zext);
+                        value = zext;
+                    } else if (constInitVal->constDef->symbol->type.type == VariableType::CHAR && basicType->basicType == BasicValueType::I32) {
+                        TruncInst* trunc = new TruncInst(value);
+                        submitInst(trunc);
+                        value = trunc;
                     }
                     StoreInst* storeInst = new StoreInst(value, getElementPtr);
                     submitInst(storeInst);
@@ -508,12 +518,17 @@ namespace thm {
         std::visit(overloaded{
             [&](const InitVal::InitValBasic& basic) {
                 basic.exp->visit(this);
-                if (initVal->varDef->symbol->type.type == VariableType::INT) {
-                    submitInst(new StoreInst(basic.exp->value, initVal->varDef->value));
+                BasicValueType *basicType = static_cast<BasicValueType *>(basic.exp->value->valueType);
+                if (initVal->varDef->symbol->type.type == VariableType::INT && basicType->basicType == BasicValueType::I8) {
+                    ZextInst *zext = new ZextInst(basic.exp->value);
+                    submitInst(zext);
+                    submitInst(new StoreInst(zext, initVal->varDef->value));
+                } else if (initVal->varDef->symbol->type.type == VariableType::CHAR && basicType->basicType == BasicValueType::I32) {
+                    TruncInst* trunc = new TruncInst(basic.exp->value);
+                    submitInst(trunc);
+                    submitInst(new StoreInst(trunc, initVal->varDef->value));
                 } else {
-                    TruncInst* truncInst = new TruncInst(basic.exp->value);
-                    submitInst(truncInst);
-                    submitInst(new StoreInst(truncInst, initVal->varDef->value));
+                    submitInst(new StoreInst(basic.exp->value, initVal->varDef->value));
                 }
             },
             [&](InitVal::InitValArray& array) {
@@ -522,10 +537,15 @@ namespace thm {
                     GetElementPtr* getElementPtr = new GetElementPtr(initVal->varDef->value, new NumericLiteral(i, BasicValueType::I32));
                     submitInst(getElementPtr);
                     Value* value = array.exps[i]->value;
-                    if (initVal->varDef->symbol->type.type == VariableType::CHAR) {
-                        TruncInst* truncInst = new TruncInst(value);
-                        submitInst(truncInst);
-                        value = truncInst;
+                    BasicValueType *basicType = static_cast<BasicValueType *>(array.exps[i]->value->valueType);
+                    if (initVal->varDef->symbol->type.type == VariableType::INT && basicType->basicType == BasicValueType::I8) {
+                        ZextInst *zext = new ZextInst(value);
+                        submitInst(zext);
+                        value = zext;
+                    } else if (initVal->varDef->symbol->type.type == VariableType::CHAR && basicType->basicType == BasicValueType::I32) {
+                        TruncInst* trunc = new TruncInst(value);
+                        submitInst(trunc);
+                        value = trunc;
                     }
                     StoreInst* storeInst = new StoreInst(value, getElementPtr);
                     submitInst(storeInst);
