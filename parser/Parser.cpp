@@ -531,7 +531,14 @@ namespace thm {
 
     Character* Parser::parseCharacter() {
         auto ptr = new Character();
-        char v = currentToken().content[1];
+        char v;
+        if (currentToken().content[1] != '\\')
+            v = currentToken().content[1];
+        else {
+            int *a = 0;
+            *a = 1;
+            v = currentToken().content[2];
+        }
         ptr->lineno = currentToken().lineno;
         match(Token::CHRCON);
         ptr->ch = v;
