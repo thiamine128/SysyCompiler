@@ -118,7 +118,7 @@ public:
     void print(std::ostream &os) const override;
     void printRef(std::ostream &os) const override;
     void addInst(Instruction* instruction);
-
+    void removeDeadInst();
     void fillSlot();
 };
 class Constant : public Value {

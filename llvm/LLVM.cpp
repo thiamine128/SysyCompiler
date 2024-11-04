@@ -140,6 +140,19 @@ namespace thm {
         insts.push_back(instruction);
     }
 
+    void BasicBlock::removeDeadInst() {
+        int len = 0;
+        for (int i = 0; i < insts.size(); ++i) {
+            len++;
+            if (insts[i]->type() == LLVMType::RET_INST || insts[i]->type() == LLVMType::BRANCH_INST) {
+                break;
+            }
+        }
+        while (insts.size() > len) {
+            insts.pop_back();
+        }
+    }
+
     void BasicBlock::fillSlot() {
         for (Instruction *inst : insts) {
             if (inst->slot == 0) {
@@ -248,6 +261,7 @@ namespace thm {
         }
         for (BasicBlock* block : blocks) {
             block->slot = slotTracker.allocSlot();
+            block->removeDeadInst();
             block->fillSlot();
         }
     }
@@ -495,11 +509,11 @@ namespace thm {
             os << "i32 0, ";
             idx->valueType->print(os);
             os << " ";
-            idx->print(os);
+            idx->printRef(os);
         } else {
             idx->valueType->print(os);
             os << " ";
-            idx->print(os);
+            idx->printRef(os);
         }
         os << std::endl;
     }
