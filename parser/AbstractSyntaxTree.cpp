@@ -114,6 +114,10 @@ namespace thm {
         constVal = addExp->constVal;
     }
 
+    BasicValueType * Exp::getBasicType() const {
+        return static_cast<BasicValueType *>(value->valueType);
+    }
+
     void Cond::visit(ASTVisitor* visitor) {
         visitor->visitCond(this);
     }
@@ -124,6 +128,11 @@ namespace thm {
 
     void LVal::evalConst() {
         
+    }
+
+    BasicValueType * LVal::getBasicType() const {
+        PtrValueType *ptrType = static_cast<PtrValueType *>(value->valueType);
+        return static_cast<BasicValueType *>(ptrType->value);
     }
 
     void PrimaryExp::visit(ASTVisitor* visitor) {
@@ -188,6 +197,10 @@ namespace thm {
                 }
             }
         }, exp);
+    }
+
+    BasicValueType * UnaryExp::getBasicType() const {
+        return static_cast<BasicValueType *>(value->valueType);
     }
 
     void UnaryOp::visit(ASTVisitor* visitor) {
@@ -255,8 +268,16 @@ namespace thm {
         visitor->visitRelExp(this);
     }
 
+    BasicValueType * RelExp::getBasicType() const {
+        return static_cast<BasicValueType *>(value->valueType);
+    }
+
     void EqExp::visit(ASTVisitor* visitor) {
         visitor->visitEqExp(this);
+    }
+
+    BasicValueType * EqExp::getBasicType() const {
+        return static_cast<BasicValueType *>(value->valueType);
     }
 
     void LAndExp::visit(ASTVisitor* visitor) {

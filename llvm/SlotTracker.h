@@ -8,7 +8,10 @@
 namespace thm {
 
 class SlotTracker {
+public:
+    int currentSlot = 0;
 
+    int allocSlot();
 };
 
 } // thm

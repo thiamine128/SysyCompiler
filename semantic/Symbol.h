@@ -10,8 +10,10 @@
 #include "../lexer/Token.h"
 
 namespace thm {
+    class Function;
+    class Value;
 
-class Symbol {
+    class Symbol {
 public:
     virtual ~Symbol() = default;
 
@@ -43,6 +45,7 @@ public:
     VariableType type;
     bool hasInit;
     int initVal;
+    Value* value;
     std::vector<int> initVals;
 
     std::string typeString() const override;
@@ -57,6 +60,7 @@ public:
         VOID
     } type;
     std::vector<VariableType> paramTypes;
+    Function* value;
     std::string typeString() const override;
     Symbol::Type symbolType() const override;
 };

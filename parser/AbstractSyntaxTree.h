@@ -9,6 +9,7 @@
 
 #include "../core/Scope.h"
 #include "../lexer/Token.h"
+#include "../llvm/LLVM.h"
 #include "../semantic/Symbol.h"
 
 #define ASTNODES \
@@ -64,6 +65,7 @@ namespace thm {
         };
         int lineno;
         Scope* scope;
+        Value* value;
 
         static void consume(std::vector<Token>& tokens);
         virtual ASTNodeType nodeType() const { return ASTNode::DEFAULT; }
@@ -117,6 +119,8 @@ namespace thm {
         Token ident;
         std::variant<ConstDefBasic, ConstDefArray> def;
         ConstInitVal* val;
+        VariableSymbol* symbol;
+        bool lazyArrayLen;
         ASTNodeType nodeType() const override {return ASTNode::CONSTDEF;}
         void visit(ASTVisitor* visitor) override;
     };
@@ -134,6 +138,7 @@ namespace thm {
             ConstInitValArray(const std::vector<ConstExp*>& exps) : exps(exps) {}
             ConstInitValArray() {}
         };
+        ConstDef* constDef;
         std::variant<ConstInitValBasic, ConstInitValArray, std::string> val;
         ASTNodeType nodeType() const override {return ASTNode::CONSTINITVAL;}
         void visit(ASTVisitor* visitor) override;
@@ -158,6 +163,8 @@ namespace thm {
         Token ident;
         std::variant<VarDefBasic, VarDefArray> def;
         InitVal* val;
+        VariableSymbol* symbol;
+        bool lazyArrayLen;
         ASTNodeType nodeType() const override {return ASTNode::VARDEF;}
         void visit(ASTVisitor* visitor) override;
     };
@@ -173,6 +180,7 @@ namespace thm {
             InitValArray(const std::vector<Exp*>& exps) : exps(exps) {}
             InitValArray() {}
         };
+        VarDef* varDef;
         std::variant<InitValBasic, InitValArray, std::string> val;
         ASTNodeType nodeType() const override {return ASTNode::INITVAL;}
         void visit(ASTVisitor* visitor) override;
@@ -183,6 +191,7 @@ namespace thm {
         Token ident;
         FuncFParams* params;
         Block* block;
+        FunctionSymbol* symbol;
 
         ASTNodeType nodeType() const override {return ASTNode::FUNCDEF;}
         void visit(ASTVisitor* visitor) override;
@@ -210,6 +219,7 @@ namespace thm {
         BType* bType;
         Token ident;
         bool isArray;
+        VariableSymbol* symbol;
         ASTNodeType nodeType() const override {return ASTNode::FUNCFPARAM;}
         void visit(ASTVisitor* visitor) override;
     };
@@ -310,10 +320,15 @@ namespace thm {
         ASTNodeType nodeType() const override { return ASTNode::EXP; }
         void visit(ASTVisitor* visitor) override;
         void evalConst();
+        BasicValueType *getBasicType() const;
     };
     class Cond : public ASTNode {
     public:
-        LOrExp* lOrExp;
+        LOrExp *lOrExp;
+        BasicBlock *ifTrue;
+        BasicBlock *ifFalse;
+        BasicBlock *block;
+
         ASTNodeType nodeType() const override { return ASTNode::COND; }
         void visit(ASTVisitor* visitor) override;
     };
@@ -323,10 +338,12 @@ namespace thm {
         Exp* exp;
         bool isConst = false;
         int constVal = 0;
+        VariableSymbol* symbol;
 
         ASTNodeType nodeType() const override { return ASTNode::LVAL; }
         void visit(ASTVisitor* visitor) override;
         void evalConst();
+        BasicValueType* getBasicType() const;
     };
     class PrimaryExp : public ASTNode {
     public:
@@ -374,6 +391,7 @@ namespace thm {
         ASTNodeType nodeType() const override { return ASTNode::UNARYEXP; }
         void visit(ASTVisitor* visitor) override;
         void evalConst();
+        BasicValueType *getBasicType() const;
     };
     class UnaryOp : public ASTNode {
     public:
@@ -386,6 +404,7 @@ namespace thm {
     class FuncRParams : public ASTNode {
     public:
         std::vector<Exp*> params;
+        std::vector<Value*> values;
         ASTNodeType nodeType() const override { return ASTNode::FUNCRPARAMS; }
         void visit(ASTVisitor* visitor) override;
     };
@@ -438,6 +457,7 @@ namespace thm {
         std::variant<AddExp*, OpExp> exp;
         ASTNodeType nodeType() const override { return ASTNode::RELEXP; }
         void visit(ASTVisitor* visitor) override;
+        BasicValueType *getBasicType() const;
     };
     class EqExp : public ASTNode {
     public:
@@ -453,6 +473,7 @@ namespace thm {
         std::variant<RelExp*, OpExp> exp;
         ASTNodeType nodeType() const override { return ASTNode::EQEXP; }
         void visit(ASTVisitor* visitor) override;
+        BasicValueType *getBasicType() const;
     };
     class LAndExp : public ASTNode {
     public:
@@ -462,6 +483,11 @@ namespace thm {
 
             OpExp(LAndExp* lAndExp, EqExp* eqExp) : lAndExp(lAndExp), eqExp(eqExp) {}
         };
+        BasicBlock *ifTrue;
+        BasicBlock *ifFalse;
+        BasicBlock *create;
+        BasicBlock *block;
+
         std::variant<EqExp*, OpExp> exp;
         ASTNodeType nodeType() const override { return ASTNode::LANDEXP; }
         void visit(ASTVisitor* visitor) override;
@@ -474,6 +500,11 @@ namespace thm {
 
             OpExp(LOrExp* lOrExp, LAndExp* lAndExp) : lOrExp(lOrExp), lAndExp(lAndExp) {}
         };
+        BasicBlock *ifTrue;
+        BasicBlock *ifFalse;
+        BasicBlock *create;
+        BasicBlock *block;
+
         std::variant<LAndExp*, OpExp> exp;
         ASTNodeType nodeType() const override { return ASTNode::LOREXP; }
         void visit(ASTVisitor* visitor) override;

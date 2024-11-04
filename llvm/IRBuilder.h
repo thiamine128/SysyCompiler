@@ -11,9 +11,26 @@ namespace thm {
 
 class IRBuilder : public ASTVisitor {
 public:
+    struct ForBlockSet {
+        BasicBlock* initBlock;
+        BasicBlock* condBlock;
+        BasicBlock* stmtBlock;
+        BasicBlock* updateBlock;
+        BasicBlock* afterBlock;
+    };
     Module* module;
+    Function* currentFunction;
+    BasicBlock* currentBlock;
+    std::vector<ForBlockSet> forBlocks;
 
     IRBuilder();
+
+    static GlobalVariable* globalVariableFromSymbol(VariableSymbol* symbol);
+
+    void submitInst(Instruction* inst);
+    void submitBlock(BasicBlock* block);
+    void doAssign(LVal* lVal, Exp* exp);
+
     void visitConstDecl(ConstDecl* constDecl) override;
     void visitVarDecl(VarDecl* varDecl) override;
     void visitFuncDef(FuncDef* funcDef) override;

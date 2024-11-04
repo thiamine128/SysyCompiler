@@ -5,4 +5,7 @@
 #include "SlotTracker.h"
 
 namespace thm {
+    int SlotTracker::allocSlot() {
+        return currentSlot++;
+    }
 } // thm

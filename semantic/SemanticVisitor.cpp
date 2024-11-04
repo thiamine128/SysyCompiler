@@ -136,6 +136,7 @@ namespace thm {
         symbol->scopeId = currentScope->scopeId;
         symbol->type = funcDef->funcType->type;
         symbol->ident = funcDef->ident;
+        funcDef->symbol = symbol;
         if (funcDef->params != nullptr) {
             for (auto const& param : funcDef->params->params) {
                 VariableType paramType;
@@ -273,6 +274,7 @@ namespace thm {
     void SemanticVisitor::visitLVal(LVal* lVal) {
         lVal->scope = currentScope;
         tryAccessSymbol(lVal->ident);
+        lVal->symbol = static_cast<VariableSymbol*>(currentScope->symbolTable->findSymbol(lVal->ident.content));
         ASTVisitor::visitLVal(lVal);
         lVal->evalConst();
     }
@@ -326,14 +328,14 @@ namespace thm {
 
     void SemanticVisitor::visitConstDef(ConstDef* constDef) {
         constDef->scope = currentScope;
-        ASTVisitor::visitConstDef(constDef);
         VariableSymbol* symbol = new VariableSymbol();
         symbol->id = ++symbolNum;
         symbol->scopeId = currentScope->scopeId;
         symbol->type.isConst = true;
         symbol->type.type = constDef->type;
         symbol->ident = constDef->ident;
-        bool lazyArrayLen = false;
+        constDef->symbol = symbol;
+        constDef->lazyArrayLen = false;
         std::visit(overloaded{
             [&](ConstDef::ConstDefBasic& basic) {
                 symbol->type.isArray = false;
@@ -341,56 +343,17 @@ namespace thm {
             [&](ConstDef::ConstDefArray& array) {
                 symbol->type.isArray = true;
                 if (array.size != nullptr) {
+                    array.size->visit(this);
                     symbol->type.arrayLen = array.size->constVal;
                 } else {
-                    lazyArrayLen = true;
+                    constDef->lazyArrayLen = true;
                 }
             }
         }, constDef->def);
         submitSymbol(symbol);
         if (constDef->val != nullptr) {
-            symbol->hasInit = true;
-            std::visit(overloaded{
-                [&](ConstInitVal::ConstInitValBasic& basic) {
-                    symbol->initVal = basic.exp->constVal;
-                    if (symbol->type.type == VariableType::CHAR) {
-                        symbol->initVal &= 0xff;
-                    }
-                },
-                [&](ConstInitVal::ConstInitValArray& array) {
-                    if (!lazyArrayLen) {
-                        symbol->initVals.resize(symbol->type.arrayLen);
-                    } else {
-                        symbol->type.arrayLen = array.exps.size();
-                        symbol->initVals.resize(array.exps.size());
-                    }
-                    for (int i = 0; i < array.exps.size(); i++) {
-                        if (i >= symbol->type.arrayLen) {
-                            break;
-                        }
-                        symbol->initVals[i] = array.exps[i]->constVal;
-                        if (symbol->type.type == VariableType::CHAR) {
-                            symbol->initVals[i] &= 0xff;
-                        }
-                    }
-                },
-                [&](std::string& str) {
-                    std::string escaped = fromRaw(str.c_str());
-                    if (!lazyArrayLen) {
-                        symbol->initVals.resize(symbol->type.arrayLen);
-                    } else {
-                        symbol->type.arrayLen = escaped.size() + 1;
-                        symbol->initVals.resize(escaped.size() + 1);
-                    }
-
-                    for (int i = 0; i < escaped.size(); i++) {
-                        if (i >= symbol->type.arrayLen) {
-                            break;
-                        }
-                        symbol->initVals[i] = escaped[i];
-                    }
-                }
-            }, constDef->val->val);
+            constDef->val->constDef = constDef;
+            constDef->val->visit(this);
         } else {
             symbol->hasInit = false;
         }
@@ -398,19 +361,63 @@ namespace thm {
 
     void SemanticVisitor::visitConstInitVal(ConstInitVal* constInitVal) {
         constInitVal->scope = currentScope;
-        ASTVisitor::visitConstInitVal(constInitVal);
+        VariableSymbol* symbol = constInitVal->constDef->symbol;
+        symbol->hasInit = true;
+        std::visit(overloaded{
+            [&](ConstInitVal::ConstInitValBasic& basic) {
+                basic.exp->visit(this);
+                symbol->initVal = basic.exp->constVal;
+                if (symbol->type.type == VariableType::CHAR) {
+                    symbol->initVal &= 0xff;
+                }
+            },
+            [&](ConstInitVal::ConstInitValArray& array) {
+                if (!constInitVal->constDef->lazyArrayLen) {
+                    symbol->initVals.resize(symbol->type.arrayLen);
+                } else {
+                    symbol->type.arrayLen = array.exps.size();
+                    symbol->initVals.resize(array.exps.size());
+                }
+                for (int i = 0; i < array.exps.size(); i++) {
+                    array.exps[i]->visit(this);
+                    if (i >= symbol->type.arrayLen) {
+                        break;
+                    }
+                    symbol->initVals[i] = array.exps[i]->constVal;
+                    if (symbol->type.type == VariableType::CHAR) {
+                        symbol->initVals[i] &= 0xff;
+                    }
+                }
+            },
+            [&](std::string& str) {
+                std::string escaped = fromRaw(str.c_str());
+                if (!constInitVal->constDef->lazyArrayLen) {
+                    symbol->initVals.resize(symbol->type.arrayLen);
+                } else {
+                    symbol->type.arrayLen = escaped.size() + 1;
+                    symbol->initVals.resize(escaped.size() + 1);
+                }
+
+                for (int i = 0; i < escaped.size(); i++) {
+                    if (i >= symbol->type.arrayLen) {
+                        break;
+                    }
+                    symbol->initVals[i] = escaped[i];
+                }
+            }
+        }, constInitVal->val);
     }
 
     void SemanticVisitor::visitVarDef(VarDef* varDef) {
         varDef->scope = currentScope;
-        ASTVisitor::visitVarDef(varDef);
         VariableSymbol* symbol = new VariableSymbol();
         symbol->id = ++symbolNum;
         symbol->scopeId = currentScope->scopeId;
         symbol->type.isConst = false;
         symbol->type.type = varDef->type;
         symbol->ident = varDef->ident;
-        bool lazyArrayLen = false;
+        varDef->symbol = symbol;
+        varDef->lazyArrayLen = false;
         std::visit(overloaded{
             [&](VarDef::VarDefBasic& basic) {
                 symbol->type.isArray = false;
@@ -418,58 +425,17 @@ namespace thm {
             [&](VarDef::VarDefArray& array) {
                 symbol->type.isArray = true;
                 if (array.size != nullptr) {
+                    array.size->visit(this);
                     symbol->type.arrayLen = array.size->constVal;
                 } else {
-                    lazyArrayLen = true;
+                    varDef->lazyArrayLen = true;
                 }
             }
         }, varDef->def);
         submitSymbol(symbol);
         if (varDef->val != nullptr) {
-            symbol->hasInit = true;
-            std::visit(overloaded{
-                [&](InitVal::InitValBasic& basic) {
-                    if (basic.exp->isConst) {
-                        symbol->initVal = basic.exp->constVal;
-
-                        if (symbol->type.type == VariableType::CHAR) {
-                            symbol->initVal &= 0xff;
-                        }
-                    }
-                },
-                [&](InitVal::InitValArray& array) {
-                    if (!lazyArrayLen) {
-                        symbol->initVals.resize(symbol->type.arrayLen);
-                    } else {
-                        symbol->type.arrayLen = array.exps.size();
-                        symbol->initVals.resize(array.exps.size());
-                    }
-                    for (int i = 0; i < array.exps.size(); i++) {
-                        if (i >= symbol->type.arrayLen) {
-                            break;
-                        }
-                        symbol->initVals[i] = array.exps[i]->constVal;
-                        if (symbol->type.type == VariableType::CHAR) {
-                            symbol->initVals[i] &= 0xff;
-                        }
-                    }
-                },
-                [&](std::string& str) {
-                    std::string escaped = fromRaw(str.c_str());
-                    if (!lazyArrayLen) {
-                        symbol->initVals.resize(symbol->type.arrayLen);
-                    } else {
-                        symbol->type.arrayLen = escaped.size() + 1;
-                        symbol->initVals.resize(escaped.size() + 1);
-                    }
-                    for (int i = 0; i < escaped.size(); i++) {
-                        if (i >= symbol->type.arrayLen) {
-                            break;
-                        }
-                        symbol->initVals[i] = escaped[i];
-                    }
-                }
-            }, varDef->val->val);
+            varDef->val->varDef = varDef;
+            varDef->val->visit(this);
         } else {
             symbol->hasInit = false;
         }
@@ -477,7 +443,53 @@ namespace thm {
 
     void SemanticVisitor::visitInitVal(InitVal* initVal) {
         initVal->scope = currentScope;
-        ASTVisitor::visitInitVal(initVal);
+        VariableSymbol* symbol = initVal->varDef->symbol;
+        symbol->hasInit = true;
+        std::visit(overloaded{
+            [&](InitVal::InitValBasic& basic) {
+                basic.exp->visit(this);
+                if (basic.exp->isConst) {
+                    symbol->initVal = basic.exp->constVal;
+
+                    if (symbol->type.type == VariableType::CHAR) {
+                        symbol->initVal &= 0xff;
+                    }
+                }
+            },
+            [&](InitVal::InitValArray& array) {
+                if (!initVal->varDef->lazyArrayLen) {
+                    symbol->initVals.resize(symbol->type.arrayLen);
+                } else {
+                    symbol->type.arrayLen = array.exps.size();
+                    symbol->initVals.resize(array.exps.size());
+                }
+                for (int i = 0; i < array.exps.size(); i++) {
+                    if (i >= symbol->type.arrayLen) {
+                        break;
+                    }
+                    array.exps[i]->visit(this);
+                    symbol->initVals[i] = array.exps[i]->constVal;
+                    if (symbol->type.type == VariableType::CHAR) {
+                        symbol->initVals[i] &= 0xff;
+                    }
+                }
+            },
+            [&](std::string& str) {
+                std::string escaped = fromRaw(str.c_str());
+                if (!initVal->varDef->lazyArrayLen) {
+                    symbol->initVals.resize(symbol->type.arrayLen);
+                } else {
+                    symbol->type.arrayLen = escaped.size() + 1;
+                    symbol->initVals.resize(escaped.size() + 1);
+                }
+                for (int i = 0; i < escaped.size(); i++) {
+                    if (i >= symbol->type.arrayLen) {
+                        break;
+                    }
+                    symbol->initVals[i] = escaped[i];
+                }
+            }
+        }, initVal->val);
     }
 
     void SemanticVisitor::visitFuncType(FuncType* funcType) {
@@ -498,6 +510,7 @@ namespace thm {
         paramSymbol->type.type = funcFParam->bType->type;
         paramSymbol->type.isArray = funcFParam->isArray;
         paramSymbol->ident = funcFParam->ident;
+        funcFParam->symbol = paramSymbol;
         submitSymbol(paramSymbol);
     }
 
