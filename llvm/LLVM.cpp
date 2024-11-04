@@ -618,7 +618,7 @@ namespace thm {
 
     Module::Module() {
         getInt = new Function("getint", BasicValueType::I32);
-        getChar = new Function("getchar", BasicValueType::I8);
+        getChar = new Function("getchar", BasicValueType::I32);
         putInt = new Function("putint", BasicValueType::VOID);
         Argument* putIntArg = new Argument();
         putIntArg->valueType = new BasicValueType(BasicValueType::I32);
