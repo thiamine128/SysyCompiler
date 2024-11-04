@@ -168,13 +168,12 @@ namespace thm {
                 submitBlock(currentBlock);
 
                 currentBlock = condBlock;
+                submitBlock(currentBlock);
                 if (stmtFor.cond != nullptr) {
                     stmtFor.cond->ifTrue = stmtBlock;
                     stmtFor.cond->ifFalse = afterBlock;
                     stmtFor.cond->visit(this);
                 }
-                submitInst(new BranchInst(stmtBlock));
-                submitBlock(currentBlock);
 
                 forBlocks.push_back({initBlock, condBlock, stmtBlock, updateBlock, afterBlock});
 
