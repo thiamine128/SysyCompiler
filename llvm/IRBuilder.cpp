@@ -493,10 +493,15 @@ namespace thm {
             },
             [&](std::string& str) {
                 std::string s = fromRaw(str.c_str());
-                for (int i = 0; i <= s.length(); i++) {
+                for (int i = 0; i < constInitVal->constDef->symbol->type.arrayLen; i++) {
                     GetElementPtr* getElementPtr = new GetElementPtr(constInitVal->constDef->value, new NumericLiteral(i, BasicValueType::I32));
                     submitInst(getElementPtr);
-                    Value* value = new NumericLiteral(s[i], BasicValueType::I8);
+                    Value* value;
+                    if (i < s.length()) {
+                        value = new NumericLiteral(s[i], BasicValueType::I8);
+                    } else {
+                        value = new NumericLiteral(0, BasicValueType::I8);
+                    }
                     StoreInst* storeInst = new StoreInst(value, getElementPtr);
                     submitInst(storeInst);
                 }
@@ -560,10 +565,15 @@ namespace thm {
             },
             [&](std::string& str) {
                 std::string s = fromRaw(str.c_str());
-                for (int i = 0; i <= s.length(); i++) {
+                for (int i = 0; i < initVal->varDef->symbol->type.arrayLen; i++) {
                     GetElementPtr* getElementPtr = new GetElementPtr(initVal->varDef->value, new NumericLiteral(i, BasicValueType::I32));
                     submitInst(getElementPtr);
-                    Value* value = new NumericLiteral(s[i], BasicValueType::I8);
+                    Value* value;
+                    if (i < s.length()) {
+                        value = new NumericLiteral(s[i], BasicValueType::I8);
+                    } else {
+                        value = new NumericLiteral(0, BasicValueType::I8);
+                    }
                     StoreInst* storeInst = new StoreInst(value, getElementPtr);
                     submitInst(storeInst);
                 }

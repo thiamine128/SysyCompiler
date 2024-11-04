@@ -26,13 +26,7 @@ std::string fromRaw(char const* raw) {
     for (int i = 1; raw[i + 1]; ++i) {
         if (raw[i] == '\\') {
             i++;
-
-            if (slashMap.find(raw[i]) == slashMap.end()) {
-                int *a = 0;
-                *a = 1;
-            } else {
-
-            }
+            result += slashMap[raw[i]];
         } else {
             result += raw[i];
         }
