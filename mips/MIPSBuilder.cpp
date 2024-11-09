@@ -21,6 +21,7 @@ namespace thm {
         for (Function *function : module->functions) {
             translateFunction(function);
         }
+        translateFunction(module->main);
     }
 
     void MIPSBuilder::addGlobalVariable(GlobalVariable *global) {
@@ -92,6 +93,7 @@ namespace thm {
                     translateBinaryInst(static_cast<BinaryInst *>(inst));
                     break;
                 case LLVMType::CALL_INST:
+
                     break;
                 case LLVMType::ALLOCA_INST:
                     break;
@@ -226,21 +228,128 @@ namespace thm {
                 }
                 break;
             case BinaryInst::AND:
-
+                // And is not used
                 break;
             case BinaryInst::OR:
+                // Or is not used
                 break;
             case BinaryInst::EQ:
+                if (lConst) {
+                    NumericLiteral *lNum = static_cast<NumericLiteral *>(binaryInst->l);
+                    if (rConst) {
+                        NumericLiteral *rNum = static_cast<NumericLiteral *>(binaryInst->r);
+                        submitText(MIPSInst::LoadImm(Register::T0, lNum->value));
+                        submitText(MIPSInst::EqImm(Register::T2, Register::T0, rNum->value));
+                    } else {
+                        submitText(MIPSInst::EqImm(Register::T2, Register::T1, lNum->value));
+                    }
+                } else {
+                    if (rConst) {
+                        NumericLiteral *rNum = static_cast<NumericLiteral *>(binaryInst->r);
+                        submitText(MIPSInst::EqImm(Register::T2, Register::T0, rNum->value));
+                    } else {
+                        submitText(MIPSInst::Eq(Register::T2, Register::T0, Register::T1));
+                    }
+                }
                 break;
             case BinaryInst::NE:
+                if (lConst) {
+                    NumericLiteral *lNum = static_cast<NumericLiteral *>(binaryInst->l);
+                    if (rConst) {
+                        NumericLiteral *rNum = static_cast<NumericLiteral *>(binaryInst->r);
+                        submitText(MIPSInst::LoadImm(Register::T0, lNum->value));
+                        submitText(MIPSInst::NeqImm(Register::T2, Register::T0, rNum->value));
+                    } else {
+                        submitText(MIPSInst::NeqImm(Register::T2, Register::T1, lNum->value));
+                    }
+                } else {
+                    if (rConst) {
+                        NumericLiteral *rNum = static_cast<NumericLiteral *>(binaryInst->r);
+                        submitText(MIPSInst::NeqImm(Register::T2, Register::T0, rNum->value));
+                    } else {
+                        submitText(MIPSInst::Neq(Register::T2, Register::T0, Register::T1));
+                    }
+                }
                 break;
             case BinaryInst::SGE:
+                if (lConst) {
+                    NumericLiteral *lNum = static_cast<NumericLiteral *>(binaryInst->l);
+                    if (rConst) {
+                        NumericLiteral *rNum = static_cast<NumericLiteral *>(binaryInst->r);
+                        submitText(MIPSInst::LoadImm(Register::T0, lNum->value));
+                        submitText(MIPSInst::SgeImm(Register::T2, Register::T0, rNum->value));
+                    } else {
+                        submitText(MIPSInst::LoadImm(Register::T0, lNum->value));
+                        submitText(MIPSInst::Sge(Register::T2, Register::T0, Register::T1));
+                    }
+                } else {
+                    if (rConst) {
+                        NumericLiteral *rNum = static_cast<NumericLiteral *>(binaryInst->r);
+                        submitText(MIPSInst::SgeImm(Register::T2, Register::T0, rNum->value));
+                    } else {
+                        submitText(MIPSInst::Sge(Register::T2, Register::T0, Register::T1));
+                    }
+                }
                 break;
             case BinaryInst::SGT:
+                if (lConst) {
+                    NumericLiteral *lNum = static_cast<NumericLiteral *>(binaryInst->l);
+                    if (rConst) {
+                        NumericLiteral *rNum = static_cast<NumericLiteral *>(binaryInst->r);
+                        submitText(MIPSInst::LoadImm(Register::T0, lNum->value));
+                        submitText(MIPSInst::SgtImm(Register::T2, Register::T0, rNum->value));
+                    } else {
+                        submitText(MIPSInst::LoadImm(Register::T0, lNum->value));
+                        submitText(MIPSInst::Sgt(Register::T2, Register::T0, Register::T1));
+                    }
+                } else {
+                    if (rConst) {
+                        NumericLiteral *rNum = static_cast<NumericLiteral *>(binaryInst->r);
+                        submitText(MIPSInst::SgtImm(Register::T2, Register::T0, rNum->value));
+                    } else {
+                        submitText(MIPSInst::Sgt(Register::T2, Register::T0, Register::T1));
+                    }
+                }
                 break;
             case BinaryInst::SLE:
+                if (lConst) {
+                    NumericLiteral *lNum = static_cast<NumericLiteral *>(binaryInst->l);
+                    if (rConst) {
+                        NumericLiteral *rNum = static_cast<NumericLiteral *>(binaryInst->r);
+                        submitText(MIPSInst::LoadImm(Register::T0, lNum->value));
+                        submitText(MIPSInst::SleImm(Register::T2, Register::T0, rNum->value));
+                    } else {
+                        submitText(MIPSInst::LoadImm(Register::T0, lNum->value));
+                        submitText(MIPSInst::Sle(Register::T2, Register::T0, Register::T1));
+                    }
+                } else {
+                    if (rConst) {
+                        NumericLiteral *rNum = static_cast<NumericLiteral *>(binaryInst->r);
+                        submitText(MIPSInst::SleImm(Register::T2, Register::T0, rNum->value));
+                    } else {
+                        submitText(MIPSInst::Sle(Register::T2, Register::T0, Register::T1));
+                    }
+                }
                 break;
             case BinaryInst::SLT:
+                if (lConst) {
+                    NumericLiteral *lNum = static_cast<NumericLiteral *>(binaryInst->l);
+                    if (rConst) {
+                        NumericLiteral *rNum = static_cast<NumericLiteral *>(binaryInst->r);
+                        submitText(MIPSInst::LoadImm(Register::T0, lNum->value));
+                        submitText(MIPSInst::SltImm(Register::T2, Register::T0, rNum->value));
+                    } else {
+                        submitText(MIPSInst::LoadImm(Register::T0, lNum->value));
+                        submitText(MIPSInst::Slt(Register::T2, Register::T0, Register::T1));
+                    }
+                } else {
+                    if (rConst) {
+                        NumericLiteral *rNum = static_cast<NumericLiteral *>(binaryInst->r);
+                        submitText(MIPSInst::SltImm(Register::T2, Register::T0, rNum->value));
+                    } else {
+                        submitText(MIPSInst::Slt(Register::T2, Register::T0, Register::T1));
+                    }
+                }
                 break;
         }
     }

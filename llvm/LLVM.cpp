@@ -255,6 +255,23 @@ namespace thm {
         os << "}" << std::endl;
     }
 
+    void Function::preAlloc() {
+        std::vector<AllocaInst *> allocaInsts;
+        for (BasicBlock* block : blocks) {
+            for (auto inst = block->insts.begin(); inst != block->insts.end();) {
+                if ((*inst)->type() == LLVMType::ALLOCA_INST) {
+                    allocaInsts.push_back(static_cast<AllocaInst*>(*inst));
+                    inst = block->insts.erase(inst);
+                } else {
+                    ++inst;
+                }
+            }
+        }
+        for (auto allocaInst : allocaInsts) {
+            blocks[0]->insts.insert(blocks[0]->insts.begin(), allocaInst);
+        }
+    }
+
     void Function::fillSlot() {
         for (Argument* arg : args) {
             arg->slot = slotTracker.allocSlot();
@@ -667,10 +684,12 @@ namespace thm {
         return stringLiteral;
     }
 
-    void Module::fillSlot() {
+    void Module::preprocess() {
         for (Function* function : functions) {
+            function->preAlloc();
             function->fillSlot();
         }
+        main->preAlloc();
         main->fillSlot();
     }
 } // thm

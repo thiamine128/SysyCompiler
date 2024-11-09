@@ -83,11 +83,17 @@ public:
         BGE,
         BGT,
         SLT,
+        SLTI,
         SLE,
+        SLEI,
         SEQ,
+        SEQI,
         SGT,
+        SGTI,
         SGE,
+        SGEI,
         SNE,
+        SNEI,
         JR,
         JAL
     } type;
@@ -105,6 +111,18 @@ public:
     static MIPSInst *DivImm(Register dest, Register l, int r);
     static MIPSInst *Rem(Register dest, Register l, Register r);
     static MIPSInst *RemImm(Register dest, Register l, int r);
+    static MIPSInst *Eq(Register dest, Register l, Register r);
+    static MIPSInst *EqImm(Register dest, Register l, int r);
+    static MIPSInst *Neq(Register dest, Register l, Register r);
+    static MIPSInst *NeqImm(Register dest, Register l, int r);
+    static MIPSInst *Sle(Register dest, Register l, Register r);
+    static MIPSInst *SleImm(Register dest, Register l, int r);
+    static MIPSInst *Slt(Register dest, Register l, Register r);
+    static MIPSInst *SltImm(Register dest, Register l, int r);
+    static MIPSInst *Sge(Register dest, Register l, Register r);
+    static MIPSInst *SgeImm(Register dest, Register l, int r);
+    static MIPSInst *Sgt(Register dest, Register l, Register r);
+    static MIPSInst *SgtImm(Register dest, Register l, int r);
     static MIPSInst *LoadWord(Register dest, int offset, Register base);
     static MIPSInst *LoadImm(Register dest, int imm);
 

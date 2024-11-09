@@ -6,14 +6,17 @@
 #define STACKTRACKER_H
 #include <unordered_map>
 
+#include "MIPS.h"
+
 namespace thm {
 
 class StackTracker {
 public:
     std::unordered_map<int, int> offset;
+    int fsize = 0;
 
     void reset();
-
+    MIPSInst *alloc(int slot);
 };
 
 } // thm

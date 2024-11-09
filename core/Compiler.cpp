@@ -52,7 +52,7 @@ namespace thm {
         irBuilder = new IRBuilder();
         compUnit_->visit(irBuilder);
         std::shared_ptr<Logger> logger = std::make_shared<Logger>("llvm_ir.txt");
-        irBuilder->module->fillSlot();
+        irBuilder->module->preprocess();
         irBuilder->module->print(logger->stream());
     }
 #endif

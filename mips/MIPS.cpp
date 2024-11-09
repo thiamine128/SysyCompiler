@@ -56,6 +56,54 @@ namespace thm {
         return new MIPSInst(REMI, dest, l, Register::ZERO, r);
     }
 
+    MIPSInst * MIPSInst::Eq(Register dest, Register l, Register r) {
+        return new MIPSInst(SEQ, dest, l, r, 0);
+    }
+
+    MIPSInst * MIPSInst::EqImm(Register dest, Register l, int r) {
+        return new MIPSInst(SEQI, dest, l, Register::ZERO, r);
+    }
+
+    MIPSInst * MIPSInst::Neq(Register dest, Register l, Register r) {
+        return new MIPSInst(SNE, dest, l, r, 0);
+    }
+
+    MIPSInst * MIPSInst::NeqImm(Register dest, Register l, int r) {
+        return new MIPSInst(SNEI, dest, l, Register::ZERO, r);
+    }
+
+    MIPSInst * MIPSInst::Sle(Register dest, Register l, Register r) {
+        return new MIPSInst(SLE, dest, l, r, 0);
+    }
+
+    MIPSInst * MIPSInst::SleImm(Register dest, Register l, int r) {
+        return new MIPSInst(SLEI, dest, l, Register::ZERO, r);
+    }
+
+    MIPSInst * MIPSInst::Slt(Register dest, Register l, Register r) {
+        return new MIPSInst(SLT, dest, l, r, 0);
+    }
+
+    MIPSInst * MIPSInst::SltImm(Register dest, Register l, int r) {
+        return new MIPSInst(SLTI, dest, l, Register::ZERO, r);
+    }
+
+    MIPSInst * MIPSInst::Sge(Register dest, Register l, Register r) {
+        return new MIPSInst(SGE, dest, l, r, 0);
+    }
+
+    MIPSInst * MIPSInst::SgeImm(Register dest, Register l, int r) {
+        return new MIPSInst(SGEI, dest, l, Register::ZERO, r);
+    }
+
+    MIPSInst * MIPSInst::Sgt(Register dest, Register l, Register r) {
+        return new MIPSInst(SGT, dest, l, r, 0);
+    }
+
+    MIPSInst * MIPSInst::SgtImm(Register dest, Register l, int r) {
+        return new MIPSInst(SGTI, dest, l, Register::ZERO, r);
+    }
+
     MIPSInst * MIPSInst::LoadWord(Register dest, int offset, Register base) {
         return new MIPSInst(Type::LW, base, dest, Register::ZERO, offset);
     }
@@ -95,6 +143,18 @@ namespace thm {
             break;
             case REMI:
                 os << "rem $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", " << imm;
+            break;
+            case SEQ:
+                os << "seq $" << static_cast<int>(rs) << ", $" << static_cast<int>(rd) << ", $" << static_cast<int>(rd);
+            break;
+            case SEQI:
+                os << "seq $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", " << imm;
+            break;
+            case SNE:
+                os << "sne $" << static_cast<int>(rs) << ", $" << static_cast<int>(rd) << ", $" << static_cast<int>(rd);
+            break;
+            case SNEI:
+                os << "sne $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", " << imm;
             break;
             case LW:
                 os << "lw $" << static_cast<int>(rt) << " " << imm << "(" << static_cast<int>(rs) << ")" << std::endl;

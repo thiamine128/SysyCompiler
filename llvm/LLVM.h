@@ -162,6 +162,7 @@ public:
 
     LLVMType type() const override;
     void print(std::ostream &os) const override;
+    void preAlloc();
     void fillSlot();
 };
 class GlobalVariable : public GlobalValue {
@@ -312,7 +313,7 @@ public:
     Module();
     void print(std::ostream& os) const;
     StringLiteral* addStringLiteral(std::string const& string);
-    void fillSlot();
+    void preprocess();
 };
 
 } // thm
