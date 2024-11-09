@@ -839,11 +839,9 @@ namespace thm {
                     exp = ne;
                 }
 
-                BinaryInst *lAnd = new BinaryInst(BinaryInst::AND, opExp.lAndExp->value, exp);
-                submitInst(lAnd);
-                BranchInst *br = new BranchInst(lAnd, lAndExp->ifTrue, lAndExp->ifFalse);
+                BranchInst *br = new BranchInst(exp, lAndExp->ifTrue, lAndExp->ifFalse);
                 submitInst(br);
-                lAndExp->value = lAnd;
+                lAndExp->value = exp;
             }
         }, lAndExp->exp);
     }

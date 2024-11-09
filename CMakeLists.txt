@@ -40,6 +40,12 @@ add_executable(Compiler main.cpp
         llvm/IRBuilder.h
         llvm/SlotTracker.cpp
         llvm/SlotTracker.h
+        mips/MIPSBuilder.cpp
+        mips/MIPSBuilder.h
+        mips/StackTracker.cpp
+        mips/StackTracker.h
+        mips/MIPS.cpp
+        mips/MIPS.h
 )
 
 add_definitions(-DPRINT_LEXER)

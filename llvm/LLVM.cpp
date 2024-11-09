@@ -259,8 +259,11 @@ namespace thm {
         for (Argument* arg : args) {
             arg->slot = slotTracker.allocSlot();
         }
+        int idx = 0;
         for (BasicBlock* block : blocks) {
             block->slot = slotTracker.allocSlot();
+            block->blockIdx = idx;
+            idx++;
             block->removeDeadInst();
             block->fillSlot();
         }

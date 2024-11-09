@@ -112,6 +112,7 @@ public:
     std::vector<Instruction*> insts;
     std::vector<BasicBlock*> froms;
     std::vector<BasicBlock*> tos;
+    int blockIdx;
 
     BasicBlock(Function* function);
     LLVMType type() const override;
