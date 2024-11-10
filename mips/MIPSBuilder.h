@@ -5,7 +5,6 @@
 #ifndef MIPSBUILDER_H
 #define MIPSBUILDER_H
 #include "MIPS.h"
-#include "StackTracker.h"
 #include "../llvm/LLVM.h"
 
 namespace thm {
@@ -15,7 +14,6 @@ public:
     Module *module;
     std::ostream& os;
     std::vector<MIPSText*> texts;
-    StackTracker stackTracker;
 
     MIPSBuilder(Module *module, std::ostream& os) : module(module), os(os) {
 
@@ -26,10 +24,11 @@ public:
     void addStringLiteral(StringLiteral *str);
     void translateFunction(Function *function);
     void translateBlock(BasicBlock *block);
-    void translateBinaryInst(BinaryInst *binaryInst);
+    void translateBinaryInst(Function *function, BinaryInst *binaryInst);
+    void translateCallInst(Function *function, CallInst *callInst);
 
     void submitText(MIPSText* text);
-    void loadSlot(int slot, Register reg);
+    void loadSlot(Function *function, int slot, Register reg);
 };
 
 } // thm

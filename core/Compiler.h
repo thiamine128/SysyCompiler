@@ -39,6 +39,8 @@ namespace thm {
 
         void buildIR();
 
+        void buildMIPS();
+
         void printErrors();
     };
 } // thm

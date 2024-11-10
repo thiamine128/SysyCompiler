@@ -157,6 +157,7 @@ public:
     std::vector<Argument*> args;
     std::vector<BasicBlock*> blocks;
     SlotTracker slotTracker;
+    Frame *frame;
 
     Function(std::string const &name, BasicValueType::BasicType retType);
 
@@ -164,6 +165,7 @@ public:
     void print(std::ostream &os) const override;
     void preAlloc();
     void fillSlot();
+    int getMaxArgs();
 };
 class GlobalVariable : public GlobalValue {
 public:
@@ -220,9 +222,10 @@ public:
 class AllocaInst : public Instruction {
 public:
     ValueType* allocType;
+    int argIdx = -1;
 
     AllocaInst(VariableType& variableType);
-    AllocaInst(ValueType* allocType);
+    AllocaInst(ValueType* allocType, int argIdx);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
 };
@@ -238,8 +241,10 @@ class StoreInst : public Instruction {
 public:
     Value* value;
     Value* ptr;
+    bool isArgInit = false;
 
     StoreInst(Value* value, Value* ptr);
+    StoreInst(Value* value, Value* ptr, bool isArgInit);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
 };

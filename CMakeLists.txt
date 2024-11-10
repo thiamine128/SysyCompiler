@@ -42,10 +42,10 @@ add_executable(Compiler main.cpp
         llvm/SlotTracker.h
         mips/MIPSBuilder.cpp
         mips/MIPSBuilder.h
-        mips/StackTracker.cpp
-        mips/StackTracker.h
         mips/MIPS.cpp
         mips/MIPS.h
+        mips/Frame.cpp
+        mips/Frame.h
 )
 
 add_definitions(-DPRINT_LEXER)

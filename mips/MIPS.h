@@ -95,7 +95,8 @@ public:
         SNE,
         SNEI,
         JR,
-        JAL
+        JAL,
+        SYSCALL,
     } type;
     Register rs, rt, rd;
     int imm;
@@ -124,7 +125,11 @@ public:
     static MIPSInst *Sgt(Register dest, Register l, Register r);
     static MIPSInst *SgtImm(Register dest, Register l, int r);
     static MIPSInst *LoadWord(Register dest, int offset, Register base);
+    static MIPSInst *LoadByte(Register dest, int offset, Register base);
     static MIPSInst *LoadImm(Register dest, int imm);
+    static MIPSInst *SaveWord(Register dest, int offset, Register base);
+    static MIPSInst *SaveByte(Register dest, int offset, Register base);
+    static MIPSInst *Syscall();
 
     void print(std::ostream &os) override;
 };

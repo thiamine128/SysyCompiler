@@ -4,9 +4,12 @@
 
 #include "MIPSBuilder.h"
 
+#include <complex>
+#include <functional>
 #include <functional>
 #include <ostream>
 
+#include "Frame.h"
 #include "../util/util.h"
 
 namespace thm {
@@ -80,6 +83,10 @@ namespace thm {
     }
 
     void MIPSBuilder::translateFunction(Function *function) {
+        function->slotTracker.prepareCallArgs(function->getMaxArgs());
+        function->frame = function->slotTracker.establishFrame();
+        submitText(new MIPSLabel(function->name));
+        submitText(MIPSInst::AddImm(Register::SP, Register::SP, -function->frame->frameSize));
         for (BasicBlock *block : function->blocks) {
             translateBlock(block);
         }
@@ -90,7 +97,7 @@ namespace thm {
         for (Instruction *inst : block->insts) {
             switch (inst->type()) {
                 case LLVMType::BINARY_INST:
-                    translateBinaryInst(static_cast<BinaryInst *>(inst));
+                    translateBinaryInst(block->function, static_cast<BinaryInst *>(inst));
                     break;
                 case LLVMType::CALL_INST:
 
@@ -117,15 +124,15 @@ namespace thm {
         }
     }
 
-    void MIPSBuilder::translateBinaryInst(BinaryInst *binaryInst) {
+    void MIPSBuilder::translateBinaryInst(Function *function, BinaryInst *binaryInst) {
         bool lConst = true;
         bool rConst = true;
         if (binaryInst->l->type() != LLVMType::NUMERIC_LITERAL) {
-            loadSlot(binaryInst->l->slot, Register::T0);
+            loadSlot(function, binaryInst->l->slot, Register::T0);
             lConst = false;
         }
         if (binaryInst->r->type() != LLVMType::NUMERIC_LITERAL) {
-            loadSlot(binaryInst->r->slot, Register::T1);
+            loadSlot(function, binaryInst->r->slot, Register::T1);
             rConst = false;
         }
         switch (binaryInst->op) {
@@ -354,12 +361,28 @@ namespace thm {
         }
     }
 
+    void MIPSBuilder::translateCallInst(Function *function, CallInst *callInst) {
+        if (function->name == "getint") {
+
+        } else if (function->name == "getchar") {
+
+        } else if (function->name == "putint") {
+
+        } else if (function->name == "putchar") {
+
+        } else if (function->name == "putstr") {
+
+        } else {
+
+        }
+    }
+
     void MIPSBuilder::submitText(MIPSText *text) {
         text->print(os);
         texts.push_back(text);
     }
 
-    void MIPSBuilder::loadSlot(int slot, Register reg) {
-        submitText(MIPSInst::LoadWord(reg, stackTracker.offset[slot], Register::FP));
+    void MIPSBuilder::loadSlot(Function *function, int slot, Register reg) {
+        submitText(MIPSInst::LoadWord(reg, function->frame->slotOffset[slot], Register::SP));
     }
 } // thm

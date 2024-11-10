@@ -157,6 +157,27 @@ namespace thm {
         for (Instruction *inst : insts) {
             if (inst->slot == 0) {
                 inst->slot = function->slotTracker.allocSlot();
+                if (inst->type() == LLVMType::ALLOCA_INST) {
+                    AllocaInst *allocInst = static_cast<AllocaInst *>(inst);
+                    if (allocInst->argIdx == -1) {
+                        PtrValueType *ptr = static_cast<PtrValueType *>(inst->valueType);
+                        int size = 0;
+                        if (ptr->value->type() == ValueType::ARRAY) {
+                            ArrayValueType *arrayType = static_cast<ArrayValueType *>(ptr->value);
+                            BasicValueType *basicType = static_cast<BasicValueType *>(arrayType->value);
+                            if (basicType->type() == BasicValueType::I8) {
+                                size = arrayType->arrayLen;
+                            } else {
+                                size = 4 * arrayType->arrayLen;
+                            }
+                        }
+                        function->slotTracker.useArray(inst->slot, size);
+                    } else {
+                        function->slotTracker.allocArgs[allocInst->argIdx] = allocInst;
+                    }
+                } else {
+                    function->slotTracker.useStack(inst->slot);
+                }
             }
         }
     }
@@ -276,6 +297,7 @@ namespace thm {
         for (Argument* arg : args) {
             arg->slot = slotTracker.allocSlot();
         }
+        slotTracker.allocArgs.resize(args.size());
         int idx = 0;
         for (BasicBlock* block : blocks) {
             block->slot = slotTracker.allocSlot();
@@ -284,6 +306,21 @@ namespace thm {
             block->removeDeadInst();
             block->fillSlot();
         }
+    }
+
+    int Function::getMaxArgs() {
+        int num = 0;
+        for (auto block : blocks) {
+            for (auto inst : block->insts) {
+                if (inst->type() == LLVMType::CALL_INST) {
+                    CallInst *call = static_cast<CallInst *>(inst);
+                    if (call->args.size() > num) {
+                        num = call->args.size();
+                    }
+                }
+            }
+        }
+        return num;
     }
 
     LLVMType GlobalVariable::type() const {
@@ -438,7 +475,7 @@ namespace thm {
         valueType = new PtrValueType(valueType);
     }
 
-    AllocaInst::AllocaInst(ValueType* allocType) : allocType(allocType->clone()) {
+    AllocaInst::AllocaInst(ValueType* allocType, int argIdx) : allocType(allocType->clone()), argIdx(argIdx) {
         slot = 0;
         valueType = new PtrValueType(allocType->clone());
     }
@@ -482,7 +519,11 @@ namespace thm {
         os << std::endl;
     }
 
-    StoreInst::StoreInst(Value *value, Value *ptr) : value(value), ptr(ptr) {
+    StoreInst::StoreInst(Value *value, Value *ptr) : value(value), ptr(ptr), isArgInit(false) {
+        valueType = new BasicValueType(BasicValueType::VOID);
+    }
+
+    StoreInst::StoreInst(Value *value, Value *ptr, bool isArgInit) : value(value), ptr(ptr), isArgInit(isArgInit) {
         valueType = new BasicValueType(BasicValueType::VOID);
     }
 

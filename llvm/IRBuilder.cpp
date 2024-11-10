@@ -89,7 +89,7 @@ namespace thm {
 
         if (funcDef->params != nullptr) {
             for (int i = 0; i < function->args.size(); i++) {
-                AllocaInst* allocaInst = new AllocaInst(function->args[i]->valueType);
+                AllocaInst* allocaInst = new AllocaInst(function->args[i]->valueType, i);
                 funcDef->params->params[i]->symbol->value = allocaInst;
                 submitInst(allocaInst);
                 submitInst(new StoreInst(function->args[i], allocaInst));

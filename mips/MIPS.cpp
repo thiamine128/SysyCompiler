@@ -108,11 +108,28 @@ namespace thm {
         return new MIPSInst(Type::LW, base, dest, Register::ZERO, offset);
     }
 
+    MIPSInst * MIPSInst::LoadByte(Register dest, int offset, Register base) {
+        return new MIPSInst(Type::LB, base, dest, Register::ZERO, offset);
+    }
+
     MIPSInst * MIPSInst::LoadImm(Register dest, int imm) {
         return new MIPSInst(LI, Register::ZERO, dest, Register::ZERO, imm);
     }
 
+    MIPSInst * MIPSInst::SaveWord(Register dest, int offset, Register base) {
+        return new MIPSInst(Type::SW, base, dest, Register::ZERO, offset);
+    }
+
+    MIPSInst * MIPSInst::SaveByte(Register dest, int offset, Register base) {
+        return new MIPSInst(Type::SB, base, dest, Register::ZERO, offset);
+    }
+
+    MIPSInst * MIPSInst::Syscall() {
+        return new MIPSInst(SYSCALL, Register::ZERO, Register::ZERO, Register::ZERO, 0);
+    }
+
     void MIPSInst::print(std::ostream &os) {
+        os << "\t";
         switch (type) {
             case ADD:
                 os << "add $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", $" << static_cast<int>(rd);
@@ -159,11 +176,21 @@ namespace thm {
             case LW:
                 os << "lw $" << static_cast<int>(rt) << " " << imm << "(" << static_cast<int>(rs) << ")" << std::endl;
                 break;
+            case LB:
+                os << "lb $" << static_cast<int>(rt) << " " << imm << "(" << static_cast<int>(rs) << ")" << std::endl;
+            break;
             case LI:
                 os << "li $" << static_cast<int>(rt) << " " << imm << std::endl;
                 break;
+            case SW:
+                os << "sw $" << static_cast<int>(rt) << " " << imm << "(" << static_cast<int>(rs) << ")" << std::endl;
+            break;
+            case SB:
+                os << "sb $" << static_cast<int>(rt) << " " << imm << "(" << static_cast<int>(rs) << ")" << std::endl;
+            break;
             default:
                 break;
         }
+        os << std::endl;
     }
 } // thm

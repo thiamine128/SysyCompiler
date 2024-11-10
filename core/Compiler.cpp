@@ -10,6 +10,7 @@
 
 #include "Scope.h"
 #include "../error/CompilerException.h"
+#include "../mips/MIPSBuilder.h"
 #include "../semantic/SemanticVisitor.h"
 
 namespace thm {
@@ -54,6 +55,11 @@ namespace thm {
         std::shared_ptr<Logger> logger = std::make_shared<Logger>("llvm_ir.txt");
         irBuilder->module->preprocess();
         irBuilder->module->print(logger->stream());
+    }
+
+    void Compiler::buildMIPS() {
+        MIPSBuilder mipsBuilder(irBuilder->module, std::cout);
+        mipsBuilder.build();
     }
 #endif
     void Compiler::printErrors() {
