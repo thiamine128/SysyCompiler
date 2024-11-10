@@ -170,8 +170,10 @@ namespace thm {
                             } else {
                                 size = 4 * arrayType->arrayLen;
                             }
+                            function->slotTracker.useArray(inst->slot, size);
+                        } else {
+                            function->slotTracker.useStack(inst->slot);
                         }
-                        function->slotTracker.useArray(inst->slot, size);
                     } else {
                         function->slotTracker.allocArgs[allocInst->argIdx] = allocInst;
                     }

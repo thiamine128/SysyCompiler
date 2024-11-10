@@ -66,6 +66,7 @@ public:
         DIVI,
         REM,
         REMI,
+        ANDI,
         NEG,
         NOT,
         SW,
@@ -94,14 +95,17 @@ public:
         SGEI,
         SNE,
         SNEI,
+        J,
         JR,
         JAL,
         SYSCALL,
     } type;
     Register rs, rt, rd;
     int imm;
+    std::string label;
 
     MIPSInst(Type type, Register rs, Register rt, Register rd, int imm);
+    MIPSInst(Type type, Register rs, Register rt, Register rd, int imm, std::string const& label);
     static MIPSInst *Add(Register dest, Register l, Register r);
     static MIPSInst *AddImm(Register dest, Register l, int r);
     static MIPSInst *Sub(Register dest, Register l, Register r);
@@ -112,6 +116,7 @@ public:
     static MIPSInst *DivImm(Register dest, Register l, int r);
     static MIPSInst *Rem(Register dest, Register l, Register r);
     static MIPSInst *RemImm(Register dest, Register l, int r);
+    static MIPSInst *AndImm(Register dest, Register l, int r);
     static MIPSInst *Eq(Register dest, Register l, Register r);
     static MIPSInst *EqImm(Register dest, Register l, int r);
     static MIPSInst *Neq(Register dest, Register l, Register r);
@@ -127,9 +132,14 @@ public:
     static MIPSInst *LoadWord(Register dest, int offset, Register base);
     static MIPSInst *LoadByte(Register dest, int offset, Register base);
     static MIPSInst *LoadImm(Register dest, int imm);
-    static MIPSInst *SaveWord(Register dest, int offset, Register base);
-    static MIPSInst *SaveByte(Register dest, int offset, Register base);
+    static MIPSInst *LoadAddr(Register dest, std::string const& symbol);
+    static MIPSInst *SaveWord(Register val, int offset, Register base);
+    static MIPSInst *SaveByte(Register val, int offset, Register base);
     static MIPSInst *Syscall();
+    static MIPSInst *JumpAndLink(std::string const& name);
+    static MIPSInst *JumpReg(Register reg);
+    static MIPSInst *Jump(std::string const& label);
+    static MIPSInst *BranchNE(Register cond, Register target, std::string const& label);
 
     void print(std::ostream &os) override;
 };

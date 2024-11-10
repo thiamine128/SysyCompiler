@@ -92,7 +92,7 @@ namespace thm {
                 AllocaInst* allocaInst = new AllocaInst(function->args[i]->valueType, i);
                 funcDef->params->params[i]->symbol->value = allocaInst;
                 submitInst(allocaInst);
-                submitInst(new StoreInst(function->args[i], allocaInst));
+                submitInst(new StoreInst(function->args[i], allocaInst, true));
             }
         }
 

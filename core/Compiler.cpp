@@ -58,7 +58,8 @@ namespace thm {
     }
 
     void Compiler::buildMIPS() {
-        MIPSBuilder mipsBuilder(irBuilder->module, std::cout);
+        std::shared_ptr<Logger> logger = std::make_shared<Logger>("mips.txt");
+        MIPSBuilder mipsBuilder(irBuilder->module, logger->stream());
         mipsBuilder.build();
     }
 #endif

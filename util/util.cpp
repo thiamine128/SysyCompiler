@@ -53,7 +53,7 @@ int escape(char ch) {
 
 std::string unescape(char ch) {
     if (unescapeMap.find(ch) == unescapeMap.end()) {
-        return "" + ch;
+        return std::string(1, ch);
     }
     return unescapeMap[ch];
 }

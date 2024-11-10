@@ -15,6 +15,9 @@ public:
     int argsNum;
 
     std::unordered_map<int, int> slotOffset;
+
+    bool isInFrame(int slot);
+    int getCallArgOffset(int idx);
 };
 
 } // thm

@@ -16,6 +16,10 @@ namespace thm {
     MIPSInst::MIPSInst(Type type, Register rs, Register rt, Register rd, int imm) : type(type), rs(rs), rt(rt), rd(rd), imm(imm) {
     }
 
+    MIPSInst::MIPSInst(Type type, Register rs, Register rt, Register rd, int imm, std::string const &label) : type(type), rs(rs), rt(rt), rd(rd), imm(imm), label(label) {
+
+    }
+
     MIPSInst * MIPSInst::Add(Register dest, Register l, Register r) {
         return new MIPSInst(ADD, dest, l, r, 0);
     }
@@ -54,6 +58,10 @@ namespace thm {
 
     MIPSInst * MIPSInst::RemImm(Register dest, Register l, int r) {
         return new MIPSInst(REMI, dest, l, Register::ZERO, r);
+    }
+
+    MIPSInst * MIPSInst::AndImm(Register dest, Register l, int r) {
+        return new MIPSInst(ANDI, dest, l, Register::ZERO, r);
     }
 
     MIPSInst * MIPSInst::Eq(Register dest, Register l, Register r) {
@@ -116,16 +124,36 @@ namespace thm {
         return new MIPSInst(LI, Register::ZERO, dest, Register::ZERO, imm);
     }
 
-    MIPSInst * MIPSInst::SaveWord(Register dest, int offset, Register base) {
-        return new MIPSInst(Type::SW, base, dest, Register::ZERO, offset);
+    MIPSInst * MIPSInst::LoadAddr(Register dest, std::string const &symbol) {
+        return new MIPSInst(LA, Register::ZERO, dest, Register::ZERO, 0, symbol);
     }
 
-    MIPSInst * MIPSInst::SaveByte(Register dest, int offset, Register base) {
-        return new MIPSInst(Type::SB, base, dest, Register::ZERO, offset);
+    MIPSInst * MIPSInst::SaveWord(Register val, int offset, Register base) {
+        return new MIPSInst(Type::SW, base, val, Register::ZERO, offset);
+    }
+
+    MIPSInst * MIPSInst::SaveByte(Register val, int offset, Register base) {
+        return new MIPSInst(Type::SB, base, val, Register::ZERO, offset);
     }
 
     MIPSInst * MIPSInst::Syscall() {
         return new MIPSInst(SYSCALL, Register::ZERO, Register::ZERO, Register::ZERO, 0);
+    }
+
+    MIPSInst * MIPSInst::JumpAndLink(std::string const &name) {
+        return new MIPSInst(JAL, Register::ZERO, Register::ZERO, Register::ZERO, 0, name);
+    }
+
+    MIPSInst * MIPSInst::JumpReg(Register reg) {
+        return new MIPSInst(JR, reg, Register::ZERO, Register::ZERO, 0);
+    }
+
+    MIPSInst * MIPSInst::Jump(std::string const &label) {
+        return new MIPSInst(J, Register::ZERO, Register::ZERO, Register::ZERO, 0, label);
+    }
+
+    MIPSInst * MIPSInst::BranchNE(Register cond, Register target, std::string const &label) {
+        return new MIPSInst(BNE, cond, target, Register::ZERO, 0, label);
     }
 
     void MIPSInst::print(std::ostream &os) {
@@ -162,31 +190,76 @@ namespace thm {
                 os << "rem $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", " << imm;
             break;
             case SEQ:
-                os << "seq $" << static_cast<int>(rs) << ", $" << static_cast<int>(rd) << ", $" << static_cast<int>(rd);
+                os << "seq $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", $" << static_cast<int>(rd);
             break;
             case SEQI:
                 os << "seq $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", " << imm;
             break;
             case SNE:
-                os << "sne $" << static_cast<int>(rs) << ", $" << static_cast<int>(rd) << ", $" << static_cast<int>(rd);
+                os << "sne $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", $" << static_cast<int>(rd);
             break;
             case SNEI:
                 os << "sne $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", " << imm;
             break;
+            case SLT:
+                os << "slt $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", $" << static_cast<int>(rd);
+            break;
+            case SLTI:
+                os << "slti $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", " << imm;
+            break;
+            case SGT:
+                os << "sgt $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", $" << static_cast<int>(rd);
+            break;
+            case SGTI:
+                os << "sgt $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", " << imm;
+            break;
+            case SLE:
+                os << "sle $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", $" << static_cast<int>(rd);
+            break;
+            case SLEI:
+                os << "sle $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", " << imm;
+            break;
+            case SGE:
+                os << "sge $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", $" << static_cast<int>(rd);
+            break;
+            case SGEI:
+                os << "sge $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", " << imm;
+            break;
             case LW:
-                os << "lw $" << static_cast<int>(rt) << " " << imm << "(" << static_cast<int>(rs) << ")" << std::endl;
+                os << "lw $" << static_cast<int>(rt) << ", " << imm << "($" << static_cast<int>(rs) << ")";
                 break;
             case LB:
-                os << "lb $" << static_cast<int>(rt) << " " << imm << "(" << static_cast<int>(rs) << ")" << std::endl;
+                os << "lb $" << static_cast<int>(rt) << ", " << imm << "($" << static_cast<int>(rs) << ")";
             break;
             case LI:
-                os << "li $" << static_cast<int>(rt) << " " << imm << std::endl;
+                os << "li $" << static_cast<int>(rt) << ", " << imm;
                 break;
             case SW:
-                os << "sw $" << static_cast<int>(rt) << " " << imm << "(" << static_cast<int>(rs) << ")" << std::endl;
+                os << "sw $" << static_cast<int>(rt) << ", " << imm << "($" << static_cast<int>(rs) << ")";
             break;
             case SB:
-                os << "sb $" << static_cast<int>(rt) << " " << imm << "(" << static_cast<int>(rs) << ")" << std::endl;
+                os << "sb $" << static_cast<int>(rt) << ", " << imm << "($" << static_cast<int>(rs) << ")";
+            break;
+            case SYSCALL:
+                os << "syscall";
+            break;
+            case LA:
+                os << "la $" << static_cast<int>(rt) << " " << label;
+            break;
+            case JAL:
+                os << "jal " << label;
+            break;
+            case JR:
+                os << "jr $" << static_cast<int>(rs);
+            break;
+            case BNE:
+                os << "bne $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", " << label;
+            break;
+            case J:
+                os << "j " << label;
+            break;
+            case ANDI:
+                os << "and $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", " << imm;
             break;
             default:
                 break;

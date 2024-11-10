@@ -5,4 +5,11 @@
 #include "Frame.h"
 
 namespace thm {
+    bool Frame::isInFrame(int slot) {
+        return slotOffset.find(slot) != slotOffset.end();
+    }
+
+    int Frame::getCallArgOffset(int idx) {
+        return idx * 4;
+    }
 } // thm
