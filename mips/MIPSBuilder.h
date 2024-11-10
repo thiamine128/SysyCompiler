@@ -37,6 +37,12 @@ public:
     void submitText(MIPSText* text);
     void loadSlot(Function *function, int slot, Register reg);
     void loadValue(Function *function, Value *value, Register reg);
+
+    void debugBreak();
+
+    void debugTLE();
+
+    void alignCheck(Register reg, int offset);
 };
 
 } // thm

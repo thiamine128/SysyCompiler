@@ -527,6 +527,7 @@ namespace thm {
 
     void MIPSBuilder::translateZextInst(Function *function, ZextInst *zextInst) {
         loadValue(function, zextInst->v, Register::T0);
+        submitText(MIPSInst::AndImm(Register::T0, Register::T0, 0xff));
         submitText(MIPSInst::SaveWord(Register::T0, function->frame->slotOffset[zextInst->slot], Register::SP));
     }
 
@@ -562,5 +563,38 @@ namespace thm {
             GlobalVariable *global = static_cast<GlobalVariable *>(value);
             submitText(MIPSInst::LoadAddr(reg, global->name));
         }
+    }
+
+    void MIPSBuilder::debugBreak() {
+        static int cnt = 0;
+
+        os << "ble $sp, 1000, force_ret." << cnt << std::endl;
+        os << "j cont." << cnt << std::endl;
+        os << "force_ret." << cnt << ":" << std::endl;
+        os << "li $v0, 10" << std::endl;
+        os << "syscall" << std::endl;
+        os << "cont." << cnt << ":" << std::endl;
+        cnt++;
+    }
+
+    void MIPSBuilder::debugTLE() {
+        static int cnt = 0;
+
+        os << "tle." << cnt << ":" << std::endl;
+        os << "j " << "tle." << cnt << std::endl;
+        cnt++;
+    }
+
+    void MIPSBuilder::alignCheck(Register reg, int offset) {
+        static int cnt = 0;
+        os << "move $s0, $" << static_cast<int>(reg) << std::endl;
+        os << "add $s0, $s0, " << offset << std::endl;
+        os << "rem $s0, $s0, 4" << std::endl;
+        os << "bne $s0, $0, failed." << cnt << std::endl;
+        os << "j suc." << cnt << std::endl;
+        os << "failed." << cnt << ":" << std::endl;
+        os << "j failed." << cnt << std::endl;
+        os << "suc." << cnt << ":" << std::endl;
+        cnt ++;
     }
 } // thm
