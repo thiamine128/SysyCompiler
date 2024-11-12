@@ -91,6 +91,10 @@ namespace thm {
         return new ArrayValueType(value->clone(), arrayLen);
     }
 
+    Value::~Value() {
+        delete valueType;
+    }
+
     LLVMType Value::type() const {
         return LLVMType::DEFAULT;
     }
@@ -140,17 +144,42 @@ namespace thm {
         insts.push_back(instruction);
     }
 
-    void BasicBlock::removeDeadInst() {
+    void BasicBlock::setupTransfer() {
         int len = 0;
         for (int i = 0; i < insts.size(); ++i) {
             len++;
-            if (insts[i]->type() == LLVMType::RET_INST || insts[i]->type() == LLVMType::BRANCH_INST) {
+            if (insts[i]->type() == LLVMType::RET_INST) {
+                break;
+            }
+            if (insts[i]->type() == LLVMType::BRANCH_INST) {
+                BranchInst *branchInst = static_cast<BranchInst *>(insts[i]);
+                if (branchInst->ifTrue) {
+                    tos.push_back(branchInst->ifTrue);
+                    branchInst->ifTrue->froms.push_back(this);
+                }
+                if (branchInst->ifFalse) {
+                    tos.push_back(branchInst->ifFalse);
+                    branchInst->ifFalse->froms.push_back(this);
+                }
                 break;
             }
         }
+
         while (insts.size() > len) {
             insts.pop_back();
         }
+    }
+
+    bool BasicBlock::canMerge() {
+        return tos.size() == 1 && tos[0]->froms.size() == 1;
+    }
+
+    void BasicBlock::merge(BasicBlock *block) {
+        insts.pop_back();
+        for (auto inst : block->insts) {
+            insts.push_back(inst);
+        }
+        tos = block->tos;
     }
 
     void BasicBlock::fillSlot() {
@@ -278,6 +307,34 @@ namespace thm {
         os << "}" << std::endl;
     }
 
+    void Function::arrangeBlocks() {
+        std::unordered_map<BasicBlock *, int> inDeg(blocks.size());
+        std::vector<BasicBlock *> free;
+        std::vector<BasicBlock *> result;
+        for (auto block : blocks) {
+            inDeg[block] = block->froms.size();
+            if (inDeg[block] == 0) {
+                free.push_back(block);
+            }
+        }
+        while (!free.empty()) {
+            auto block = free[0];
+            result.push_back(block);
+            free.erase(free.begin());
+            while (block->canMerge()) {
+                BasicBlock *merged = block->tos[0];
+                block->merge(block->tos[0]);
+            }
+            for (auto to : block->tos) {
+                --inDeg[to];
+                if (inDeg[to] == 0) {
+                    free.push_back(to);
+                }
+            }
+        }
+        blocks = result;
+    }
+
     void Function::preAlloc() {
         std::vector<AllocaInst *> allocaInsts;
         for (BasicBlock* block : blocks) {
@@ -305,7 +362,7 @@ namespace thm {
             block->slot = slotTracker.allocSlot();
             block->blockIdx = idx;
             idx++;
-            block->removeDeadInst();
+            block->setupTransfer();
             block->fillSlot();
         }
     }
@@ -729,6 +786,7 @@ namespace thm {
 
     void Module::preprocess() {
         for (Function* function : functions) {
+            function->arrangeBlocks();
             function->preAlloc();
             function->fillSlot();
         }

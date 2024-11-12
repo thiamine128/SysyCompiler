@@ -10,6 +10,7 @@
 #include "SlotTracker.h"
 #include "../semantic/Symbol.h"
 namespace thm {
+    class BranchInst;
     class Instruction;
     class Function;
     class Use;
@@ -95,7 +96,7 @@ public:
     std::vector<Use> usedBys;
     int slot = -1;
 
-    virtual ~Value() = default;
+    virtual ~Value();
     virtual LLVMType type() const;
     virtual void print(std::ostream& os) const;
     virtual void printRef(std::ostream& os) const;
@@ -108,18 +109,20 @@ public:
 };
 class BasicBlock : public Value {
 public:
-    Function* function;
-    std::vector<Instruction*> insts;
-    std::vector<BasicBlock*> froms;
-    std::vector<BasicBlock*> tos;
+    Function *function;
+    std::vector<Instruction *> insts;
+    std::vector<BasicBlock *> froms;
+    std::vector<BasicBlock *> tos;
     int blockIdx;
 
-    BasicBlock(Function* function);
+    explicit BasicBlock(Function* function);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
     void printRef(std::ostream &os) const override;
     void addInst(Instruction* instruction);
-    void removeDeadInst();
+    void setupTransfer();
+    bool canMerge();
+    void merge(BasicBlock *block);
     void fillSlot();
 };
 class Constant : public Value {
@@ -163,6 +166,7 @@ public:
 
     LLVMType type() const override;
     void print(std::ostream &os) const override;
+    void arrangeBlocks();
     void preAlloc();
     void fillSlot();
     int getMaxArgs();
