@@ -132,6 +132,7 @@ public:
     LLVMType type() const override;
     void print(std::ostream &os) const override;
     void printRef(std::ostream &os) const override;
+    bool isReachable() const;
     void calcDefUse();
     void addInstAhead(Instruction *instruction);
     void addInst(Instruction *instruction);
@@ -182,6 +183,7 @@ public:
 
     LLVMType type() const override;
     void print(std::ostream &os) const override;
+    void removeUnreachableBlocks();
     void arrangeBlocks();
     void calcDominators();
     void setAllocas();

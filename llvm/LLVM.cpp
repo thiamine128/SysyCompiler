@@ -156,6 +156,11 @@ namespace thm {
         os << "%" << slot;
     }
 
+    bool BasicBlock::isReachable() const {
+        if (froms.size() == 0 || (froms.size() == 1 && froms[0] == this)) return false;
+        return true;
+    }
+
     void BasicBlock::calcDefUse() {
         for (auto inst : insts) {
             std::unordered_set<Value *> instDef, instUse;
@@ -353,30 +358,38 @@ namespace thm {
         os << "}" << std::endl;
     }
 
+    void Function::removeUnreachableBlocks() {
+        std::unordered_map<BasicBlock *, bool> vis;
+        std::vector<BasicBlock *> q;
+        vis[blocks[0]] = true;
+        q.push_back(blocks[0]);
+        while (!q.empty()) {
+            auto bb = q.front();
+            q.erase(q.begin());
+            for (auto to : bb->tos) {
+                if (!vis[to]) {
+                    vis[to] = true;
+                    q.push_back(to);
+                }
+            }
+        }
+        for (auto it = blocks.begin(); it != blocks.end();) {
+            if (!vis[*it]) {
+                it = blocks.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
     void Function::arrangeBlocks() {
         for (auto block : blocks) {
             block->setupTransfer();
         }
-        for (auto iter = blocks.begin() + 1; iter != blocks.end(); ) {
-            auto block = *iter;
-            if (block->froms.size() == 0) {
-                for (auto to : block->tos) {
-                    for (auto fromIter = to->froms.begin(); fromIter != to->froms.end(); ) {
-                        if (*fromIter == block) {
-                            fromIter = to->froms.erase(fromIter);
-                        } else {
-                            ++fromIter;
-                        }
-                    }
-                }
-                iter = blocks.erase(iter);
-            } else {
-                ++iter;
-            }
-        }
+        removeUnreachableBlocks();
         std::unordered_set<BasicBlock*> merged;
         for (auto block : blocks) {
-            if (block->canMerge() && merged.find(block) == merged.end()) {
+            while (block->canMerge() && merged.find(block) == merged.end()) {
                 merged.insert(block->tos[0]);
                 block->merge(block->tos[0]);
             }
