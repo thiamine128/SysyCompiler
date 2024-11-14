@@ -30,9 +30,9 @@ namespace thm {
         std::vector<BasicBlock *> blocks;
         blocks.push_back(function->blocks[0]);
         std::unordered_map<BasicBlock *, bool> vis;
+        vis[blocks[0]] = true;
         while (!blocks.empty()) {
             auto bb = blocks.front();
-            vis[bb] = true;
             blocks.erase(blocks.begin());
             for (auto iter = bb->insts.begin(); iter != bb->insts.end();) {
                 auto inst = *iter;
@@ -55,8 +55,8 @@ namespace thm {
                         store = static_cast<StoreInst *>(inst);
                         if (AllocaInst *alloc = dynamic_cast<AllocaInst *>(store->ptr)) {
                             if (promoted.find(alloc) != promoted.end()) {
-                                shouldRemove = true;
                                 bb->allocaTracker[alloc] = store->value;
+                                shouldRemove = true;
                             }
                         }
                         break;
@@ -90,6 +90,7 @@ namespace thm {
                 }
                 to->allocaTracker = bb->allocaTracker;
                 if (!vis[to]) {
+                    vis[to] = true;
                     blocks.push_back(to);
                 }
             }
