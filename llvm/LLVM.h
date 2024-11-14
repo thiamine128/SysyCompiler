@@ -99,6 +99,7 @@ public:
     std::vector<Value *> usedBys;
     int slot = -1;
     int color = -1;
+    bool used = false;
 
     virtual ~Value();
     virtual LLVMType type() const;
@@ -124,11 +125,14 @@ public:
     BasicBlock *iDom = nullptr;
     std::unordered_set<BasicBlock *> doms;
     std::unordered_set<BasicBlock *> df;
+    std::vector<BasicBlock *> iDomChildren;
     std::unordered_map<AllocaInst *, PhiInst *> phis;
     std::unordered_map<AllocaInst *, Value *> allocaTracker;
-    int blockIdx;
+    int blockIdx = 0;
+    int domDepth = 0;
+    int loopNest = 0;
 
-    BasicBlock(Function* function);
+    BasicBlock(Function* function, int loopNest);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
     void printRef(std::ostream &os) const override;
@@ -173,9 +177,10 @@ public:
 };
 class Function : public GlobalValue {
 public:
-    std::vector<Argument*> args;
+    std::vector<Argument *> args;
     std::vector<BasicBlock *> blocks;
     std::vector<AllocaInst *> allocas;
+    BasicBlock *root;
     SlotTracker slotTracker;
     Frame *frame;
 
@@ -210,6 +215,7 @@ public:
 class Instruction : public User {
 public:
     BasicBlock *block;
+    bool pinned = false;
 
     LLVMType type() const override;
     virtual void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use);
@@ -340,7 +346,9 @@ public:
 
     PhiInst(AllocaInst* alloc);
     LLVMType type() const override;
+    bool isNecessary();
     void print(std::ostream &os) const override;
+    void addOpt(BasicBlock* bb, Value* val);
 };
 
 class Module {

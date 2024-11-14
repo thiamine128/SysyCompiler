@@ -86,7 +86,7 @@ namespace thm {
             }
             for (auto to : bb->tos) {
                 for (auto ent : to->phis) {
-                    ent.second->opt[bb] = bb->allocaTracker[ent.first];
+                    ent.second->addOpt(bb, bb->allocaTracker[ent.first]);
                 }
                 to->allocaTracker = bb->allocaTracker;
                 if (!vis[to]) {
@@ -95,6 +95,7 @@ namespace thm {
                 }
             }
         }
+        collapsePhi(function);
     }
 
     void Mem2Reg::promote(Function *function, AllocaInst *alloca) {
@@ -130,6 +131,60 @@ namespace thm {
         for (auto v : inst->usings) {
             if (*v == src) {
                 *v = dst;
+                dst->usedBys.push_back(inst);
+                for (auto it = src->usedBys.begin(); it != src->usedBys.end();) {
+                    if (*it == inst) {
+                        src->usedBys.erase(it);
+                        break;
+                    }
+                    it++;
+                }
+            }
+        }
+    }
+
+    void Mem2Reg::collapsePhi(Function *function) {
+        std::unordered_set<PhiInst *> phis;
+        std::unordered_set<PhiInst *> toRemove;
+        for (auto bb : function->blocks) {
+            for (auto inst : bb->insts) {
+                if (PhiInst *phi = dynamic_cast<PhiInst *>(inst)) {
+                    if (!phi->isNecessary()) {
+                        phis.insert(phi);
+                        toRemove.insert(phi);
+                    }
+                }
+            }
+        }
+        while (!phis.empty()) {
+            auto phi = *phis.begin();
+            phis.erase(phi);
+            Value *elm = nullptr;
+            for (auto ent : phi->opt) {
+                if (ent.second != phi) {
+                    elm = ent.second;
+                    break;
+                }
+            }
+            for (auto used : phi->usedBys) {
+                if (Instruction *inst = dynamic_cast<Instruction *>(used)) {
+                    replaceUse(inst, phi, elm);
+                }
+                if (PhiInst *p = dynamic_cast<PhiInst *>(used)) {
+                    if (!p->isNecessary()) {
+                        phis.insert(p);
+                        toRemove.insert(p);
+                    }
+                }
+            }
+        }
+        for (auto bb : function->blocks) {
+            for (auto iter = bb->insts.begin(); iter != bb->insts.end();) {
+                if (toRemove.find(static_cast<PhiInst *>(*iter)) != toRemove.end()) {
+                    iter = bb->insts.erase(iter);
+                } else {
+                    ++iter;
+                }
             }
         }
     }

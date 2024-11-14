@@ -50,6 +50,8 @@ add_executable(Compiler main.cpp
         llvm/Pass.h
         llvm/Mem2Reg.cpp
         llvm/Mem2Reg.h
+        llvm/GCM.cpp
+        llvm/GCM.h
 )
 
 add_definitions(-DPRINT_LEXER)

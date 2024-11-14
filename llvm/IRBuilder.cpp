@@ -85,7 +85,7 @@ namespace thm {
         if (funcDef->params != nullptr) {
             funcDef->params->visit(this);
         }
-        currentBlock = new BasicBlock(currentFunction);
+        currentBlock = new BasicBlock(currentFunction, forBlocks.size());
 
         if (funcDef->params != nullptr) {
             for (int i = 0; i < function->args.size(); i++) {
@@ -110,7 +110,7 @@ namespace thm {
         mainFuncDef->value = function;
         module->main = function;
         currentFunction = function;
-        currentBlock = new BasicBlock(currentFunction);
+        currentBlock = new BasicBlock(currentFunction, forBlocks.size());
         ASTVisitor::visitMainFuncDef(mainFuncDef);
         submitBlock(currentBlock);
         currentBlock = nullptr;
@@ -136,9 +136,9 @@ namespace thm {
             },
             [&](const Stmt::StmtIf& stmtIf) {
                 submitBlock(currentBlock);
-                stmtIf.cond->ifTrue = new BasicBlock(currentFunction);
-                stmtIf.cond->ifFalse = new BasicBlock(currentFunction);
-                BasicBlock* after = new BasicBlock(currentFunction);
+                stmtIf.cond->ifTrue = new BasicBlock(currentFunction, forBlocks.size());
+                stmtIf.cond->ifFalse = new BasicBlock(currentFunction, forBlocks.size());
+                BasicBlock* after = new BasicBlock(currentFunction, forBlocks.size());
                 stmtIf.cond->visit(this);
 
                 currentBlock = stmtIf.cond->ifTrue;
@@ -155,11 +155,11 @@ namespace thm {
             },
             [&](const Stmt::StmtFor& stmtFor) {
                 BasicBlock *initBlock = currentBlock;
-                BasicBlock *condBlock = new BasicBlock(currentFunction);
-                BasicBlock *stmtBlock = new BasicBlock(currentFunction);
-                BasicBlock *updateBlock = new BasicBlock(currentFunction);
-                BasicBlock *afterBlock = new BasicBlock(currentFunction);
-
+                BasicBlock *condBlock = new BasicBlock(currentFunction, forBlocks.size() + 1);
+                BasicBlock *stmtBlock = new BasicBlock(currentFunction, forBlocks.size() + 1);
+                BasicBlock *updateBlock = new BasicBlock(currentFunction, forBlocks.size() + 1);
+                BasicBlock *afterBlock = new BasicBlock(currentFunction, forBlocks.size());
+                forBlocks.push_back({initBlock, condBlock, stmtBlock, updateBlock, afterBlock});
                 currentBlock = initBlock;
                 if (stmtFor.initStmt != nullptr) {
                     stmtFor.initStmt->visit(this);
@@ -177,7 +177,6 @@ namespace thm {
                     submitInst(new BranchInst(stmtBlock));
                 }
 
-                forBlocks.push_back({initBlock, condBlock, stmtBlock, updateBlock, afterBlock});
 
                 currentBlock = stmtBlock;
                 stmtFor.stmt->visit(this);
@@ -824,7 +823,7 @@ namespace thm {
                 lAndExp->value = exp;
             },
             [&](const LAndExp::OpExp& opExp) {
-                lAndExp->create = new BasicBlock(currentFunction);
+                lAndExp->create = new BasicBlock(currentFunction, forBlocks.size());
                 opExp.lAndExp->ifTrue = lAndExp->create;
                 opExp.lAndExp->ifFalse = lAndExp->ifFalse;
                 opExp.lAndExp->block = lAndExp->block;
@@ -856,7 +855,7 @@ namespace thm {
                 lOrExp->value = lAndExp->value;
             },
             [&](const LOrExp::OpExp& opExp) {
-                lOrExp->create = new BasicBlock(currentFunction);
+                lOrExp->create = new BasicBlock(currentFunction, forBlocks.size());
                 opExp.lOrExp->ifTrue = lOrExp->ifTrue;
                 opExp.lOrExp->ifFalse = lOrExp->create;
                 opExp.lOrExp->block = lOrExp->block;

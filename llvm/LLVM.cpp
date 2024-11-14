@@ -122,7 +122,7 @@ namespace thm {
         os << " %" << slot;
     }
 
-    BasicBlock::BasicBlock(Function *function) : function(function) {
+    BasicBlock::BasicBlock(Function *function, int loopNest) : function(function), loopNest(loopNest) {
         valueType = new BasicValueType(BasicValueType::LABEL);
         slot = 0;
     }
@@ -133,19 +133,7 @@ namespace thm {
 
     void BasicBlock::print(std::ostream &os) const {
         os << slot << ":" << std::endl;
-        // os << "; doms=";
-        // for (auto bb : doms) {
-        //     os << bb->slot << " ";
-        // }
-        // os << std::endl;
-        // os << "; df=";
-        // for (auto bb : df) {
-        //     os << bb->slot << " ";
-        // }
-        // os << std::endl;
-        // os << std::endl;
-        // if (iDom != nullptr)
-        //     os << "; idom=" << iDom->slot << std::endl;
+        os << "; " << loopNest << std::endl;
         for (Instruction* instruction : insts) {
             os << "\t";
             instruction->print(os);
@@ -401,6 +389,7 @@ namespace thm {
                 iter = blocks.erase(iter);
             }
         }
+        root = blocks[0];
     }
 
     void Function::calcDominators() {
@@ -446,6 +435,7 @@ namespace thm {
                     }
                     if (valid) {
                         blocks[i]->iDom = dom;
+                        dom->iDomChildren.push_back(blocks[i]);
                         break;
                     }
                 }
@@ -678,6 +668,8 @@ namespace thm {
             slot = 0;
             color = 0;
         }
+        // TODO: determined if funtion is pinned
+        pinned = true;
         use(reinterpret_cast<Value **>(&this->function));
         for (int i = 0; i < args.size(); i++) {
             use(&this->args[i]);
@@ -926,6 +918,7 @@ namespace thm {
     }
 
     RetInst::RetInst(Value *value) : value(value) {
+        pinned = true;
         if (value != nullptr) {
             use(&this->value);
         }
@@ -955,11 +948,12 @@ namespace thm {
     }
 
     BranchInst::BranchInst(BasicBlock *uncond) : cond(nullptr), ifTrue(uncond), ifFalse(nullptr) {
-
+        pinned = true;
     }
 
     BranchInst::BranchInst(Value *cond, BasicBlock *ifTrue, BasicBlock *ifFalse) : cond(cond), ifTrue(ifTrue), ifFalse(ifFalse) {
         use(&this->cond);
+        pinned = true;
     }
 
     LLVMType BranchInst::type() const {
@@ -1002,10 +996,20 @@ namespace thm {
     PhiInst::PhiInst(AllocaInst *alloc) : alloc(alloc) {
         slot = 0;
         valueType = alloc->allocType->clone();
+        pinned = true;
     }
 
     LLVMType PhiInst::type() const {
         return LLVMType::PHI_INST;
+    }
+
+    bool PhiInst::isNecessary() {
+        if (opt.size() == 2) {
+            for (auto ent : opt) {
+                if (ent.second == this) return false;
+            }
+        }
+        return true;
     }
 
     void PhiInst::print(std::ostream &os) const {
@@ -1023,6 +1027,15 @@ namespace thm {
             idx++;
         }
         os << std::endl;
+    }
+
+    void PhiInst::addOpt(BasicBlock *bb, Value *val) {
+        if (opt.find(bb) == opt.end()) {
+            opt[bb] = val;
+            use(&opt[bb]);
+        } else {
+            opt[bb] = val;
+        }
     }
 
     Module::Module() {

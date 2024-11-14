@@ -15,6 +15,7 @@ public:
     void processFunction(Function *function);
     void promote(Function *function, AllocaInst *alloca);
     void replaceUse(Instruction *inst, Value *src, Value *dst);
+    void collapsePhi(Function *function);
 };
 
 } // thm
