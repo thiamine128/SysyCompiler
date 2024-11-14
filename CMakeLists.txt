@@ -46,6 +46,10 @@ add_executable(Compiler main.cpp
         mips/MIPS.h
         mips/Frame.cpp
         mips/Frame.h
+        llvm/Pass.cpp
+        llvm/Pass.h
+        llvm/Mem2Reg.cpp
+        llvm/Mem2Reg.h
 )
 
 add_definitions(-DPRINT_LEXER)

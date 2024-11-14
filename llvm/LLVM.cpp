@@ -10,6 +10,8 @@
 #include <ostream>
 #include <bits/locale_facets_nonio.h>
 
+#include "Mem2Reg.h"
+
 namespace thm {
     ValueType::Type ValueType::type() const {
         return BASIC;
@@ -122,6 +124,7 @@ namespace thm {
 
     BasicBlock::BasicBlock(Function *function) : function(function) {
         valueType = new BasicValueType(BasicValueType::LABEL);
+        slot = 0;
     }
 
     LLVMType BasicBlock::type() const {
@@ -130,6 +133,20 @@ namespace thm {
 
     void BasicBlock::print(std::ostream &os) const {
         os << slot << ":" << std::endl;
+        // os << "; doms=";
+        // for (auto bb : doms) {
+        //     os << bb->slot << " ";
+        // }
+        // os << std::endl;
+        // os << "; df=";
+        // for (auto bb : df) {
+        //     os << bb->slot << " ";
+        // }
+        // os << std::endl;
+        // os << "; df+=";
+        // os << std::endl;
+        // if (iDom != nullptr)
+        //     os << "; idom=" << iDom->slot << std::endl;
         for (Instruction* instruction : insts) {
             os << "\t";
             instruction->print(os);
@@ -140,7 +157,30 @@ namespace thm {
         os << "%" << slot;
     }
 
+    void BasicBlock::calcDefUse() {
+        for (auto inst : insts) {
+            std::unordered_set<Value *> instDef, instUse;
+            inst->getDefUse(instDef, instUse);
+            for (auto elm : instDef) {
+                if (def.find(elm) == def.end()) {
+                    def.insert(elm);
+                }
+            }
+            for (auto elm : instUse) {
+                if (use.find(elm) == use.end()) {
+                    use.insert(elm);
+                }
+            }
+        }
+    }
+
+    void BasicBlock::addInstAhead(Instruction *instruction) {
+        instruction->block = this;
+        insts.insert(insts.begin(), instruction);
+    }
+
     void BasicBlock::addInst(Instruction *instruction) {
+        instruction->block = this;
         insts.push_back(instruction);
     }
 
@@ -283,7 +323,7 @@ namespace thm {
         os << "@" << name;
     }
 
-    Function::Function(std::string const &name, BasicValueType::BasicType retType) {
+    Function::Function(std::string const &name, BasicValueType::BasicType retType): frame(nullptr) {
         this->name = name;
         valueType = new BasicValueType(retType);
     }
@@ -308,47 +348,124 @@ namespace thm {
     }
 
     void Function::arrangeBlocks() {
-        std::unordered_map<BasicBlock *, int> inDeg(blocks.size());
-        std::vector<BasicBlock *> free;
-        std::vector<BasicBlock *> result;
         for (auto block : blocks) {
-            inDeg[block] = block->froms.size();
-            if (inDeg[block] == 0) {
-                free.push_back(block);
-            }
+            block->setupTransfer();
         }
-        while (!free.empty()) {
-            auto block = free[0];
-            result.push_back(block);
-            free.erase(free.begin());
-            while (block->canMerge()) {
-                BasicBlock *merged = block->tos[0];
+        std::unordered_set<BasicBlock*> merged;
+        for (auto block : blocks) {
+            if (block->canMerge() && merged.find(block) == merged.end()) {
+                merged.insert(block->tos[0]);
                 block->merge(block->tos[0]);
             }
-            for (auto to : block->tos) {
-                --inDeg[to];
-                if (inDeg[to] == 0) {
-                    free.push_back(to);
+        }
+        for (auto iter = blocks.begin(); iter != blocks.end(); ) {
+            if (merged.find(*iter) == merged.end()) {
+                ++iter;
+            } else {
+                iter = blocks.erase(iter);
+            }
+        }
+    }
+
+    void Function::calcDominators() {
+        blocks[0]->doms.insert(blocks[0]);
+        bool changed = true;
+        while (changed) {
+            changed = false;
+            for (int i = 1; i < blocks.size(); i++) {
+                std::unordered_set<BasicBlock *> newDom;
+                newDom.insert(blocks[i]);
+                if (blocks[i]->froms.empty()) continue;
+                for (auto candidate : blocks[i]->froms[0]->doms) {
+                    bool valid = true;
+                    for (auto from : blocks[i]->froms) {
+                        if (from->doms.find(candidate) == from->doms.end()) {
+                            valid = false;
+                            break;
+                        }
+                    }
+                    if (valid) {
+                        newDom.insert(candidate);
+                    }
+                }
+                if (newDom != blocks[i]->doms) {
+                    changed = true;
+                    blocks[i]->doms = newDom;
                 }
             }
         }
-        blocks = result;
+        for (int i = 1; i < blocks.size(); ++i) {
+            for (auto dom : blocks[i]->doms) {
+                // dom is strict dom of i
+                if (dom != blocks[i]) {
+                    bool valid = true;
+                    for (auto d : blocks[i]->doms) {
+                        // d is strict dom of i
+                        if (d != blocks[i] && d != dom) {
+                            if (d->doms.find(dom) != d->doms.end()) {
+                                valid = false;
+                                break;
+                            }
+                        }
+                    }
+                    if (valid) {
+                        blocks[i]->iDom = dom;
+                        break;
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < blocks.size(); ++i) {
+            for (auto to : blocks[i]->tos) {
+                BasicBlock *x = blocks[i];
+                while (!(x != to && to->doms.find(x) != to->doms.end())) {
+                    x->df.insert(to);
+                    x = x->iDom;
+                    if (x == nullptr) break;
+                }
+            }
+        }
     }
 
-    void Function::preAlloc() {
-        std::vector<AllocaInst *> allocaInsts;
+    void Function::setAllocas() {
         for (BasicBlock* block : blocks) {
             for (auto inst = block->insts.begin(); inst != block->insts.end();) {
                 if ((*inst)->type() == LLVMType::ALLOCA_INST) {
-                    allocaInsts.push_back(static_cast<AllocaInst*>(*inst));
+                    allocas.push_back(static_cast<AllocaInst*>(*inst));
                     inst = block->insts.erase(inst);
                 } else {
                     ++inst;
                 }
             }
         }
-        for (auto allocaInst : allocaInsts) {
-            blocks[0]->insts.insert(blocks[0]->insts.begin(), allocaInst);
+        for (auto alloc : allocas) {
+            blocks[0]->addInstAhead(alloc);
+        }
+    }
+
+    void Function::livenessAnalysis() {
+        for (BasicBlock* block : blocks) {
+            block->calcDefUse();
+        }
+        bool changed = true;
+        while (changed) {
+            changed = false;
+            for (BasicBlock* block : blocks) {
+                std::unordered_set<Value *> newOut;
+                for (BasicBlock* to : block->tos) {
+                    newOut.insert(to->in.begin(), to->in.end());
+                }
+                if (newOut != block->out) {
+                    changed = true;
+                    block->out = newOut;
+                    block->in = block->use;
+                    for (auto elm : block->out) {
+                        if (block->def.find(elm) == block->def.end()) {
+                            block->in.insert(elm);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -362,7 +479,6 @@ namespace thm {
             block->slot = slotTracker.allocSlot();
             block->blockIdx = idx;
             idx++;
-            block->setupTransfer();
             block->fillSlot();
         }
     }
@@ -422,8 +538,16 @@ namespace thm {
         return LLVMType::USER;
     }
 
+    void User::use(Value **value) {
+        (*value)->usedBys.push_back(this);
+        usings.push_back(value);
+    }
+
     LLVMType Instruction::type() const {
         return LLVMType::INST;
+    }
+
+    void Instruction::getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) {
     }
 
     BinaryInst::BinaryInst(Op op, Value *l, Value *r) : op(op), l(l), r(r) {
@@ -441,6 +565,9 @@ namespace thm {
             break;
         }
         slot = 0;
+        color = 0;
+        use(&this->l);
+        use(&this->r);
     }
 
     LLVMType BinaryInst::type() const {
@@ -499,9 +626,26 @@ namespace thm {
         os << std::endl;
     }
 
-    CallInst::CallInst(bool requireSlot, Function* function, std::vector<Value *> const &args) : name(function->name), args(args) {
+    void BinaryInst::getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) {
+        Instruction::getDefUse(def, use);
+        def.insert(this);
+        if (l->color >= 0)
+            use.insert(l);
+        if (r->color >= 0)
+            use.insert(r);
+    }
+
+    CallInst::CallInst(bool requireSlot, Function* function, std::vector<Value *> const &args) : function(function), name(function->name), args(args) {
         valueType = function->valueType->clone();
-        if (requireSlot) slot = 0;
+        if (requireSlot) {
+            // TODO: Return Value not used ?
+            slot = 0;
+            color = 0;
+        }
+        use(reinterpret_cast<Value **>(&this->function));
+        for (int i = 0; i < args.size(); i++) {
+            use(&this->args[i]);
+        }
     }
 
     LLVMType CallInst::type() const {
@@ -525,6 +669,16 @@ namespace thm {
             }
         }
         os << ")" << std::endl;
+    }
+
+    void CallInst::getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) {
+        Instruction::getDefUse(def, use);
+        if (slot >= 0)
+            def.insert(this);
+        for (auto arg : args) {
+            if (arg->color >= 0)
+                use.insert(arg);
+        }
     }
 
     AllocaInst::AllocaInst(VariableType& variableType) {
@@ -558,10 +712,25 @@ namespace thm {
         os << std::endl;
     }
 
+    void AllocaInst::getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) {
+        Instruction::getDefUse(def, use);
+    }
+
+    bool AllocaInst::isPromotable() const {
+        for (auto used : usedBys) {
+            if (used->type() != LLVMType::LOAD_INST && used->type() != LLVMType::STORE_INST) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     LoadInst::LoadInst(Value *ptr) : ptr(ptr) {
         slot = 0;
+        color = 0;
         PtrValueType* v = static_cast<PtrValueType*>(ptr->valueType);
         valueType = v->value->clone();
+        use(&this->ptr);
     }
 
     LLVMType LoadInst::type() const {
@@ -578,12 +747,23 @@ namespace thm {
         os << std::endl;
     }
 
+    void LoadInst::getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) {
+        Instruction::getDefUse(def, use);
+        def.insert(this);
+        if (ptr->color >= 0)
+            use.insert(ptr);
+    }
+
     StoreInst::StoreInst(Value *value, Value *ptr) : value(value), ptr(ptr), isArgInit(false) {
         valueType = new BasicValueType(BasicValueType::VOID);
+        use(&this->value);
+        use(&this->ptr);
     }
 
     StoreInst::StoreInst(Value *value, Value *ptr, bool isArgInit) : value(value), ptr(ptr), isArgInit(isArgInit) {
         valueType = new BasicValueType(BasicValueType::VOID);
+        use(&this->value);
+        use(&this->ptr);
     }
 
     LLVMType StoreInst::type() const {
@@ -602,14 +782,24 @@ namespace thm {
         os << std::endl;
     }
 
+    void StoreInst::getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) {
+        Instruction::getDefUse(def, use);
+        use.insert(value);
+        if (ptr->color >= 0)
+            use.insert(ptr);
+    }
+
     GetElementPtr::GetElementPtr(Value *ptr, Value* idx) : ptr(ptr), idx(idx) {
         slot = 0;
+        color = 0;
         ValueType* inner = static_cast<PtrValueType*>(ptr->valueType)->value;
         if (inner->type() == ValueType::ARRAY) {
             valueType = new PtrValueType(static_cast<ArrayValueType*>(inner)->value->clone());
         } else {
             valueType = ptr->valueType->clone();
         }
+        use(&this->ptr);
+        use(&this->idx);
     }
 
     LLVMType GetElementPtr::type() const {
@@ -638,9 +828,18 @@ namespace thm {
         os << std::endl;
     }
 
+    void GetElementPtr::getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) {
+        Instruction::getDefUse(def, use);
+        def.insert(this);
+        use.insert(ptr);
+        use.insert(idx);
+    }
+
     ZextInst::ZextInst(Value *v) : v(v) {
         slot = 0;
+        color = 0;
         valueType = new BasicValueType(BasicValueType::I32);
+        use(&this->v);
     }
 
     LLVMType ZextInst::type() const {
@@ -657,9 +856,17 @@ namespace thm {
         os << std::endl;
     }
 
+    void ZextInst::getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) {
+        Instruction::getDefUse(def, use);
+        def.insert(this);
+        use.insert(v);
+    }
+
     TruncInst::TruncInst(Value *v) : v(v) {
         slot = 0;
+        color = 0;
         valueType = new BasicValueType(BasicValueType::I8);
+        use(&this->v);
     }
 
     LLVMType TruncInst::type() const {
@@ -676,7 +883,16 @@ namespace thm {
         os << std::endl;
     }
 
+    void TruncInst::getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) {
+        Instruction::getDefUse(def, use);
+        def.insert(this);
+        use.insert(v);
+    }
+
     RetInst::RetInst(Value *value) : value(value) {
+        if (value != nullptr) {
+            use(&this->value);
+        }
     }
 
     LLVMType RetInst::type() const {
@@ -695,11 +911,19 @@ namespace thm {
         os << std::endl;
     }
 
+    void RetInst::getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) {
+        Instruction::getDefUse(def, use);
+        if (value != nullptr) {
+            use.insert(value);
+        }
+    }
+
     BranchInst::BranchInst(BasicBlock *uncond) : cond(nullptr), ifTrue(uncond), ifFalse(nullptr) {
+
     }
 
     BranchInst::BranchInst(Value *cond, BasicBlock *ifTrue, BasicBlock *ifFalse) : cond(cond), ifTrue(ifTrue), ifFalse(ifFalse) {
-
+        use(&this->cond);
     }
 
     LLVMType BranchInst::type() const {
@@ -732,8 +956,37 @@ namespace thm {
         Instruction::printRef(os);
     }
 
-    Use::Use(User *user, Value *value) : user(user), value(value) {
+    void BranchInst::getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) {
+        Instruction::getDefUse(def, use);
+        if (cond != nullptr) {
+            use.insert(cond);
+        }
+    }
 
+    PhiInst::PhiInst(AllocaInst *alloc) : alloc(alloc) {
+        slot = 0;
+        valueType = alloc->allocType->clone();
+    }
+
+    LLVMType PhiInst::type() const {
+        return LLVMType::PHI_INST;
+    }
+
+    void PhiInst::print(std::ostream &os) const {
+        os << "%" << slot << " = phi ";
+        alloc->allocType->print(os);
+        os << " ";
+        int idx = 0;
+        for (auto ent : opt) {
+            os << "[ ";
+            ent.second->printRef(os);
+            os << " %" << ent.first->slot << " ]";
+            if (idx + 1 < opt.size()) {
+                os << ", ";
+            }
+            idx++;
+        }
+        os << std::endl;
     }
 
     Module::Module() {
@@ -787,10 +1040,19 @@ namespace thm {
     void Module::preprocess() {
         for (Function* function : functions) {
             function->arrangeBlocks();
-            function->preAlloc();
+            function->calcDominators();
+            function->setAllocas();
+            function->livenessAnalysis();
+        }
+        main->arrangeBlocks();
+        main->calcDominators();
+        main->setAllocas();
+        Mem2Reg mem2Reg(this);
+        //mem2Reg.process();
+
+        for (Function* function : functions) {
             function->fillSlot();
         }
-        main->preAlloc();
         main->fillSlot();
     }
 } // thm

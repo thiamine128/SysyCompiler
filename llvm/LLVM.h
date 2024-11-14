@@ -5,11 +5,13 @@
 #ifndef LLVM_H
 #define LLVM_H
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "SlotTracker.h"
 #include "../semantic/Symbol.h"
 namespace thm {
+    class PhiInst;
     class BranchInst;
     class Instruction;
     class Function;
@@ -37,6 +39,7 @@ enum class LLVMType {
     RET_INST,
     ZEXT_INST,
     TRUNC_INST,
+    PHI_INST,
 };
 
 class ValueType {
@@ -93,8 +96,9 @@ public:
 class Value {
 public:
     ValueType* valueType = nullptr;
-    std::vector<Use> usedBys;
+    std::vector<Value *> usedBys;
     int slot = -1;
+    int color = -1;
 
     virtual ~Value();
     virtual LLVMType type() const;
@@ -113,13 +117,24 @@ public:
     std::vector<Instruction *> insts;
     std::vector<BasicBlock *> froms;
     std::vector<BasicBlock *> tos;
+    std::unordered_set<Value *> def;
+    std::unordered_set<Value *> use;
+    std::unordered_set<Value *> in;
+    std::unordered_set<Value *> out;
+    BasicBlock *iDom = nullptr;
+    std::unordered_set<BasicBlock *> doms;
+    std::unordered_set<BasicBlock *> df;
+    std::unordered_map<AllocaInst *, PhiInst *> phis;
+    std::unordered_map<AllocaInst *, Value *> allocaTracker;
     int blockIdx;
 
-    explicit BasicBlock(Function* function);
+    BasicBlock(Function* function);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
     void printRef(std::ostream &os) const override;
-    void addInst(Instruction* instruction);
+    void calcDefUse();
+    void addInstAhead(Instruction *instruction);
+    void addInst(Instruction *instruction);
     void setupTransfer();
     bool canMerge();
     void merge(BasicBlock *block);
@@ -158,7 +173,8 @@ public:
 class Function : public GlobalValue {
 public:
     std::vector<Argument*> args;
-    std::vector<BasicBlock*> blocks;
+    std::vector<BasicBlock *> blocks;
+    std::vector<AllocaInst *> allocas;
     SlotTracker slotTracker;
     Frame *frame;
 
@@ -167,7 +183,9 @@ public:
     LLVMType type() const override;
     void print(std::ostream &os) const override;
     void arrangeBlocks();
-    void preAlloc();
+    void calcDominators();
+    void setAllocas();
+    void livenessAnalysis();
     void fillSlot();
     int getMaxArgs();
 };
@@ -182,13 +200,17 @@ public:
 };
 class User : public Value {
 public:
-    std::vector<Use> usings;
+    std::vector<Value **> usings;
 
     LLVMType type() const override;
+    void use(Value **value);
 };
 class Instruction : public User {
 public:
+    BasicBlock *block;
+
     LLVMType type() const override;
+    virtual void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use);
 };
 class BinaryInst : public Instruction {
 public:
@@ -213,15 +235,18 @@ public:
     BinaryInst(Op op, Value* l, Value* r);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
+    void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) override;
 };
 class CallInst : public Instruction {
 public:
     std::string name;
+    Function *function;
     std::vector<Value*> args;
 
     CallInst(bool requireSlot, Function* function, std::vector<Value*> const& args);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
+    void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) override;
 };
 class AllocaInst : public Instruction {
 public:
@@ -232,6 +257,8 @@ public:
     AllocaInst(ValueType* allocType, int argIdx);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
+    void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) override;
+    bool isPromotable() const;
 };
 class LoadInst : public Instruction {
 public:
@@ -240,6 +267,7 @@ public:
     LoadInst(Value* ptr);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
+    void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) override;
 };
 class StoreInst : public Instruction {
 public:
@@ -251,6 +279,7 @@ public:
     StoreInst(Value* value, Value* ptr, bool isArgInit);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
+    void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) override;
 };
 class GetElementPtr : public Instruction {
 public:
@@ -260,6 +289,7 @@ public:
     GetElementPtr(Value* ptr, Value* idx);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
+    void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) override;
 };
 class ZextInst : public Instruction {
 public:
@@ -268,6 +298,7 @@ public:
     ZextInst(Value* v);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
+    void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) override;
 };
 class TruncInst : public Instruction {
 public:
@@ -276,6 +307,7 @@ public:
     TruncInst(Value* v);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
+    void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) override;
 };
 class RetInst : public Instruction {
 public:
@@ -284,6 +316,7 @@ public:
     RetInst(Value* value);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
+    void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) override;
 };
 class BranchInst : public Instruction {
 public:
@@ -296,14 +329,16 @@ public:
     LLVMType type() const override;
     void print(std::ostream &os) const override;
     void printRef(std::ostream &os) const override;
+    void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) override;
 };
-
-class Use {
+class PhiInst : public Instruction {
 public:
-    User* user;
-    Value* value;
+    AllocaInst* alloc;
+    std::unordered_map<BasicBlock *, Value *> opt;
 
-    Use(User* user, Value* value);
+    PhiInst(AllocaInst* alloc);
+    LLVMType type() const override;
+    void print(std::ostream &os) const override;
 };
 
 class Module {
