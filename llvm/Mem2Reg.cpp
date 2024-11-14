@@ -128,6 +128,7 @@ namespace thm {
     }
 
     void Mem2Reg::replaceUse(Instruction *inst, Value *src, Value *dst) {
+
         for (auto v : inst->usings) {
             if (*v == src) {
                 *v = dst;
@@ -166,7 +167,9 @@ namespace thm {
                     break;
                 }
             }
-            for (auto used : phi->usedBys) {
+            auto usedBys = phi->usedBys;
+            for (auto used : usedBys) {
+                if (used == phi) continue;
                 if (Instruction *inst = dynamic_cast<Instruction *>(used)) {
                     replaceUse(inst, phi, elm);
                 }
