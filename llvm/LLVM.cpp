@@ -143,7 +143,6 @@ namespace thm {
         //     os << bb->slot << " ";
         // }
         // os << std::endl;
-        // os << "; df+=";
         // os << std::endl;
         // if (iDom != nullptr)
         //     os << "; idom=" << iDom->slot << std::endl;
@@ -980,7 +979,7 @@ namespace thm {
         for (auto ent : opt) {
             os << "[ ";
             ent.second->printRef(os);
-            os << " %" << ent.first->slot << " ]";
+            os << ", %" << ent.first->slot << " ]";
             if (idx + 1 < opt.size()) {
                 os << ", ";
             }
@@ -1048,7 +1047,7 @@ namespace thm {
         main->calcDominators();
         main->setAllocas();
         Mem2Reg mem2Reg(this);
-        //mem2Reg.process();
+        mem2Reg.process();
 
         for (Function* function : functions) {
             function->fillSlot();

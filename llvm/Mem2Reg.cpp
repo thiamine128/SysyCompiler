@@ -82,8 +82,11 @@ namespace thm {
             }
             for (auto to : bb->tos) {
                 for (auto ent : to->phis) {
-                    ent.second->opt[bb] = bb->allocaTracker[ent.second->alloc];
+                    if (bb->allocaTracker.find(ent.first) != bb->allocaTracker.end()) {
+                        ent.second->opt[bb] = bb->allocaTracker[ent.first];
+                    }
                 }
+                to->allocaTracker = bb->allocaTracker;
                 if (!vis[to]) {
                     blocks.push_back(to);
                 }
