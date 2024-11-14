@@ -219,6 +219,13 @@ namespace thm {
             insts.push_back(inst);
         }
         tos = block->tos;
+        for (auto to : tos) {
+            for (int i = 0; i < to->froms.size(); ++i) {
+                if (to->froms[i] == block) {
+                    to->froms[i] = this;
+                }
+            }
+        }
     }
 
     void BasicBlock::fillSlot() {
@@ -349,6 +356,23 @@ namespace thm {
     void Function::arrangeBlocks() {
         for (auto block : blocks) {
             block->setupTransfer();
+        }
+        for (auto iter = blocks.begin() + 1; iter != blocks.end(); ) {
+            auto block = *iter;
+            if (block->froms.size() == 0) {
+                for (auto to : block->tos) {
+                    for (auto fromIter = to->froms.begin(); fromIter != to->froms.end(); ) {
+                        if (*fromIter == block) {
+                            fromIter = to->froms.erase(fromIter);
+                        } else {
+                            ++fromIter;
+                        }
+                    }
+                }
+                iter = blocks.erase(iter);
+            } else {
+                ++iter;
+            }
         }
         std::unordered_set<BasicBlock*> merged;
         for (auto block : blocks) {
