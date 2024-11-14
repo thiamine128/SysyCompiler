@@ -4,6 +4,7 @@
 
 #include "Mem2Reg.h"
 
+#include <assert.h>
 #include <functional>
 #include <iostream>
 #include <ostream>
@@ -45,6 +46,9 @@ namespace thm {
                         alloca = static_cast<AllocaInst *>(inst);
                         if (promoted.find(alloca) != promoted.end()) {
                             shouldRemove = true;
+                        }
+                        if (BasicValueType *basicType = dynamic_cast<BasicValueType *>(alloca->allocType)) {
+                            bb->allocaTracker[alloca] = new NumericLiteral(0, basicType->basicType);
                         }
                         break;
                     case LLVMType::STORE_INST:
