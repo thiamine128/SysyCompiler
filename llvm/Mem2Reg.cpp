@@ -110,6 +110,10 @@ namespace thm {
             auto block = *w.begin();
             w.erase(w.begin());
             for (auto b : block->df) {
+                int bid;
+                for ( bid = 0; function->blocks[bid] != b; bid++) {
+
+                }
                 if (!vis[b]) {
                     b->phis[alloca] = new PhiInst(alloca);
                     b->addInstAhead(b->phis[alloca]);

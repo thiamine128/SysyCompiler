@@ -221,7 +221,7 @@ namespace thm {
     void BasicBlock::merge(BasicBlock *block) {
         insts.pop_back();
         for (auto inst : block->insts) {
-            insts.push_back(inst);
+            addInst(inst);
         }
         tos = block->tos;
         for (auto to : tos) {
