@@ -10,6 +10,8 @@
 #include <ostream>
 #include <bits/locale_facets_nonio.h>
 
+#include "DeadCode.h"
+#include "GCM.h"
 #include "Mem2Reg.h"
 
 namespace thm {
@@ -133,7 +135,7 @@ namespace thm {
 
     void BasicBlock::print(std::ostream &os) const {
         os << slot << ":" << std::endl;
-        os << "; " << loopNest << std::endl;
+        os << "; " << domDepth << std::endl;
         for (Instruction* instruction : insts) {
             os << "\t";
             instruction->print(os);
@@ -252,8 +254,29 @@ namespace thm {
         }
     }
 
+    void BasicBlock::addInstLastSecond(Instruction *inst) {
+        inst->block = this;
+        insts.insert(insts.end() - 1, inst);
+    }
+
     LLVMType Constant::type() const {
         return LLVMType::CONSTANT;
+    }
+
+    Undef::Undef(BasicValueType::BasicType basicType) {
+        valueType = new BasicValueType(basicType);
+    }
+
+    LLVMType Undef::type() const {
+        return LLVMType::UNDEF;
+    }
+
+    void Undef::print(std::ostream &os) const {
+        os << "undef";
+    }
+
+    void Undef::printRef(std::ostream &os) const {
+        os << "undef";
     }
 
     NumericLiteral::NumericLiteral(int value, BasicValueType::BasicType basic) : value(value) {
@@ -393,6 +416,14 @@ namespace thm {
     }
 
     void Function::calcDominators() {
+        std::unordered_set<BasicBlock *> all;
+        for (auto bb : blocks) {
+            all.insert(bb);
+        }
+        for (auto bb : blocks) {
+            if (bb != blocks[0])
+                bb->doms = all;
+        }
         blocks[0]->doms.insert(blocks[0]);
         bool changed = true;
         while (changed) {
@@ -1098,6 +1129,11 @@ namespace thm {
         main->setAllocas();
         Mem2Reg mem2Reg(this);
         mem2Reg.process();
+        DeadCode deadCode(this);
+        deadCode.process();
+
+        GCM gcm(this);
+        gcm.process();
 
         for (Function* function : functions) {
             function->fillSlot();

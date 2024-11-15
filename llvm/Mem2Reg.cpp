@@ -48,7 +48,7 @@ namespace thm {
                             shouldRemove = true;
                         }
                         if (BasicValueType *basicType = dynamic_cast<BasicValueType *>(alloca->allocType)) {
-                            bb->allocaTracker[alloca] = new NumericLiteral(0, basicType->basicType);
+                            bb->allocaTracker[alloca] = new Undef(basicType->basicType);
                         }
                         break;
                     case LLVMType::STORE_INST:

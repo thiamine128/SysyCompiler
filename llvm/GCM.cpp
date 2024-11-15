@@ -7,6 +7,7 @@
 #include <functional>
 #include <functional>
 #include <functional>
+#include <iostream>
 
 namespace thm {
     void GCM::process() {
@@ -59,7 +60,7 @@ namespace thm {
                 if ((*iter)->block != bb) {
                     auto inst = *iter;
                     iter = bb->insts.erase(iter);
-                    inst->block->addInst(inst);
+                    inst->block->addInstLastSecond(inst);
                 } else {
                     ++iter;
                 }
@@ -70,6 +71,7 @@ namespace thm {
     void GCM::scheduleEarly(Function *func, Instruction *inst) {
         if (vis[inst] || inst->pinned) return;
         vis[inst] = true;
+        inst->block = func->root;
         for (auto use : inst->usings) {
             if (Instruction *i = dynamic_cast<Instruction *>(*use)) {
                 scheduleEarly(func, i);
@@ -100,8 +102,8 @@ namespace thm {
         }
         if (lca != nullptr) {
             BasicBlock *best = lca;
-            while (lca != inst->block) {
-                if (lca->loopNest < inst->block->loopNest) {
+            while (lca != nullptr && lca->domDepth >= inst->block->domDepth) {
+                if (lca->loopNest < best->loopNest) {
                     best = lca;
                 }
                 lca = lca->iDom;

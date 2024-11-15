@@ -11,6 +11,7 @@
 #include "SlotTracker.h"
 #include "../semantic/Symbol.h"
 namespace thm {
+    class GlobalVariable;
     class PhiInst;
     class BranchInst;
     class Instruction;
@@ -22,6 +23,7 @@ enum class LLVMType {
     ARGUMENT,
     BASIC_BLOCK,
     CONSTANT,
+    UNDEF,
     NUMERIC_LITERAL,
     STRING_LITERAL,
     GLOBAL_VALUE,
@@ -144,10 +146,19 @@ public:
     bool canMerge();
     void merge(BasicBlock *block);
     void fillSlot();
+
+    void addInstLastSecond(Instruction * inst);
 };
 class Constant : public Value {
 public:
     LLVMType type() const override;
+};
+class Undef : public Constant {
+public:
+    Undef(BasicValueType::BasicType basicType);
+    LLVMType type() const override;
+    void print(std::ostream &os) const override;
+    void printRef(std::ostream &os) const override;
 };
 class NumericLiteral : public Constant {
 public:
@@ -180,6 +191,7 @@ public:
     std::vector<Argument *> args;
     std::vector<BasicBlock *> blocks;
     std::vector<AllocaInst *> allocas;
+    std::vector<GlobalVariable *> modified;
     BasicBlock *root;
     SlotTracker slotTracker;
     Frame *frame;
