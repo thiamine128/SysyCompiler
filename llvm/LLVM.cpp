@@ -136,6 +136,20 @@ namespace thm {
     void BasicBlock::print(std::ostream &os) const {
         os << slot << ":" << std::endl;
         os << "; " << domDepth << std::endl;
+        if (iDom)
+            os << "; " << iDom->slot << std::endl;
+        else
+            os << ";" << std::endl;
+        os << "; ";
+        for (auto bb : doms) {
+            os << bb->slot << " ";
+        }
+        os << std::endl;
+        os << "; froms: ";
+        for (auto bb : froms) {
+            os << bb->slot << " ";
+        }
+        os << std::endl;
         for (Instruction* instruction : insts) {
             os << "\t";
             instruction->print(os);
@@ -386,6 +400,15 @@ namespace thm {
         }
         for (auto it = blocks.begin(); it != blocks.end();) {
             if (!vis[*it]) {
+                for (auto to = (*it)->tos.begin(); to != (*it)->tos.end(); ++to) {
+                    for (auto from = (*to)->froms.begin(); from != (*to)->froms.end(); ) {
+                        if (*from == *it) {
+                            from = (*to)->froms.erase(from);
+                        } else {
+                            ++from;
+                        }
+                    }
+                }
                 it = blocks.erase(it);
             } else {
                 ++it;
@@ -1139,5 +1162,7 @@ namespace thm {
             function->fillSlot();
         }
         main->fillSlot();
+
+
     }
 } // thm

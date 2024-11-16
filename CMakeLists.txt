@@ -52,8 +52,8 @@ add_executable(Compiler main.cpp
         llvm/Mem2Reg.h
         llvm/GCM.cpp
         llvm/GCM.h
-        llvm/Deadcode.cpp
-        llvm/Deadcode.h
+        llvm/DeadCode.cpp
+        llvm/DeadCode.h
 )
 
 add_definitions(-DPRINT_LEXER)
