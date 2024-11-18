@@ -127,7 +127,17 @@ namespace thm {
     }
 
     void LVal::evalConst() {
-        
+        isConst = symbol->type.isConst;
+        if (exp != nullptr) {
+            isConst &= exp->isConst;
+        }
+        if (isConst) {
+            if (symbol->type.isArray) {
+                constVal = symbol->initVals[exp->constVal];
+            } else {
+                constVal = symbol->initVal;
+            }
+        }
     }
 
     BasicValueType * LVal::getBasicType() const {
