@@ -33,6 +33,7 @@ public:
     void translateRetInst(Function *function, RetInst *retInst);
     void translateZextInst(Function *function, ZextInst *zextInst);
     void translateTruncInst(Function *function, TruncInst *truncInst);
+    void translateMoveInst(Function *function, MoveInst *moveInst);
 
     void submitText(MIPSText* text);
     void loadSlot(Function *function, int slot, Register reg);

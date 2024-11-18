@@ -4,7 +4,12 @@
 
 #include "MIPS.h"
 
+#include <unordered_set>
+
+
 namespace thm {
+    Register regParams[4] = {Register::A0, Register::A1, Register::A2, Register::A3};
+    std::unordered_set<Register> generalRegs = {Register::T0, Register::T1, Register::T2, Register::T3, Register::T4, Register::T5, Register::T6, Register::T7, Register::S0, Register::S1, Register::S2, Register::S3, Register::S4, Register::S5, Register::S6, Register::S7, Register::T8, Register::T9, Register::K0, Register::K1};
     MIPSLabel::MIPSLabel(std::string const &label) {
         this->label = label;
     }

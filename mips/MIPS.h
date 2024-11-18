@@ -5,10 +5,13 @@
 #ifndef MIPS_H
 #define MIPS_H
 #include <ostream>
+#include <unordered_set>
+#include <vector>
 
 namespace thm {
 
 enum class Register {
+    NONE = -1,
     ZERO = 0,
     AT,
     V0,
@@ -42,6 +45,8 @@ enum class Register {
     FP,
     RA
 };
+    extern Register regParams[4];
+    extern std::unordered_set<Register> generalRegs;
 class MIPSText {
 public:
     virtual void print(std::ostream& os) {}

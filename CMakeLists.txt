@@ -54,6 +54,12 @@ add_executable(Compiler main.cpp
         llvm/GCM.h
         llvm/DeadCode.cpp
         llvm/DeadCode.h
+        llvm/EliminatePhis.cpp
+        llvm/EliminatePhis.h
+        llvm/AllocateRegisters.cpp
+        llvm/AllocateRegisters.h
+        llvm/RegAllocator.cpp
+        llvm/RegAllocator.h
 )
 
 add_definitions(-DPRINT_LEXER)

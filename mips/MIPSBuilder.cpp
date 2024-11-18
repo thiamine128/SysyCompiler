@@ -14,7 +14,6 @@
 #include "../util/util.h"
 
 namespace thm {
-    Register regParams[4] = {Register::A0, Register::A1, Register::A2, Register::A3};
 
     void MIPSBuilder::build() {
         os << ".data" << std::endl;
@@ -135,6 +134,9 @@ namespace thm {
                 case LLVMType::TRUNC_INST:
                     translateTruncInst(block->function, static_cast<TruncInst *>(inst));
                     break;
+                case LLVMType::MOVE:
+                    translateMoveInst(block->function, static_cast<MoveInst *>(inst));
+                    break;
                 default:
                     break;
             }
@@ -144,12 +146,14 @@ namespace thm {
     void MIPSBuilder::translateBinaryInst(Function *function, BinaryInst *binaryInst) {
         bool lConst = true;
         bool rConst = true;
+        Register lReg = Register::T0;
         if (binaryInst->l->type() != LLVMType::NUMERIC_LITERAL) {
-            loadSlot(function, binaryInst->l->slot, Register::T0);
+            loadSlot(function, binaryInst->l->slot, lReg);
             lConst = false;
         }
+        Register rReg = Register::T1;
         if (binaryInst->r->type() != LLVMType::NUMERIC_LITERAL) {
-            loadSlot(function, binaryInst->r->slot, Register::T1);
+            loadSlot(function, binaryInst->r->slot, rReg);
             rConst = false;
         }
         switch (binaryInst->op) {
@@ -535,6 +539,9 @@ namespace thm {
         loadValue(function, truncInst->v, Register::T0);
         submitText(MIPSInst::AndImm(Register::T0, Register::T0, 0xff));
         submitText(MIPSInst::SaveWord(Register::T0, function->frame->slotOffset[truncInst->slot], Register::SP));
+    }
+
+    void MIPSBuilder::translateMoveInst(Function *function, MoveInst *moveInst) {
     }
 
     void MIPSBuilder::submitText(MIPSText *text) {

@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "SlotTracker.h"
+#include "../mips/MIPS.h"
 #include "../semantic/Symbol.h"
 namespace thm {
     class GlobalVariable;
@@ -42,6 +43,9 @@ enum class LLVMType {
     ZEXT_INST,
     TRUNC_INST,
     PHI_INST,
+    MOVE,
+    MOVE_TMP,
+    STACK_ADDRESS
 };
 
 class ValueType {
@@ -100,8 +104,8 @@ public:
     ValueType* valueType = nullptr;
     std::vector<Value *> usedBys;
     int slot = -1;
-    int color = -1;
     bool used = false;
+    Register reg = Register::NONE;
 
     virtual ~Value();
     virtual LLVMType type() const;
@@ -120,10 +124,10 @@ public:
     std::vector<Instruction *> insts;
     std::vector<BasicBlock *> froms;
     std::vector<BasicBlock *> tos;
-    std::unordered_set<Value *> def;
-    std::unordered_set<Value *> use;
-    std::unordered_set<Value *> in;
-    std::unordered_set<Value *> out;
+    std::unordered_set<int> def;
+    std::unordered_set<int> use;
+    std::unordered_set<int> in;
+    std::unordered_set<int> out;
     BasicBlock *iDom = nullptr;
     std::unordered_set<BasicBlock *> doms;
     std::unordered_set<BasicBlock *> df;
@@ -146,8 +150,7 @@ public:
     bool canMerge();
     void merge(BasicBlock *block);
     void fillSlot();
-
-    void addInstLastSecond(Instruction * inst);
+    void addInstLastSecond(Instruction *inst);
 };
 class Constant : public Value {
 public:
@@ -207,6 +210,7 @@ public:
     void livenessAnalysis();
     void fillSlot();
     int getMaxArgs();
+    void rebuildCFG();
 };
 class GlobalVariable : public GlobalValue {
 public:
@@ -230,7 +234,7 @@ public:
     bool pinned = false;
 
     LLVMType type() const override;
-    virtual void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use);
+    virtual void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use);
 };
 class BinaryInst : public Instruction {
 public:
@@ -255,7 +259,7 @@ public:
     BinaryInst(Op op, Value* l, Value* r);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
-    void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) override;
+    void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
 };
 class CallInst : public Instruction {
 public:
@@ -266,7 +270,7 @@ public:
     CallInst(bool requireSlot, Function* function, std::vector<Value*> const& args);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
-    void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) override;
+    void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
 };
 class AllocaInst : public Instruction {
 public:
@@ -277,7 +281,7 @@ public:
     AllocaInst(ValueType* allocType, int argIdx);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
-    void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) override;
+    void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
     bool isPromotable() const;
 };
 class LoadInst : public Instruction {
@@ -287,7 +291,7 @@ public:
     LoadInst(Value* ptr);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
-    void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) override;
+    void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
 };
 class StoreInst : public Instruction {
 public:
@@ -299,7 +303,7 @@ public:
     StoreInst(Value* value, Value* ptr, bool isArgInit);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
-    void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) override;
+    void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
 };
 class GetElementPtr : public Instruction {
 public:
@@ -309,7 +313,7 @@ public:
     GetElementPtr(Value* ptr, Value* idx);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
-    void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) override;
+    void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
 };
 class ZextInst : public Instruction {
 public:
@@ -318,7 +322,7 @@ public:
     ZextInst(Value* v);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
-    void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) override;
+    void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
 };
 class TruncInst : public Instruction {
 public:
@@ -327,7 +331,7 @@ public:
     TruncInst(Value* v);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
-    void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) override;
+    void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
 };
 class RetInst : public Instruction {
 public:
@@ -336,7 +340,7 @@ public:
     RetInst(Value* value);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
-    void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) override;
+    void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
 };
 class BranchInst : public Instruction {
 public:
@@ -349,7 +353,7 @@ public:
     LLVMType type() const override;
     void print(std::ostream &os) const override;
     void printRef(std::ostream &os) const override;
-    void getDefUse(std::unordered_set<Value *> &def, std::unordered_set<Value *> &use) override;
+    void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
 };
 class PhiInst : public Instruction {
 public:
@@ -362,7 +366,32 @@ public:
     void print(std::ostream &os) const override;
     void addOpt(BasicBlock* bb, Value* val);
 };
+class MoveInst : public Instruction {
+public:
+    Value* dst;
+    Value* src;
 
+    MoveInst(Value *dst, Value *src);
+    LLVMType type() const override;
+    void print(std::ostream &os) const override;
+    void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
+};
+class MoveTmp : public Value {
+public:
+    MoveTmp();
+    LLVMType type() const override;
+    void print(std::ostream &os) const override;
+    void printRef(std::ostream &os) const override;
+};
+class StackAddress : public Constant {
+public:
+    int offset;
+
+    StackAddress(int offset);
+    LLVMType type() const override;
+    void print(std::ostream &os) const override;
+    void printRef(std::ostream &os) const override;
+};
 class Module {
 public:
     Function* getInt;
