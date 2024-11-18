@@ -165,16 +165,16 @@ namespace thm {
         os << "\t";
         switch (type) {
             case ADD:
-                os << "add $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", $" << static_cast<int>(rd);
+                os << "addu $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", $" << static_cast<int>(rd);
                 break;
             case ADDI:
-                os << "addi $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", " << imm;
+                os << "addiu $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", " << imm;
             break;
             case SUB:
-                os << "sub $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", $" << static_cast<int>(rd);
+                os << "subu $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", $" << static_cast<int>(rd);
             break;
             case SUBI:
-                os << "subi $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", " << imm;
+                os << "subiu $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", " << imm;
             break;
             case MUL:
                 os << "mul $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", $" << static_cast<int>(rd);
@@ -234,7 +234,7 @@ namespace thm {
                 os << "lw $" << static_cast<int>(rt) << ", " << imm << "($" << static_cast<int>(rs) << ")";
                 break;
             case LB:
-                os << "lb $" << static_cast<int>(rt) << ", " << imm << "($" << static_cast<int>(rs) << ")";
+                os << "lbu $" << static_cast<int>(rt) << ", " << imm << "($" << static_cast<int>(rs) << ")";
             break;
             case LI:
                 os << "li $" << static_cast<int>(rt) << ", " << imm;

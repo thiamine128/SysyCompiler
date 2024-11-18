@@ -339,7 +339,6 @@ namespace thm {
     }
 
     void IRBuilder::visitLVal(LVal* lVal) {
-        ASTVisitor::visitLVal(lVal);
         PtrValueType* ptr = static_cast<PtrValueType*>(lVal->symbol->value->valueType);
         if (lVal->exp != nullptr) {
             lVal->exp->visit(this);
