@@ -12,6 +12,7 @@
 #include "../mips/MIPS.h"
 #include "../semantic/Symbol.h"
 namespace thm {
+    class ArgumentAddress;
     class GlobalVariable;
     class PhiInst;
     class BranchInst;
@@ -45,6 +46,7 @@ enum class LLVMType {
     PHI_INST,
     MOVE,
     MOVE_TMP,
+    ARG_ADDR,
 };
 
 class ValueType {
@@ -114,6 +116,8 @@ public:
 };
 class Argument : public Value {
 public:
+    ArgumentAddress *addr = nullptr;
+
     Argument();
     LLVMType type() const override;
     void print(std::ostream &os) const override;
@@ -388,6 +392,13 @@ public:
 class MoveTmp : public Value {
 public:
     MoveTmp();
+    LLVMType type() const override;
+    void print(std::ostream &os) const override;
+    void printRef(std::ostream &os) const override;
+};
+class ArgumentAddress : public Constant {
+public:
+    ArgumentAddress(Argument* arg);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
     void printRef(std::ostream &os) const override;

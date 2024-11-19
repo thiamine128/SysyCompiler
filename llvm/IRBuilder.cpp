@@ -602,6 +602,7 @@ namespace thm {
         if (funcFParam->symbol->type.isArray) {
             arg->valueType = new PtrValueType(arg->valueType);
         }
+        arg->addr = new ArgumentAddress(arg);
         currentFunction->args.push_back(arg);
         ASTVisitor::visitFuncFParam(funcFParam);
     }

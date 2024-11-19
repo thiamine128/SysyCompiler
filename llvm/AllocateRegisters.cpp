@@ -18,7 +18,6 @@ namespace thm {
 
     void AllocateRegisters::processFunction(Function *function) {
         RegAllocator regAllocator(function);
-        regAllocator.init();
         regAllocator.process();
         regAllocator.submitColors();
     }

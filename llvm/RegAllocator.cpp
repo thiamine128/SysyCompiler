@@ -12,10 +12,11 @@ namespace thm {
     void RegAllocator::init() {
         for (auto arg : func->args) {
             addValue(arg);
+            value[arg->slot] = arg;
         }
         for (auto bb : func->blocks) {
             for (auto inst : bb->insts) {
-                if (inst->slot >= 0) {
+                if (inst->needsColor()) {
                     addValue(inst);
                 }
             }
@@ -23,6 +24,8 @@ namespace thm {
     }
 
     void RegAllocator::process() {
+        static int cnt = 0;
+        init();
         func->livenessAnalysis();
         build();
         makeWorkList();
@@ -32,7 +35,9 @@ namespace thm {
             else if (!freezeWorklist.empty()) freeze();
             else if (!spillWorklist.empty()) selectSpill();
         } while (!simplifyWorklist.empty() || !worklistMoves.empty() || !freezeWorklist.empty() || !spillWorklist.empty());
+
         assignColors();
+
         if (!spilledNodes.empty()) {
             rewriteProgram();
             process();
@@ -74,6 +79,16 @@ namespace thm {
                 }
                 for (auto use : instUse) {
                     live.insert(use);
+                }
+            }
+            if (bb == func->root) {
+                for (int i = 4; i < func->args.size(); i++) {
+                    live.insert(func->args[i]->slot);
+                }
+                for (int i = 4; i < func->args.size(); i++) {
+                    for (auto l : live) {
+                        addEdge(func->args[i]->slot, l);
+                    }
                 }
             }
         }
@@ -327,13 +342,18 @@ namespace thm {
     }
 
     void RegAllocator::rewriteProgram() {
-        std::unordered_map<int, AllocaInst *> pos;
+        std::unordered_map<int, Value *> pos;
         for (auto n : spilledNodes) {
-            pos[n] = new AllocaInst(value[n]->valueType);
-            pos[n]->slot = func->slotTracker.allocSlot();
-            func->root->addInstAhead(pos[n]);
+            if (Argument *arg = dynamic_cast<Argument *>(value[n])) {
+                pos[n] = arg->addr;
+            } else {
+                auto alloc = new AllocaInst(value[n]->valueType);
+                pos[n] = alloc;
+                pos[n]->slot = func->slotTracker.allocSlot();
+                func->root->addInstAhead(alloc);
+            }
         }
-        std::vector<LoadInst *> newTemps;
+
         // replace use
         for (auto n : spilledNodes) {
             for (auto bb : func->blocks) {
@@ -344,7 +364,6 @@ namespace thm {
                         if ((*use)->slot == n) {
                             if (l == nullptr) {
                                 l = new LoadInst(pos[n]);
-                                newTemps.push_back(l);
                                 l->slot = func->slotTracker.allocSlot();
                                 color[l->slot] = Register::NONE;
                             }
@@ -352,17 +371,18 @@ namespace thm {
                         }
                     }
                     if (l != nullptr) {
-                        bb->insts.insert(iter, l);
+                        iter = bb->insts.insert(iter, l) + 1;
                     }
                 }
             }
         }
+
         // replace def
         for (auto n : spilledNodes) {
             for (auto bb : func->blocks) {
                 for (auto iter = bb->insts.begin(); iter != bb->insts.end(); ++iter) {
                     if ((*iter)->slot == n) {
-                        bb->insts.insert(iter + 1, new StoreInst(value[n], pos[n]));
+                        iter = bb->insts.insert(iter + 1, new StoreInst(value[n], pos[n])) + 1;
                     }
                 }
             }
@@ -389,10 +409,12 @@ namespace thm {
         freezeWorklist.clear();
         preColored.clear();
         color.clear();
-        init();
     }
 
     void RegAllocator::submitColors() {
+        for (auto arg : func->args) {
+            arg->reg = color[arg->slot];
+        }
         for (auto bb : func->blocks) {
             for (auto inst : bb->insts) {
                 if (color.find(inst->slot) != color.end()) {

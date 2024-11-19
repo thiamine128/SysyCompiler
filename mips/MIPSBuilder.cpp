@@ -96,11 +96,14 @@ namespace thm {
                 submitText(MIPSInst::SaveWord(regParams[i], function->frame->frameSize + 4 * i, Register::SP));
             }
         }
+        for (int i = 4; i < function->args.size(); i++) {
+            submitText(MIPSInst::LoadWord(function->args[i]->reg, function->frame->frameSize + 4 * i, Register::SP));
+        }
         for (auto ent : function->frame->saved) {
             submitText(MIPSInst::SaveWord(ent.first, function->frame->getRegOffset(ent.first), Register::SP));
         }
         for (BasicBlock *block : function->blocks) {
-            translateBlock(block);
+            //translateBlock(block);
         }
     }
 
@@ -403,6 +406,9 @@ namespace thm {
         if (AllocaInst *alloc = dynamic_cast<AllocaInst *>(loadInst->ptr)) {
             offset = function->frame->getOffset(alloc);
             reg = Register::SP;
+        } else if (ArgumentAddress *arg = dynamic_cast<ArgumentAddress *>(loadInst->ptr)) {
+            offset = function->frame->getArgAddress(arg);
+            reg = Register::SP;
         } else if (loadInst->ptr->reg != Register::NONE) {
             offset = 0;
             reg = loadInst->ptr->reg;
@@ -436,6 +442,9 @@ namespace thm {
         if (AllocaInst *alloc = dynamic_cast<AllocaInst *>(storeInst->ptr)) {
             offset = function->frame->getOffset(alloc);
             reg = Register::SP;
+        } else if (ArgumentAddress *arg = dynamic_cast<ArgumentAddress *>(storeInst->ptr)) {
+            offset = function->frame->getArgAddress(arg);
+            reg = Register::SP;
         } else if (storeInst->ptr->reg != Register::NONE) {
             offset = 0;
             reg = storeInst->ptr->reg;
@@ -443,24 +452,31 @@ namespace thm {
             useLabel = true;
             label = global->name;
         }
-        BasicValueType *basicType = static_cast<BasicValueType *>(storeInst->value->valueType);
-        switch (basicType->basicType) {
-            case BasicValueType::I8:
-                if (useLabel) {
-                    submitText(MIPSInst::SaveByte(loadValue(storeInst->value), Register::ZERO, label));
-                } else {
-                    submitText(MIPSInst::SaveByte(loadValue(storeInst->value), offset, reg));
-                }
-            break;
-            case BasicValueType::I32:
-                if (useLabel) {
-                    submitText(MIPSInst::SaveWord(loadValue(storeInst->value), Register::ZERO, label));
-                } else {
-                    submitText(MIPSInst::SaveWord(loadValue(storeInst->value), offset, reg));
-                }
-            break;
-            default:
+        if (BasicValueType *basicType = dynamic_cast<BasicValueType *>(storeInst->value->valueType)) {
+            switch (basicType->basicType) {
+                case BasicValueType::I8:
+                    if (useLabel) {
+                        submitText(MIPSInst::SaveByte(loadValue(storeInst->value), Register::ZERO, label));
+                    } else {
+                        submitText(MIPSInst::SaveByte(loadValue(storeInst->value), offset, reg));
+                    }
                 break;
+                case BasicValueType::I32:
+                    if (useLabel) {
+                        submitText(MIPSInst::SaveWord(loadValue(storeInst->value), Register::ZERO, label));
+                    } else {
+                        submitText(MIPSInst::SaveWord(loadValue(storeInst->value), offset, reg));
+                    }
+                break;
+                default:
+                    break;
+            }
+        } else if (PtrValueType* ptrType = dynamic_cast<PtrValueType *>(storeInst->value->valueType)) {
+            if (useLabel) {
+                submitText(MIPSInst::SaveWord(loadValue(storeInst->value), Register::ZERO, label));
+            } else {
+                submitText(MIPSInst::SaveWord(loadValue(storeInst->value), offset, reg));
+            }
         }
     }
 

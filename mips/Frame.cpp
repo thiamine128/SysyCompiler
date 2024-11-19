@@ -4,6 +4,7 @@
 
 #include "Frame.h"
 
+#include <complex>
 #include <iostream>
 
 #include "../llvm/LLVM.h"
@@ -53,6 +54,9 @@ namespace thm {
             }
         }
         frameSize += 4 * maxCallArgs;
+        for (int i = 0; i < function->args.size(); i++) {
+            args[function->args[i]->addr] = frameSize + i * 4;
+        }
     }
 
     int Frame::getOffset(AllocaInst *slot) {
@@ -65,5 +69,9 @@ namespace thm {
 
     int Frame::getCallArgOffset(int i) {
         return 4 * i;
+    }
+
+    int Frame::getArgAddress(ArgumentAddress *addr) {
+        return args[addr];
     }
 } // thm

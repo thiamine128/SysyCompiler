@@ -372,6 +372,11 @@ namespace thm {
             if (i + 1 < args.size()) os << ", ";
         }
         os << ") {" << std::endl;
+        os << ";";
+        for (auto arg : args) {
+            os << static_cast<int>(arg->reg) << " ";
+        }
+        os << std::endl;
         for (BasicBlock* block : blocks) {
             block->print(os);
         }
@@ -1181,6 +1186,22 @@ namespace thm {
         os << "%" << slot;
     }
 
+    ArgumentAddress::ArgumentAddress(Argument* arg) {
+        valueType = new PtrValueType(arg->valueType->clone());
+    }
+
+    LLVMType ArgumentAddress::type() const {
+        return LLVMType::ARG_ADDR;
+    }
+
+    void ArgumentAddress::print(std::ostream &os) const {
+
+    }
+
+    void ArgumentAddress::printRef(std::ostream &os) const {
+
+    }
+
     Module::Module() {
         getInt = new Function("getint", BasicValueType::I32);
         getChar = new Function("getchar", BasicValueType::I32);
@@ -1240,10 +1261,11 @@ namespace thm {
         main->setAllocas();
         Mem2Reg mem2Reg(this);
         mem2Reg.process();
-        DeadCode deadCode(this);
-        deadCode.process();
-        GCM gcm(this);
+        //DeadCode deadCode(this);
+        //deadCode.process();
+        //GCM gcm(this);
         //gcm.process();
+
         EliminatePhis eliminatePhis(this);
         eliminatePhis.process();
 

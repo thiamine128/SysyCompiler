@@ -19,12 +19,14 @@ public:
 
     std::unordered_map<Register, int> saved;
     std::unordered_map<AllocaInst *, int> offset;
+    std::unordered_map<ArgumentAddress *, int> args;
 
     Frame(Function *function);
     void init(int maxCallArgs);
     int getOffset(AllocaInst *slot);
     int getRegOffset(Register reg);
     int getCallArgOffset(int i);
+    int getArgAddress(ArgumentAddress *addr);
 };
 
 } // thm

@@ -37,7 +37,7 @@ public:
     std::unordered_map<int, std::unordered_set<MoveInst *>> moveList;
     std::unordered_map<int, int> alias;
     std::unordered_map<int, Register> color;
-    std::unordered_map<int, Instruction *> value;
+    std::unordered_map<int, Value *> value;
 
     RegAllocator(Function *func) : K(generalRegs.size()), func(func) {
 

@@ -5,6 +5,7 @@
 #include "core/Compiler.h"
 
 int main() {
+
     thm::Compiler compiler("testfile.txt");
     compiler.lexer();
     compiler.parse();
