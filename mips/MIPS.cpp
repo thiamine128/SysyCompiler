@@ -137,8 +137,16 @@ namespace thm {
         return new MIPSInst(Type::SW, base, val, Register::ZERO, offset);
     }
 
+    MIPSInst * MIPSInst::SaveWord(Register val, Register offset, std::string const &label) {
+        return new MIPSInst(Type::SW_LABEL, offset, val, Register::ZERO, 0, label);
+    }
+
     MIPSInst * MIPSInst::SaveByte(Register val, int offset, Register base) {
         return new MIPSInst(Type::SB, base, val, Register::ZERO, offset);
+    }
+
+    MIPSInst * MIPSInst::SaveByte(Register val, Register offset, std::string const &label) {
+        return new MIPSInst(Type::SB_LABEL, offset, val, Register::ZERO, 0, label);
     }
 
     MIPSInst * MIPSInst::Syscall() {
@@ -159,6 +167,10 @@ namespace thm {
 
     MIPSInst * MIPSInst::BranchNE(Register cond, Register target, std::string const &label) {
         return new MIPSInst(BNE, cond, target, Register::ZERO, 0, label);
+    }
+
+    MIPSInst * MIPSInst::Move(Register dst, Register src) {
+        return new MIPSInst(MOVE, dst, src, Register::ZERO, 0);
     }
 
     void MIPSInst::print(std::ostream &os) {
@@ -242,8 +254,14 @@ namespace thm {
             case SW:
                 os << "sw $" << static_cast<int>(rt) << ", " << imm << "($" << static_cast<int>(rs) << ")";
             break;
+            case SW_LABEL:
+                os << "sw $" << static_cast<int>(rt) << ", " << label << "($" << static_cast<int>(rs) << ")";
+            break;
             case SB:
                 os << "sb $" << static_cast<int>(rt) << ", " << imm << "($" << static_cast<int>(rs) << ")";
+            break;
+            case SB_LABEL:
+                os << "sb $" << static_cast<int>(rt) << ", " << label << "($" << static_cast<int>(rs) << ")";
             break;
             case SYSCALL:
                 os << "syscall";
@@ -265,6 +283,9 @@ namespace thm {
             break;
             case ANDI:
                 os << "and $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", " << imm;
+            break;
+            case MOVE:
+                os << "move $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt);
             break;
             default:
                 break;

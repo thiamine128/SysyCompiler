@@ -75,8 +75,10 @@ public:
         NEG,
         NOT,
         SW,
+        SW_LABEL,
         LW,
         SB,
+        SB_LABEL,
         LB,
         LI,
         LA,
@@ -104,6 +106,7 @@ public:
         JR,
         JAL,
         SYSCALL,
+        MOVE,
     } type;
     Register rs, rt, rd;
     int imm;
@@ -139,12 +142,15 @@ public:
     static MIPSInst *LoadImm(Register dest, int imm);
     static MIPSInst *LoadAddr(Register dest, std::string const& symbol);
     static MIPSInst *SaveWord(Register val, int offset, Register base);
+    static MIPSInst *SaveWord(Register val, Register offset, std::string const& label);
     static MIPSInst *SaveByte(Register val, int offset, Register base);
+    static MIPSInst *SaveByte(Register val, Register offset, std::string const& label);
     static MIPSInst *Syscall();
     static MIPSInst *JumpAndLink(std::string const& name);
     static MIPSInst *JumpReg(Register reg);
     static MIPSInst *Jump(std::string const& label);
     static MIPSInst *BranchNE(Register cond, Register target, std::string const& label);
+    static MIPSInst *Move(Register dst, Register src);
 
     void print(std::ostream &os) override;
 };

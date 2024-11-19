@@ -6,23 +6,22 @@
 #define MIPSBUILDER_H
 #include "MIPS.h"
 #include "../llvm/LLVM.h"
-
+#include "../llvm/Pass.h"
 namespace thm {
 
-class MIPSBuilder {
+class MIPSBuilder : public Pass {
 public:
-    Module *module;
     std::ostream& os;
     std::vector<MIPSText*> texts;
 
-    MIPSBuilder(Module *module, std::ostream& os) : module(module), os(os) {
+    MIPSBuilder(Module *module, std::ostream& os) : Pass(module), os(os) {
 
     }
 
-    void build();
+    void process() override;
     void addGlobalVariable(GlobalVariable *global);
     void addStringLiteral(StringLiteral *str);
-    void translateFunction(Function *function);
+    void processFunction(Function *function);
     void translateBlock(BasicBlock *block);
     void translateBinaryInst(Function *function, BinaryInst *binaryInst);
     void translateCallInst(Function *function, CallInst *callInst);
@@ -36,9 +35,11 @@ public:
     void translateMoveInst(Function *function, MoveInst *moveInst);
 
     void submitText(MIPSText* text);
-    void loadSlot(Function *function, int slot, Register reg);
-    void loadValue(Function *function, Value *value, Register reg);
-
+    Register loadValue(Value *value);
+    void loadValue(Value *value, Register reg);
+    void loadConstant(Value *value, Register reg);
+    void move(Register dst, Register src);
+    void sequenceMoves(std::vector<std::pair<Register, Register>> &moves);
     void debugBreak();
 
     void debugTLE();

@@ -10,7 +10,7 @@ int main() {
     compiler.parse();
     compiler.buildSymbolTables();
     compiler.buildIR();
-    //compiler.buildMIPS();
+    compiler.buildMIPS();
     compiler.printErrors();
     return 0;
 }

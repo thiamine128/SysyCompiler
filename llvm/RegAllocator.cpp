@@ -6,9 +6,10 @@
 
 #include <iostream>
 
+#include "../mips/Frame.h"
+
 namespace thm {
-    void RegAllocator::process() {
-        func->livenessAnalysis();
+    void RegAllocator::init() {
         for (auto arg : func->args) {
             addValue(arg);
         }
@@ -19,6 +20,10 @@ namespace thm {
                 }
             }
         }
+    }
+
+    void RegAllocator::process() {
+        func->livenessAnalysis();
         build();
         makeWorkList();
         do {
@@ -29,7 +34,6 @@ namespace thm {
         } while (!simplifyWorklist.empty() || !worklistMoves.empty() || !freezeWorklist.empty() || !spillWorklist.empty());
         assignColors();
         if (!spilledNodes.empty()) {
-            std::cout << "spill!" << std::endl;
             rewriteProgram();
             process();
         }
@@ -42,12 +46,10 @@ namespace thm {
                 auto inst = *iter;
                 std::unordered_set<int> instDef;
                 std::unordered_set<int> instUse;
+                value[inst->slot] = inst;
                 inst->getDefUse(instDef, instUse);
                 if (MoveInst *move = dynamic_cast<MoveInst *>(inst)) {
                     if (move->src->slot >= 0) {
-                        if (move->src->slot == 2) {
-                            std::cout << "";
-                        }
                         for (auto use : instUse) {
                             live.erase(use);
                             moveList[use].insert(move);
@@ -61,6 +63,7 @@ namespace thm {
                 for (auto def : instDef) {
                     live.insert(def);
                 }
+
                 for (auto def : instDef) {
                     for (auto l : live) {
                         addEdge(def, l);
@@ -77,7 +80,7 @@ namespace thm {
     }
 
     void RegAllocator::addValue(Value *val) {
-        color[val->slot] = Register::NONE;
+        color[val->slot] = val->reg;
         if (val->reg != Register::NONE) {
             preColored.insert(val->slot);
         } else {
@@ -324,9 +327,69 @@ namespace thm {
     }
 
     void RegAllocator::rewriteProgram() {
+        std::unordered_map<int, AllocaInst *> pos;
         for (auto n : spilledNodes) {
-
+            pos[n] = new AllocaInst(value[n]->valueType);
+            pos[n]->slot = func->slotTracker.allocSlot();
+            func->root->addInstAhead(pos[n]);
         }
+        std::vector<LoadInst *> newTemps;
+        // replace use
+        for (auto n : spilledNodes) {
+            for (auto bb : func->blocks) {
+                for (auto iter = bb->insts.begin(); iter != bb->insts.end(); ++iter) {
+                    auto inst = *iter;
+                    LoadInst *l = nullptr;
+                    for (auto use : inst->usings) {
+                        if ((*use)->slot == n) {
+                            if (l == nullptr) {
+                                l = new LoadInst(pos[n]);
+                                newTemps.push_back(l);
+                                l->slot = func->slotTracker.allocSlot();
+                                color[l->slot] = Register::NONE;
+                            }
+                            *use = l;
+                        }
+                    }
+                    if (l != nullptr) {
+                        bb->insts.insert(iter, l);
+                    }
+                }
+            }
+        }
+        // replace def
+        for (auto n : spilledNodes) {
+            for (auto bb : func->blocks) {
+                for (auto iter = bb->insts.begin(); iter != bb->insts.end(); ++iter) {
+                    if ((*iter)->slot == n) {
+                        bb->insts.insert(iter + 1, new StoreInst(value[n], pos[n]));
+                    }
+                }
+            }
+        }
+        spilledNodes.clear();
+        initial.clear();
+        colorNodes.clear();
+        coalescedNodes.clear();
+        adjList.clear();
+        adjSet.clear();
+        degree.clear();
+        moveList.clear();
+        alias.clear();
+        value.clear();
+        coalescedMoves.clear();
+        activeMoves.clear();
+        worklistMoves.clear();
+        frozenMoves.clear();
+        constrainedMoves.clear();
+        selectStack.clear();
+        selectSet.clear();
+        simplifyWorklist.clear();
+        spillWorklist.clear();
+        freezeWorklist.clear();
+        preColored.clear();
+        color.clear();
+        init();
     }
 
     void RegAllocator::submitColors() {
@@ -334,6 +397,9 @@ namespace thm {
             for (auto inst : bb->insts) {
                 if (color.find(inst->slot) != color.end()) {
                     inst->reg = color[inst->slot];
+                    if (MoveInst *move = dynamic_cast<MoveInst *>(inst)) {
+                        move->dst->reg = move->reg;
+                    }
                 }
             }
         }

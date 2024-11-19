@@ -5,19 +5,26 @@
 #ifndef FRAME_H
 #define FRAME_H
 #include <unordered_map>
+#include <vector>
+
+#include "../llvm/LLVM.h"
 
 namespace thm {
-
 class Frame {
 public:
-    int raOffset;
-    int frameSize;
-    int argsNum;
+    Function *function;
+    int raOffset = 0;
+    int frameSize = 0;
+    int argsNum = 0;
 
-    std::unordered_map<int, int> slotOffset;
+    std::unordered_map<Register, int> saved;
+    std::unordered_map<AllocaInst *, int> offset;
 
-    bool isInFrame(int slot);
-    int getCallArgOffset(int idx);
+    Frame(Function *function);
+    void init(int maxCallArgs);
+    int getOffset(AllocaInst *slot);
+    int getRegOffset(Register reg);
+    int getCallArgOffset(int i);
 };
 
 } // thm

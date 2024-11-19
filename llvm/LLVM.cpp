@@ -15,6 +15,7 @@
 #include "EliminatePhis.h"
 #include "GCM.h"
 #include "Mem2Reg.h"
+#include "../mips/Frame.h"
 
 namespace thm {
     ValueType::Type ValueType::type() const {
@@ -113,6 +114,10 @@ namespace thm {
         os << "%" << slot;
     }
 
+    bool Value::needsColor() const {
+        return false;
+    }
+
     Argument::Argument() {
         slot = 0;
     }
@@ -124,6 +129,10 @@ namespace thm {
     void Argument::print(std::ostream &os) const {
         valueType->print(os);
         os << " %" << slot;
+    }
+
+    bool Argument::needsColor() const {
+        return true;
     }
 
     BasicBlock::BasicBlock(Function *function, int loopNest) : function(function), loopNest(loopNest) {
@@ -168,6 +177,8 @@ namespace thm {
     }
 
     void BasicBlock::calcDefUse() {
+        def.clear();
+        use.clear();
         for (auto inst : insts) {
             std::unordered_set<int> instDef, instUse;
             inst->getDefUse(instDef, instUse);
@@ -248,22 +259,6 @@ namespace thm {
                     continue;
                 }
                 inst->slot = function->slotTracker.allocSlot();
-                if (inst->type() == LLVMType::ALLOCA_INST) {
-                    PtrValueType *ptr = static_cast<PtrValueType *>(inst->valueType);
-                    int size = 0;
-                    if (ptr->value->type() == ValueType::ARRAY) {
-                        ArrayValueType *arrayType = static_cast<ArrayValueType *>(ptr->value);
-                        BasicValueType *basicType = static_cast<BasicValueType *>(arrayType->value);
-                        if (basicType->type() == BasicValueType::I8) {
-                            size = arrayType->arrayLen;
-                        } else {
-                            size = 4 * arrayType->arrayLen;
-                        }
-                        function->slotTracker.useArray(inst->slot, size);
-                    }
-                } else {
-                    function->slotTracker.useStack(inst->slot);
-                }
             }
         }
     }
@@ -359,7 +354,7 @@ namespace thm {
         os << "@" << name;
     }
 
-    Function::Function(std::string const &name, BasicValueType::BasicType retType): frame(nullptr) {
+    Function::Function(std::string const &name, BasicValueType::BasicType retType): frame(new Frame(this)) {
         this->name = name;
         valueType = new BasicValueType(retType);
     }
@@ -561,7 +556,6 @@ namespace thm {
             }
             argIdx++;
         }
-        slotTracker.allocArgs.resize(args.size());
         int idx = 0;
         for (BasicBlock* block : blocks) {
             block->slot = slotTracker.allocSlot();
@@ -726,10 +720,14 @@ namespace thm {
 
     void BinaryInst::getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) {
         def.insert(slot);
-        if (l->slot >= 0)
+        if (l->needsColor())
             use.insert(l->slot);
-        if (r->slot >= 0)
+        if (r->needsColor())
             use.insert(r->slot);
+    }
+
+    bool BinaryInst::needsColor() const {
+        return true;
     }
 
     CallInst::CallInst(bool requireSlot, Function* function, std::vector<Value *> const &args) : function(function), name(function->name), args(args) {
@@ -777,9 +775,13 @@ namespace thm {
         if (slot >= 0)
             def.insert(slot);
         for (auto arg : args) {
-            if (arg->slot >= 0)
+            if (arg->needsColor())
                 use.insert(arg->slot);
         }
+    }
+
+    bool CallInst::needsColor() const {
+        return slot >= 0;
     }
 
     AllocaInst::AllocaInst(VariableType& variableType) {
@@ -789,7 +791,7 @@ namespace thm {
         valueType = new PtrValueType(valueType);
     }
 
-    AllocaInst::AllocaInst(ValueType* allocType, int argIdx) : allocType(allocType->clone()), argIdx(argIdx) {
+    AllocaInst::AllocaInst(ValueType* allocType) : allocType(allocType->clone()) {
         slot = 0;
         valueType = new PtrValueType(allocType->clone());
     }
@@ -827,7 +829,12 @@ namespace thm {
         return true;
     }
 
+    bool AllocaInst::needsColor() const {
+        return false;
+    }
+
     LoadInst::LoadInst(Value *ptr) : ptr(ptr) {
+        pinned = true;
         slot = 0;
         PtrValueType* v = static_cast<PtrValueType*>(ptr->valueType);
         valueType = v->value->clone();
@@ -851,17 +858,23 @@ namespace thm {
 
     void LoadInst::getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) {
         def.insert(slot);
-        if (ptr->slot >= 0)
+        if (ptr->needsColor())
             use.insert(ptr->slot);
     }
 
+    bool LoadInst::needsColor() const {
+        return true;
+    }
+
     StoreInst::StoreInst(Value *value, Value *ptr) : value(value), ptr(ptr), isArgInit(false) {
+        pinned = true;
         valueType = new BasicValueType(BasicValueType::VOID);
         use(&this->value);
         use(&this->ptr);
     }
 
     StoreInst::StoreInst(Value *value, Value *ptr, bool isArgInit) : value(value), ptr(ptr), isArgInit(isArgInit) {
+        pinned = true;
         valueType = new BasicValueType(BasicValueType::VOID);
         use(&this->value);
         use(&this->ptr);
@@ -884,10 +897,10 @@ namespace thm {
     }
 
     void StoreInst::getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) {
-        if (value->slot >= 0)
+        if (value->needsColor())
             use.insert(value->slot);
-        if (ptr->slot >= 0)
-            use.insert(value->slot);
+        if (ptr->needsColor())
+            use.insert(ptr->slot);
     }
 
     GetElementPtr::GetElementPtr(Value *ptr, Value* idx) : ptr(ptr), idx(idx) {
@@ -931,10 +944,14 @@ namespace thm {
 
     void GetElementPtr::getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) {
         def.insert(slot);
-        if (ptr->slot >= 0)
+        if (ptr->needsColor())
             use.insert(ptr->slot);
-        if (idx->slot >= 0)
+        if (idx->needsColor())
             use.insert(idx->slot);
+    }
+
+    bool GetElementPtr::needsColor() const {
+        return true;
     }
 
     ZextInst::ZextInst(Value *v) : v(v) {
@@ -960,8 +977,12 @@ namespace thm {
 
     void ZextInst::getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) {
         def.insert(slot);
-        if (v->slot >= 0)
+        if (v->needsColor())
             use.insert(v->slot);
+    }
+
+    bool ZextInst::needsColor() const {
+        return true;
     }
 
     TruncInst::TruncInst(Value *v) : v(v) {
@@ -987,8 +1008,12 @@ namespace thm {
 
     void TruncInst::getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) {
         def.insert(slot);
-        if (v->slot >= 0)
+        if (v->needsColor())
             use.insert(v->slot);
+    }
+
+    bool TruncInst::needsColor() const {
+        return true;
     }
 
     RetInst::RetInst(Value *value) : value(value) {
@@ -1015,7 +1040,7 @@ namespace thm {
     }
 
     void RetInst::getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) {
-        if (value != nullptr && value->slot >= 0) {
+        if (value != nullptr && value->needsColor()) {
             use.insert(value->slot);
         }
     }
@@ -1060,7 +1085,7 @@ namespace thm {
     }
 
     void BranchInst::getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) {
-        if (cond != nullptr && cond->slot) {
+        if (cond != nullptr && cond->needsColor()) {
             use.insert(cond->slot);
         }
     }
@@ -1110,6 +1135,10 @@ namespace thm {
         }
     }
 
+    bool PhiInst::needsColor() const {
+        return true;
+    }
+
     MoveInst::MoveInst(Value *dst, Value *src) : dst(dst), src(src) {
         slot = 0;
     }
@@ -1127,9 +1156,13 @@ namespace thm {
 
     void MoveInst::getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) {
         def.insert(slot);
-        if (src->slot >= 0) {
+        if (src->needsColor()) {
             use.insert(src->slot);
         }
+    }
+
+    bool MoveInst::needsColor() const {
+        return true;
     }
 
     MoveTmp::MoveTmp() {
@@ -1146,21 +1179,6 @@ namespace thm {
 
     void MoveTmp::printRef(std::ostream &os) const {
         os << "%" << slot;
-    }
-
-    StackAddress::StackAddress(int offset) : offset(offset) {
-    }
-
-    LLVMType StackAddress::type() const {
-        return LLVMType::STACK_ADDRESS;
-    }
-
-    void StackAddress::print(std::ostream &os) const {
-        os << "sp + " << offset << std::endl;
-    }
-
-    void StackAddress::printRef(std::ostream &os) const {
-        os << "sp + " << offset;
     }
 
     Module::Module() {
@@ -1225,7 +1243,7 @@ namespace thm {
         DeadCode deadCode(this);
         deadCode.process();
         GCM gcm(this);
-        gcm.process();
+        //gcm.process();
         EliminatePhis eliminatePhis(this);
         eliminatePhis.process();
 

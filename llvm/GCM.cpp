@@ -47,8 +47,8 @@ namespace thm {
             for (auto inst : bb->insts) {
                 if (inst->pinned) {
                     vis[inst] = true;
-                    for (auto use : inst->usings) {
-                        if (Instruction *i = dynamic_cast<Instruction *>(*use)) {
+                    for (auto user : inst->usedBys) {
+                        if (Instruction *i = dynamic_cast<Instruction *>(user)) {
                             scheduleLate(function, i);
                         }
                     }

@@ -45,7 +45,6 @@ enum class LLVMType {
     PHI_INST,
     MOVE,
     MOVE_TMP,
-    STACK_ADDRESS
 };
 
 class ValueType {
@@ -111,12 +110,14 @@ public:
     virtual LLVMType type() const;
     virtual void print(std::ostream& os) const;
     virtual void printRef(std::ostream& os) const;
+    virtual bool needsColor() const;
 };
 class Argument : public Value {
 public:
     Argument();
     LLVMType type() const override;
     void print(std::ostream &os) const override;
+    bool needsColor() const override;
 };
 class BasicBlock : public Value {
 public:
@@ -260,6 +261,7 @@ public:
     LLVMType type() const override;
     void print(std::ostream &os) const override;
     void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
+    bool needsColor() const override;
 };
 class CallInst : public Instruction {
 public:
@@ -271,18 +273,19 @@ public:
     LLVMType type() const override;
     void print(std::ostream &os) const override;
     void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
+    bool needsColor() const override;
 };
 class AllocaInst : public Instruction {
 public:
     ValueType* allocType;
-    int argIdx = -1;
 
     AllocaInst(VariableType& variableType);
-    AllocaInst(ValueType* allocType, int argIdx);
+    AllocaInst(ValueType* allocType);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
     void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
     bool isPromotable() const;
+    bool needsColor() const override;
 };
 class LoadInst : public Instruction {
 public:
@@ -292,6 +295,7 @@ public:
     LLVMType type() const override;
     void print(std::ostream &os) const override;
     void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
+    bool needsColor() const override;
 };
 class StoreInst : public Instruction {
 public:
@@ -314,6 +318,7 @@ public:
     LLVMType type() const override;
     void print(std::ostream &os) const override;
     void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
+    bool needsColor() const override;
 };
 class ZextInst : public Instruction {
 public:
@@ -323,6 +328,7 @@ public:
     LLVMType type() const override;
     void print(std::ostream &os) const override;
     void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
+    bool needsColor() const override;
 };
 class TruncInst : public Instruction {
 public:
@@ -332,6 +338,7 @@ public:
     LLVMType type() const override;
     void print(std::ostream &os) const override;
     void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
+    bool needsColor() const override;
 };
 class RetInst : public Instruction {
 public:
@@ -365,6 +372,7 @@ public:
     bool isNecessary();
     void print(std::ostream &os) const override;
     void addOpt(BasicBlock* bb, Value* val);
+    bool needsColor() const override;
 };
 class MoveInst : public Instruction {
 public:
@@ -375,19 +383,11 @@ public:
     LLVMType type() const override;
     void print(std::ostream &os) const override;
     void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
+    bool needsColor() const override;
 };
 class MoveTmp : public Value {
 public:
     MoveTmp();
-    LLVMType type() const override;
-    void print(std::ostream &os) const override;
-    void printRef(std::ostream &os) const override;
-};
-class StackAddress : public Constant {
-public:
-    int offset;
-
-    StackAddress(int offset);
     LLVMType type() const override;
     void print(std::ostream &os) const override;
     void printRef(std::ostream &os) const override;
