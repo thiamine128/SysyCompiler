@@ -103,7 +103,7 @@ namespace thm {
             submitText(MIPSInst::SaveWord(ent.first, function->frame->getRegOffset(ent.first), Register::SP));
         }
         for (BasicBlock *block : function->blocks) {
-            //translateBlock(block);
+            translateBlock(block);
         }
     }
 
@@ -125,27 +125,27 @@ namespace thm {
                 case LLVMType::LOAD_INST:
                     translateLoadInst(block->function, static_cast<LoadInst *>(inst));
                     break;
-                case LLVMType::STORE_INST:
-                    translateStoreInst(block->function, static_cast<StoreInst *>(inst));
-                    break;
-                case LLVMType::GET_ELEMENT_PTR_INST:
-                    translateGetElementPtrInst(block->function, static_cast<GetElementPtr *>(inst));
-                    break;
-                case LLVMType::BRANCH_INST:
-                    translateBranchInst(block->function, static_cast<BranchInst *>(inst));
-                    break;
-                case LLVMType::RET_INST:
-                    translateRetInst(block->function, static_cast<RetInst *>(inst));
-                    break;
-                case LLVMType::ZEXT_INST:
-                    translateZextInst(block->function, static_cast<ZextInst *>(inst));
-                    break;
-                case LLVMType::TRUNC_INST:
-                    translateTruncInst(block->function, static_cast<TruncInst *>(inst));
-                    break;
-                case LLVMType::MOVE:
-                    translateMoveInst(block->function, static_cast<MoveInst *>(inst));
-                    break;
+                // case LLVMType::STORE_INST:
+                //     translateStoreInst(block->function, static_cast<StoreInst *>(inst));
+                //     break;
+                // case LLVMType::GET_ELEMENT_PTR_INST:
+                //     translateGetElementPtrInst(block->function, static_cast<GetElementPtr *>(inst));
+                //     break;
+                // case LLVMType::BRANCH_INST:
+                //     translateBranchInst(block->function, static_cast<BranchInst *>(inst));
+                //     break;
+                // case LLVMType::RET_INST:
+                //     translateRetInst(block->function, static_cast<RetInst *>(inst));
+                //     break;
+                // case LLVMType::ZEXT_INST:
+                //     translateZextInst(block->function, static_cast<ZextInst *>(inst));
+                //     break;
+                // case LLVMType::TRUNC_INST:
+                //     translateTruncInst(block->function, static_cast<TruncInst *>(inst));
+                //     break;
+                // case LLVMType::MOVE:
+                //     translateMoveInst(block->function, static_cast<MoveInst *>(inst));
+                //     break;
                 default:
                     break;
             }
