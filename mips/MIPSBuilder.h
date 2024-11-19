@@ -40,6 +40,9 @@ public:
     void loadConstant(Value *value, Register reg);
     void move(Register dst, Register src);
     void sequenceMoves(std::vector<std::pair<Register, Register>> &moves);
+
+    void debugReturn();
+
     void debugBreak();
 
     void debugTLE();

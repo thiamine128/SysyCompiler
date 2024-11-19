@@ -39,6 +39,9 @@ namespace thm {
                 offset[alloca] = frameSize;
             }
         }
+        for (int i = 4; i < function->args.size(); i++) {
+            usedRegister.insert(function->args[i]->reg);
+        }
         for (auto bb : function->blocks) {
             for (auto inst : bb->insts) {
                 if (generalRegs.find(inst->reg) != generalRegs.end()) {

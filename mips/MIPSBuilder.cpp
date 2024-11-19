@@ -4,16 +4,13 @@
 
 #include "MIPSBuilder.h"
 
-#include <complex>
 #include <functional>
-#include <functional>
-#include <functional>
-#include <iostream>
 #include <ostream>
-#include <set>
 
 #include "Frame.h"
 #include "../util/util.h"
+
+int flag = 0;
 
 namespace thm {
     void MIPSBuilder::process() {
@@ -91,16 +88,14 @@ namespace thm {
         function->frame->init(maxCallArgs);
         submitText(new MIPSLabel(function->name));
         submitText(MIPSInst::AddImm(Register::SP, Register::SP, -function->frame->frameSize));
-        for (int i = 0; i < function->args.size() && i < maxCallArgs; i++) {
-            if (i < 4) {
-                submitText(MIPSInst::SaveWord(regParams[i], function->frame->frameSize + 4 * i, Register::SP));
-            }
-        }
-        for (int i = 4; i < function->args.size(); i++) {
-            submitText(MIPSInst::LoadWord(function->args[i]->reg, function->frame->frameSize + 4 * i, Register::SP));
+        for (int i = 0; i < function->args.size() && i < 4; i++) {
+            submitText(MIPSInst::SaveWord(regParams[i], function->frame->frameSize + 4 * i, Register::SP));
         }
         for (auto ent : function->frame->saved) {
             submitText(MIPSInst::SaveWord(ent.first, function->frame->getRegOffset(ent.first), Register::SP));
+        }
+        for (int i = 4; i < function->args.size(); i++) {
+            submitText(MIPSInst::LoadWord(function->args[i]->reg, function->frame->frameSize + 4 * i, Register::SP));
         }
         for (BasicBlock *block : function->blocks) {
             translateBlock(block);
@@ -121,31 +116,32 @@ namespace thm {
                     translateCallInst(block->function, static_cast<CallInst *>(inst));
                     break;
                 case LLVMType::ALLOCA_INST:
+                    os << "# address " << block->function->frame->getOffset(static_cast<AllocaInst *>(inst)) << "($sp)" << std::endl;
                     break;
                 case LLVMType::LOAD_INST:
                     translateLoadInst(block->function, static_cast<LoadInst *>(inst));
                     break;
-                // case LLVMType::STORE_INST:
-                //     translateStoreInst(block->function, static_cast<StoreInst *>(inst));
-                //     break;
-                // case LLVMType::GET_ELEMENT_PTR_INST:
-                //     translateGetElementPtrInst(block->function, static_cast<GetElementPtr *>(inst));
-                //     break;
-                // case LLVMType::BRANCH_INST:
-                //     translateBranchInst(block->function, static_cast<BranchInst *>(inst));
-                //     break;
-                // case LLVMType::RET_INST:
-                //     translateRetInst(block->function, static_cast<RetInst *>(inst));
-                //     break;
-                // case LLVMType::ZEXT_INST:
-                //     translateZextInst(block->function, static_cast<ZextInst *>(inst));
-                //     break;
-                // case LLVMType::TRUNC_INST:
-                //     translateTruncInst(block->function, static_cast<TruncInst *>(inst));
-                //     break;
-                // case LLVMType::MOVE:
-                //     translateMoveInst(block->function, static_cast<MoveInst *>(inst));
-                //     break;
+                case LLVMType::STORE_INST:
+                    translateStoreInst(block->function, static_cast<StoreInst *>(inst));
+                    break;
+                case LLVMType::GET_ELEMENT_PTR_INST:
+                    translateGetElementPtrInst(block->function, static_cast<GetElementPtr *>(inst));
+                    break;
+                case LLVMType::BRANCH_INST:
+                    translateBranchInst(block->function, static_cast<BranchInst *>(inst));
+                    break;
+                case LLVMType::RET_INST:
+                    translateRetInst(block->function, static_cast<RetInst *>(inst));
+                    break;
+                case LLVMType::ZEXT_INST:
+                    translateZextInst(block->function, static_cast<ZextInst *>(inst));
+                    break;
+                case LLVMType::TRUNC_INST:
+                    translateTruncInst(block->function, static_cast<TruncInst *>(inst));
+                    break;
+                case LLVMType::MOVE:
+                    translateMoveInst(block->function, static_cast<MoveInst *>(inst));
+                    break;
                 default:
                     break;
             }
@@ -155,7 +151,7 @@ namespace thm {
     void MIPSBuilder::translateBinaryInst(Function *function, BinaryInst *binaryInst) {
         bool lConst = false;
         bool rConst = false;
-        int lNum, rNum;
+        int lNum = 1, rNum = 1;
         if (binaryInst->l->type() == LLVMType::NUMERIC_LITERAL) {
             lNum = static_cast<NumericLiteral *>(binaryInst->l)->value;
             lConst = true;
@@ -341,7 +337,7 @@ namespace thm {
                 if (lConst) {
                     submitText(MIPSInst::LoadImm(Register::V1, lNum));
                     if (rConst) {
-                        submitText(MIPSInst::SleImm(binaryInst->reg, Register::V1, rNum));
+                        submitText(MIPSInst::SltImm(binaryInst->reg, Register::V1, rNum));
                     } else {
                         submitText(MIPSInst::Slt(binaryInst->reg, Register::V1, binaryInst->r->reg));
                     }
@@ -395,7 +391,7 @@ namespace thm {
             move(callInst->reg, Register::V0);
         }
 
-        for (int i = 0; i < function->args.size() && i < 4 && i < callInst->args.size(); i++) {
+        for (int i = 0; i < function->args.size() && i < 4; i++) {
             submitText(MIPSInst::LoadWord(regParams[i], function->frame->frameSize + 4 * i, Register::SP));
         }
     }
@@ -412,6 +408,10 @@ namespace thm {
         } else if (loadInst->ptr->reg != Register::NONE) {
             offset = 0;
             reg = loadInst->ptr->reg;
+            if (flag) {
+                flag = 0;
+                return;
+            }
         } else if (Constant *constant = dynamic_cast<Constant *>(loadInst->ptr)) {
             loadConstant(constant, Register::V1);
             offset = 0;
@@ -427,6 +427,7 @@ namespace thm {
                     submitText(MIPSInst::LoadWord(loadInst->reg, offset, reg));
                 break;
                 default:
+                    submitText(MIPSInst::LoadWord(loadInst->reg, offset, reg));
                     break;
             }
         } else {
@@ -461,15 +462,13 @@ namespace thm {
                         submitText(MIPSInst::SaveByte(loadValue(storeInst->value), offset, reg));
                     }
                 break;
-                case BasicValueType::I32:
+                default:
                     if (useLabel) {
                         submitText(MIPSInst::SaveWord(loadValue(storeInst->value), Register::ZERO, label));
                     } else {
                         submitText(MIPSInst::SaveWord(loadValue(storeInst->value), offset, reg));
                     }
                 break;
-                default:
-                    break;
             }
         } else if (PtrValueType* ptrType = dynamic_cast<PtrValueType *>(storeInst->value->valueType)) {
             if (useLabel) {
@@ -482,6 +481,7 @@ namespace thm {
 
     void MIPSBuilder::translateGetElementPtrInst(Function *function, GetElementPtr *getElementPtr) {
         int size = 4;
+        flag = 0;
         PtrValueType *ptrType = static_cast<PtrValueType *>(getElementPtr->valueType);
         if (ptrType->value->type() == ValueType::BASIC) {
             BasicValueType *basicType = static_cast<BasicValueType *>(ptrType->value);
@@ -489,34 +489,57 @@ namespace thm {
                 size = 1;
             }
         }
-        if (getElementPtr->idx->type() == LLVMType::NUMERIC_LITERAL) {
-            NumericLiteral *num = static_cast<NumericLiteral *>(getElementPtr->idx);
-            Register baseReg = getElementPtr->reg;
+        if (getElementPtr->idx->type() == LLVMType::NUMERIC_LITERAL || getElementPtr->idx->type() == LLVMType::UNDEF) {
+            int num = 0;
+            if (NumericLiteral *numericLiteral = dynamic_cast<NumericLiteral *>(getElementPtr->idx)) {
+                num = numericLiteral->value;
+            } else if (Undef *undef = dynamic_cast<Undef *>(getElementPtr->idx)) {
+                num = 0;
+            }
+            Register baseReg = Register::V1;
             if (AllocaInst *alloc = dynamic_cast<AllocaInst *>(getElementPtr->ptr)) {
-                submitText(MIPSInst::AddImm(getElementPtr->reg, Register::SP, function->frame->getOffset(alloc)));
+                submitText(MIPSInst::AddImm(baseReg, Register::SP, function->frame->getOffset(alloc)));
             } else if (getElementPtr->ptr->reg != Register::NONE) {
                 baseReg = getElementPtr->ptr->reg;
             } else {
                 loadConstant(getElementPtr->ptr, Register::V1);
                 baseReg = Register::V1;
             }
-            submitText(MIPSInst::AddImm(getElementPtr->reg, baseReg, num->value * size));
+            submitText(MIPSInst::AddImm(getElementPtr->reg, baseReg, num * size));
         } else {
-            Register baseReg = getElementPtr->reg;
-            Register idxTmp = getElementPtr->reg;
+            Register baseReg;
+            Register idxTmp = Register::V1;
             if (AllocaInst *alloc = dynamic_cast<AllocaInst *>(getElementPtr->ptr)) {
-                submitText(MIPSInst::AddImm(getElementPtr->reg, Register::SP, function->frame->getOffset(alloc)));
-                idxTmp = Register::V1;
+                submitText(MIPSInst::AddImm(Register::V0, Register::SP, function->frame->getOffset(alloc)));
+                baseReg = Register::V0;
             } else if (getElementPtr->ptr->reg != Register::NONE) {
                 baseReg = getElementPtr->ptr->reg;
-                idxTmp = Register::V1;
             } else {
-                loadConstant(getElementPtr->ptr, Register::V1);
-                baseReg = Register::V1;
-                idxTmp = getElementPtr->reg;
+                loadConstant(getElementPtr->ptr, Register::V0);
+                baseReg = Register::V0;
             }
             if (size != 1) {
+                // if (Argument *arg = dynamic_cast<Argument *>(getElementPtr->ptr)) {
+                //     int argIdx = 0;
+                //     for (; function->args[argIdx] != arg; argIdx++) {}
+                //     if (BasicValueType *basicType = dynamic_cast<BasicValueType *>(arg->valueType)) {
+                //         flag = 1;
+                //     }
+                // }
+                // if (Argument *arg = dynamic_cast<Argument *>(getElementPtr->idx)) {
+                //     int argIdx = 0;
+                //     for (; function->args[argIdx] != arg; argIdx++) {}
+                //     if (BasicValueType *basicType = dynamic_cast<BasicValueType *>(arg->valueType)) {
+                //         if (basicType->basicType == BasicValueType::I32)
+                //             flag = 1;
+                //     }
+                //     //     if (BasicValueType *basicType = dynamic_cast<BasicValueType *>(arg->valueType)) {
+                //     //         flag = 1;
+                //     //     }
+                // }
                 submitText(MIPSInst::MulImm(idxTmp, getElementPtr->idx->reg, size));
+            } else {
+                idxTmp = getElementPtr->idx->reg;
             }
             submitText(MIPSInst::Add(getElementPtr->reg, baseReg, idxTmp));
         }
@@ -542,8 +565,8 @@ namespace thm {
             if (retInst->value != nullptr) {
                 Register reg = retInst->value->reg;
                 if (Constant *constant = dynamic_cast<Constant *>(retInst->value)) {
-                    reg = Register::V1;
-                    loadConstant(constant, Register::V1);
+                    reg = Register::V0;
+                    loadConstant(constant, Register::V0);
                 }
                 move(Register::V0, reg);
             }
@@ -601,16 +624,16 @@ namespace thm {
     void MIPSBuilder::loadConstant(Value *value, Register reg) {
         if (NumericLiteral *num = dynamic_cast<NumericLiteral *>(value)) {
             submitText(MIPSInst::LoadImm(reg, num->value));
-        }
-        if (StringLiteral *str = dynamic_cast<StringLiteral *>(value)) {
+        } else if (StringLiteral *str = dynamic_cast<StringLiteral *>(value)) {
             std::string label = ".str";
             if (str->refId) {
                 label += "." + std::to_string(str->refId);
             }
             submitText(MIPSInst::LoadAddr(reg, label));
-        }
-        if (GlobalVariable *global = dynamic_cast<GlobalVariable *>(value)) {
+        } else if (GlobalVariable *global = dynamic_cast<GlobalVariable *>(value)) {
             submitText(MIPSInst::LoadAddr(reg, global->name));
+        } else if (Undef *undef = dynamic_cast<Undef *>(value)) {
+
         }
     }
 
@@ -646,6 +669,11 @@ namespace thm {
             move(Register::V1, cp->second);
             cp->second = Register::V1;
         }
+    }
+
+    void MIPSBuilder::debugReturn() {
+        os << "li $v0, 10" << std::endl;
+        os << "syscall" << std::endl;
     }
 
     void MIPSBuilder::debugBreak() {

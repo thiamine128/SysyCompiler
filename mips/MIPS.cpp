@@ -19,10 +19,17 @@ namespace thm {
     }
 
     MIPSInst::MIPSInst(Type type, Register rs, Register rt, Register rd, int imm) : type(type), rs(rs), rt(rt), rd(rd), imm(imm) {
+        // if (rs == Register::NONE || rt == Register::NONE || rd == Register::NONE) {
+        //     int *a = 0;
+        //     *a = 1;
+        // }
     }
 
     MIPSInst::MIPSInst(Type type, Register rs, Register rt, Register rd, int imm, std::string const &label) : type(type), rs(rs), rt(rt), rd(rd), imm(imm), label(label) {
-
+        // if (rs == Register::NONE || rt == Register::NONE || rd == Register::NONE) {
+        //     int *a = 0;
+        //     *a = 1;
+        // }
     }
 
     MIPSInst * MIPSInst::Add(Register dest, Register l, Register r) {
