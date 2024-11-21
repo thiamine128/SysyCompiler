@@ -198,8 +198,8 @@ namespace thm {
     void RegAllocator::coalesce() {
         auto m = *worklistMoves.begin();
         worklistMoves.erase(worklistMoves.begin());
-        int x = m->src->slot;
-        int y = m->dst->slot;
+        int x = m->dst->slot;
+        int y = m->src->slot;
         x = getAlias(x);
         y = getAlias(y);
         int u, v;
@@ -216,7 +216,7 @@ namespace thm {
             addWorklist(u);
             addWorklist(v);
         } else if ((preColored.find(u) != preColored.end() && judgeCoalesce(u, v)) || (preColored.find(u) == preColored.end() && judgeConservative(u, v))) {
-            constrainedMoves.insert(m);
+            coalescedMoves.insert(m);
             combine(u, v);
             addWorklist(u);
         } else {
@@ -293,8 +293,8 @@ namespace thm {
     void RegAllocator::freezeMoves(int u) {
         auto moves = getMoves(u);
         for (auto m : moves) {
-            int x = m->src->slot;
-            int y = m->dst->slot;
+            int x = m->dst->slot;
+            int y = m->src->slot;
             int v;
             if (getAlias(y) == getAlias(u)) {
                 v = getAlias(x);
