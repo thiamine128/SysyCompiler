@@ -60,6 +60,8 @@ add_executable(Compiler main.cpp
         llvm/AllocateRegisters.h
         llvm/RegAllocator.cpp
         llvm/RegAllocator.h
+        llvm/SaveArgument.cpp
+        llvm/SaveArgument.h
 )
 
 add_definitions(-DPRINT_LEXER)

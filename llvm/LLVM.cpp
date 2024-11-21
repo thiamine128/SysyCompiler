@@ -15,6 +15,7 @@
 #include "EliminatePhis.h"
 #include "GCM.h"
 #include "Mem2Reg.h"
+#include "SaveArgument.h"
 #include "../mips/Frame.h"
 
 namespace thm {
@@ -1170,6 +1171,46 @@ namespace thm {
         return true;
     }
 
+    BackupArg::BackupArg(int idx) : idx(idx) {
+        slot = 0;
+        valueType = new BasicValueType(BasicValueType::I32);
+    }
+
+    LLVMType BackupArg::type() const {
+        return LLVMType::BACKUP_ARG;
+    }
+
+    void BackupArg::print(std::ostream &os) const {
+        os << "backup " << idx;
+        os << "; " << static_cast<int>(reg);
+        os << std::endl;
+    }
+
+    void BackupArg::getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) {
+        def.insert(slot);
+    }
+
+    bool BackupArg::needsColor() const {
+        return true;
+    }
+
+    RecoverArg::RecoverArg(BackupArg *backup) : backup(backup) {
+
+    }
+
+    LLVMType RecoverArg::type() const {
+        return LLVMType::RECOVER_ARG;
+    }
+
+    void RecoverArg::print(std::ostream &os) const {
+        os << "recover " << backup->idx;
+        os << std::endl;
+    }
+
+    void RecoverArg::getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) {
+        use.insert(backup->slot);
+    }
+
     MoveTmp::MoveTmp() {
         slot = 0;
     }
@@ -1268,6 +1309,9 @@ namespace thm {
 
         EliminatePhis eliminatePhis(this);
         eliminatePhis.process();
+
+        SaveArgument saveArgument(this);
+        saveArgument.process();
 
         for (Function *function : functions) {
             function->rebuildCFG();

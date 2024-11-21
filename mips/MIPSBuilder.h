@@ -22,6 +22,11 @@ public:
     void addGlobalVariable(GlobalVariable *global);
     void addStringLiteral(StringLiteral *str);
     void processFunction(Function *function);
+
+    void translateBackupInst(Function * function, BackupArg * inst);
+
+    void translateRecoverInst(Function * function, RecoverArg * inst);
+
     void translateBlock(BasicBlock *block);
     void translateBinaryInst(Function *function, BinaryInst *binaryInst);
     void translateCallInst(Function *function, CallInst *callInst);

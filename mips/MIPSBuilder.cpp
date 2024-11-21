@@ -88,9 +88,6 @@ namespace thm {
         function->frame->init(maxCallArgs);
         submitText(new MIPSLabel(function->name));
         submitText(MIPSInst::AddImm(Register::SP, Register::SP, -function->frame->frameSize));
-        for (int i = 0; i < function->args.size() && i < 4; i++) {
-            submitText(MIPSInst::SaveWord(regParams[i], function->frame->frameSize + 4 * i, Register::SP));
-        }
         for (auto ent : function->frame->saved) {
             submitText(MIPSInst::SaveWord(ent.first, function->frame->getRegOffset(ent.first), Register::SP));
         }
@@ -100,6 +97,14 @@ namespace thm {
         for (BasicBlock *block : function->blocks) {
             translateBlock(block);
         }
+    }
+
+    void MIPSBuilder::translateBackupInst(Function *function, BackupArg *inst) {
+        submitText(MIPSInst::Move(inst->reg, regParams[inst->idx]));
+    }
+
+    void MIPSBuilder::translateRecoverInst(Function *function, RecoverArg *inst) {
+        submitText(MIPSInst::Move(regParams[inst->backup->idx], inst->backup->reg));
     }
 
     void MIPSBuilder::translateBlock(BasicBlock *block) {
@@ -142,6 +147,12 @@ namespace thm {
                 case LLVMType::MOVE:
                     translateMoveInst(block->function, static_cast<MoveInst *>(inst));
                     break;
+                case LLVMType::BACKUP_ARG:
+                    translateBackupInst(block->function, static_cast<BackupArg *>(inst));
+                break;
+                case LLVMType::RECOVER_ARG:
+                    translateRecoverInst(block->function, static_cast<RecoverArg *>(inst));
+                break;
                 default:
                     break;
             }
@@ -389,10 +400,6 @@ namespace thm {
 
         if (callInst->slot >= 0) {
             move(callInst->reg, Register::V0);
-        }
-
-        for (int i = 0; i < function->args.size() && i < 4; i++) {
-            submitText(MIPSInst::LoadWord(regParams[i], function->frame->frameSize + 4 * i, Register::SP));
         }
     }
 

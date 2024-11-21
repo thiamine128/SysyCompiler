@@ -12,6 +12,7 @@
 #include "../mips/MIPS.h"
 #include "../semantic/Symbol.h"
 namespace thm {
+    class MoveTmp;
     class ArgumentAddress;
     class GlobalVariable;
     class PhiInst;
@@ -47,6 +48,8 @@ enum class LLVMType {
     MOVE,
     MOVE_TMP,
     ARG_ADDR,
+    BACKUP_ARG,
+    RECOVER_ARG
 };
 
 class ValueType {
@@ -388,6 +391,25 @@ public:
     void print(std::ostream &os) const override;
     void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
     bool needsColor() const override;
+};
+class BackupArg : public Instruction {
+public:
+    int idx;
+
+    BackupArg(int idx);
+    LLVMType type() const override;
+    void print(std::ostream &os) const override;
+    void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
+    bool needsColor() const override;
+};
+class RecoverArg : public Instruction {
+public:
+    BackupArg *backup;
+
+    RecoverArg(BackupArg *backup);
+    LLVMType type() const override;
+    void print(std::ostream &os) const override;
+    void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
 };
 class MoveTmp : public Value {
 public:
