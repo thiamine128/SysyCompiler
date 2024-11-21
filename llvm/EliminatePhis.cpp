@@ -15,6 +15,8 @@ namespace thm {
     }
 
     void EliminatePhis::processFunction(Function *func) {
+        phiLoc.clear();
+        phiLoad.clear();
         processBasicBlockDebug(func->root);
 
         for (auto ent : phiLoc) {
