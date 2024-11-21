@@ -17,6 +17,9 @@ namespace thm {
     void EliminatePhis::processFunction(Function *func) {
         processBasicBlockDebug(func->root);
 
+        for (auto ent : phiLoc) {
+            func->blocks[0]->addInstAhead(ent.second);
+        }
         for (auto bb : func->blocks) {
             for (auto inst : bb->insts) {
                 for (auto use : inst->usings) {
@@ -145,9 +148,6 @@ namespace thm {
             } else {
                 ++iter;
             }
-        }
-        for (auto ent : phiLoc) {
-            bb->function->blocks[0]->addInstAhead(ent.second);
         }
         for (auto pc : pcs) {
             auto moves = toMemory(pc.second);
