@@ -685,7 +685,6 @@ namespace thm {
 
     void MIPSBuilder::debugBreak() {
         static int cnt = 0;
-
         os << "ble $sp, 1000, force_ret." << cnt << std::endl;
         os << "j cont." << cnt << std::endl;
         os << "force_ret." << cnt << ":" << std::endl;

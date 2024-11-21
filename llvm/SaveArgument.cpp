@@ -16,6 +16,7 @@ namespace thm {
         for (auto bb : func->blocks) {
             for (auto iter = bb->insts.begin(); iter != bb->insts.end(); iter++) {
                 if (CallInst *callInst = dynamic_cast<CallInst *>(*iter)) {
+                    // TODO: find call inst recursively to find to proper maxUsed
                     int maxUsed = 4;
                     if (callInst->function->name == "getint" || callInst->function->name == "getchar" || callInst->function->name == "putint" || callInst->function->name == "putch" || callInst->function->name == "putstr") {
                         maxUsed = 1;
