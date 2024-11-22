@@ -1304,14 +1304,14 @@ namespace thm {
         mem2Reg.process();
         //DeadCode deadCode(this);
         //deadCode.process();
-        //GCM gcm(this);
-        //gcm.process();
+        GCM gcm(this);
+        gcm.process();
 
-        EliminatePhis eliminatePhis(this);
-        eliminatePhis.process();
+        //EliminatePhis eliminatePhis(this);
+        //eliminatePhis.process();
 
-        SaveArgument saveArgument(this);
-        saveArgument.process();
+        //SaveArgument saveArgument(this);
+        //saveArgument.process();
 
         for (Function *function : functions) {
             function->rebuildCFG();
