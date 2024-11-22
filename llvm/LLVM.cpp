@@ -1324,7 +1324,7 @@ namespace thm {
         main->fillSlot();
 
 
-        AllocateRegisters allocateRegister(this);
-        allocateRegister.process();
+        //AllocateRegisters allocateRegister(this);
+        //allocateRegister.process();
     }
 } // thm
