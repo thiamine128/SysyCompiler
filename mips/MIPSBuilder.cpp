@@ -228,35 +228,41 @@ namespace thm {
                 break;
             case BinaryInst::SDIV:
                 if (lConst) {
-                    submitText(MIPSInst::LoadImm(Register::V1, lNum));
+                    submitText(MIPSInst::LoadImm(Register::V0, lNum));
                     if (rConst) {
-                        submitText(MIPSInst::DivImm(binaryInst->reg, Register::V1, rNum));
+                        submitText(MIPSInst::LoadImm(Register::V1, rNum));
+                        submitText(MIPSInst::Div(Register::V0, Register::V1));
                     } else {
-                        submitText(MIPSInst::Div(binaryInst->reg, Register::V1, binaryInst->r->reg));
+                        submitText(MIPSInst::Div(Register::V0, binaryInst->r->reg));
                     }
                 } else {
                     if (rConst) {
-                        submitText(MIPSInst::DivImm(binaryInst->reg, binaryInst->l->reg, rNum));
+                        submitText(MIPSInst::LoadImm(Register::V1, rNum));
+                        submitText(MIPSInst::Div(binaryInst->l->reg, Register::V1));
                     } else {
-                        submitText(MIPSInst::Div(binaryInst->reg, binaryInst->l->reg, binaryInst->r->reg));
+                        submitText(MIPSInst::Div(binaryInst->l->reg, binaryInst->r->reg));
                     }
                 }
+                submitText(MIPSInst::Mflo(binaryInst->reg));
                 break;
             case BinaryInst::SREM:
                 if (lConst) {
-                    submitText(MIPSInst::LoadImm(Register::V1, lNum));
+                    submitText(MIPSInst::LoadImm(Register::V0, lNum));
                     if (rConst) {
-                        submitText(MIPSInst::RemImm(binaryInst->reg, Register::V1, rNum));
+                        submitText(MIPSInst::LoadImm(Register::V1, rNum));
+                        submitText(MIPSInst::Rem(Register::V0, Register::V1));
                     } else {
-                        submitText(MIPSInst::Rem(binaryInst->reg, Register::V1, binaryInst->r->reg));
+                        submitText(MIPSInst::Rem(Register::V0, binaryInst->r->reg));
                     }
                 } else {
                     if (rConst) {
-                        submitText(MIPSInst::RemImm(binaryInst->reg, binaryInst->l->reg, rNum));
+                        submitText(MIPSInst::LoadImm(Register::V1, rNum));
+                        submitText(MIPSInst::Rem(binaryInst->l->reg, Register::V1));
                     } else {
-                        submitText(MIPSInst::Rem(binaryInst->reg, binaryInst->l->reg, binaryInst->r->reg));
+                        submitText(MIPSInst::Rem(binaryInst->l->reg, binaryInst->r->reg));
                     }
                 }
+                submitText(MIPSInst::Mfhi(binaryInst->reg));
                 break;
             case BinaryInst::AND:
                 // And is not used

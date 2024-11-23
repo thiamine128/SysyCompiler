@@ -8,6 +8,7 @@
 
 #include "../mips/Frame.h"
 
+bool nonSpill = false;
 namespace thm {
     void RegAllocator::init() {
         for (auto arg : func->args) {
@@ -24,7 +25,6 @@ namespace thm {
     }
 
     void RegAllocator::process() {
-        static int cnt = 0;
         init();
         func->livenessAnalysis();
         build();
@@ -35,13 +35,12 @@ namespace thm {
             else if (!freezeWorklist.empty()) freeze();
             else if (!spillWorklist.empty()) selectSpill();
         } while (!simplifyWorklist.empty() || !worklistMoves.empty() || !freezeWorklist.empty() || !spillWorklist.empty());
-
         assignColors();
-
         if (!spilledNodes.empty()) {
             rewriteProgram();
             process();
         }
+
     }
 
     void RegAllocator::build() {
@@ -311,10 +310,16 @@ namespace thm {
     }
 
     void RegAllocator::selectSpill() {
-        auto m = *spillWorklist.begin();
-        spillWorklist.erase(m);
-        simplifyWorklist.insert(m);
-        freezeMoves(m);
+        int ans = *spillWorklist.begin();
+        for (auto m = spillWorklist.begin(); m != spillWorklist.end(); ++m) {
+            if (spilled.find(*m) == spilled.end()) {
+                ans = *m;
+                break;
+            }
+        }
+        spillWorklist.erase(ans);
+        simplifyWorklist.insert(ans);
+        freezeMoves(ans);
     }
 
     void RegAllocator::assignColors() {
@@ -342,6 +347,11 @@ namespace thm {
     }
 
     void RegAllocator::rewriteProgram() {
+        // std::cout << "spill ";
+        // for (auto n : spilledNodes) {
+        //     std::cout << n << " ";
+        // }
+        // std::cout << std::endl;
         std::unordered_map<int, Value *> pos;
         for (auto n : spilledNodes) {
             if (Argument *arg = dynamic_cast<Argument *>(value[n])) {
@@ -354,6 +364,7 @@ namespace thm {
             }
         }
 
+        std::unordered_set<int> newTemps;
         // replace use
         for (auto n : spilledNodes) {
             for (auto bb : func->blocks) {
@@ -365,7 +376,10 @@ namespace thm {
                             if (l == nullptr) {
                                 l = new LoadInst(pos[n]);
                                 l->slot = func->slotTracker.allocSlot();
+                                spilled.insert(l->slot);
+                                spilled.insert(n);
                                 color[l->slot] = Register::NONE;
+                                newTemps.insert(l->slot);
                             }
                             *use = l;
                         }

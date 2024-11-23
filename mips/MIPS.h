@@ -68,9 +68,7 @@ public:
         MUL,
         MULI,
         DIV,
-        DIVI,
         REM,
-        REMI,
         ANDI,
         NEG,
         NOT,
@@ -107,6 +105,8 @@ public:
         JAL,
         SYSCALL,
         MOVE,
+        MFHI,
+        MFLO,
     } type;
     Register rs, rt, rd;
     int imm;
@@ -120,10 +120,8 @@ public:
     static MIPSInst *SubImm(Register dest, Register l, int r);
     static MIPSInst *Mul(Register dest, Register l, Register r);
     static MIPSInst *MulImm(Register dest, Register l, int r);
-    static MIPSInst *Div(Register dest, Register l, Register r);
-    static MIPSInst *DivImm(Register dest, Register l, int r);
-    static MIPSInst *Rem(Register dest, Register l, Register r);
-    static MIPSInst *RemImm(Register dest, Register l, int r);
+    static MIPSInst *Div(Register l, Register r);
+    static MIPSInst *Rem(Register l, Register r);
     static MIPSInst *AndImm(Register dest, Register l, int r);
     static MIPSInst *Eq(Register dest, Register l, Register r);
     static MIPSInst *EqImm(Register dest, Register l, int r);
@@ -151,6 +149,8 @@ public:
     static MIPSInst *Jump(std::string const& label);
     static MIPSInst *BranchNE(Register cond, Register target, std::string const& label);
     static MIPSInst *Move(Register dst, Register src);
+    static MIPSInst *Mfhi(Register dst);
+    static MIPSInst *Mflo(Register dst);
 
     void print(std::ostream &os) override;
 };

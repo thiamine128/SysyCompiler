@@ -39,6 +39,8 @@ public:
     std::unordered_map<int, Register> color;
     std::unordered_map<int, Value *> value;
 
+    std::unordered_set<int> spilled;
+
     RegAllocator(Function *func) : K(generalRegs.size()), func(func) {
 
     }

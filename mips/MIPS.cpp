@@ -56,20 +56,12 @@ namespace thm {
         return new MIPSInst(MULI, dest, l, Register::ZERO, r);
     }
 
-    MIPSInst * MIPSInst::Div(Register dest, Register l, Register r) {
-        return new MIPSInst(DIV, dest, l, r, 0);
+    MIPSInst * MIPSInst::Div(Register l, Register r) {
+        return new MIPSInst(DIV, l, r, Register::ZERO, 0);
     }
 
-    MIPSInst * MIPSInst::DivImm(Register dest, Register l, int r) {
-        return new MIPSInst(DIVI, dest, l, Register::ZERO, r);
-    }
-
-    MIPSInst * MIPSInst::Rem(Register dest, Register l, Register r) {
-        return new MIPSInst(REM, dest, l, r, 0);
-    }
-
-    MIPSInst * MIPSInst::RemImm(Register dest, Register l, int r) {
-        return new MIPSInst(REMI, dest, l, Register::ZERO, r);
+    MIPSInst * MIPSInst::Rem(Register l, Register r) {
+        return new MIPSInst(REM, l, r, Register::ZERO, 0);
     }
 
     MIPSInst * MIPSInst::AndImm(Register dest, Register l, int r) {
@@ -180,6 +172,14 @@ namespace thm {
         return new MIPSInst(MOVE, dst, src, Register::ZERO, 0);
     }
 
+    MIPSInst * MIPSInst::Mfhi(Register dst) {
+        return new MIPSInst(MFHI, dst, Register::ZERO, Register::ZERO, 0);
+    }
+
+    MIPSInst * MIPSInst::Mflo(Register dst) {
+        return new MIPSInst(MFLO, dst, Register::ZERO, Register::ZERO, 0);
+    }
+
     void MIPSInst::print(std::ostream &os) {
         os << "\t";
         switch (type) {
@@ -202,16 +202,10 @@ namespace thm {
                 os << "mul $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", " << imm;
             break;
             case DIV:
-                os << "div $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", $" << static_cast<int>(rd);
-            break;
-            case DIVI:
-                os << "div $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", " << imm;
+                os << "div $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt);
             break;
             case REM:
-                os << "rem $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", $" << static_cast<int>(rd);
-            break;
-            case REMI:
-                os << "rem $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", " << imm;
+                os << "div $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt);
             break;
             case SEQ:
                 os << "seq $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt) << ", $" << static_cast<int>(rd);
@@ -293,6 +287,12 @@ namespace thm {
             break;
             case MOVE:
                 os << "move $" << static_cast<int>(rs) << ", $" << static_cast<int>(rt);
+            break;
+            case MFHI:
+                os << "mfhi $" << static_cast<int>(rs);
+            break;
+            case MFLO:
+                os << "mflo $" << static_cast<int>(rs);
             break;
             default:
                 break;

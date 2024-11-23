@@ -180,6 +180,8 @@ namespace thm {
     void BasicBlock::calcDefUse() {
         def.clear();
         use.clear();
+        in.clear();
+        out.clear();
         for (auto inst : insts) {
             std::unordered_set<int> instDef, instUse;
             inst->getDefUse(instDef, instUse);
@@ -1147,6 +1149,7 @@ namespace thm {
 
     MoveInst::MoveInst(Value *dst, Value *src) : dst(dst), src(src) {
         slot = 0;
+        valueType = src->valueType->clone();
     }
 
     LLVMType MoveInst::type() const {
@@ -1304,14 +1307,14 @@ namespace thm {
         mem2Reg.process();
         //DeadCode deadCode(this);
         //deadCode.process();
-        GCM gcm(this);
-        gcm.process();
+        // GCM gcm(this);
+        // gcm.process();
 
-        //EliminatePhis eliminatePhis(this);
-        //eliminatePhis.process();
+        EliminatePhis eliminatePhis(this);
+        eliminatePhis.process();
 
-        //SaveArgument saveArgument(this);
-        //saveArgument.process();
+        SaveArgument saveArgument(this);
+        saveArgument.process();
 
         for (Function *function : functions) {
             function->rebuildCFG();
@@ -1324,7 +1327,7 @@ namespace thm {
         main->fillSlot();
 
 
-        //AllocateRegisters allocateRegister(this);
-        //allocateRegister.process();
+        AllocateRegisters allocateRegister(this);
+        allocateRegister.process();
     }
 } // thm
