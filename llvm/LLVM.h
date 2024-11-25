@@ -8,6 +8,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "Memory.h"
 #include "SlotTracker.h"
 #include "../mips/MIPS.h"
 #include "../semantic/Symbol.h"
@@ -49,7 +50,7 @@ enum class LLVMType {
     MOVE_TMP,
     ARG_ADDR,
     BACKUP_ARG,
-    RECOVER_ARG
+    RECOVER_ARG,
 };
 
 class ValueType {
@@ -142,6 +143,7 @@ public:
     std::vector<BasicBlock *> iDomChildren;
     std::unordered_map<AllocaInst *, PhiInst *> phis;
     std::unordered_map<AllocaInst *, Value *> allocaTracker;
+    std::vector<MemoryPhi *> memPhis;
     int blockIdx = 0;
     int domDepth = 0;
     int loopNest = 0;
@@ -203,7 +205,7 @@ public:
     std::vector<BasicBlock *> blocks;
     std::vector<AllocaInst *> allocas;
     std::vector<GlobalVariable *> modified;
-    BasicBlock *root;
+    BasicBlock *root = nullptr;
     SlotTracker slotTracker;
     Frame *frame;
     std::unordered_set<Argument *> argSideEffects;
@@ -221,6 +223,8 @@ public:
     void fillSlot();
     int getMaxArgs();
     void rebuildCFG();
+    std::vector<BasicBlock *> calcRPO();
+    static void buildPO(std::unordered_map<BasicBlock *, bool>& vis, std::vector<BasicBlock *>& rpo, BasicBlock *bb);
 };
 class GlobalVariable : public GlobalValue {
 public:
@@ -242,10 +246,12 @@ class Instruction : public User {
 public:
     BasicBlock *block;
     bool pinned = false;
+    std::vector<MemoryAccess *> memAccesses;
 
     LLVMType type() const override;
     virtual void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use);
     void onRemove();
+    void replaceUse(Value *src, Value *dst);
 };
 class BinaryInst : public Instruction {
 public:
@@ -284,6 +290,7 @@ public:
     void print(std::ostream &os) const override;
     void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) override;
     bool needsColor() const override;
+    bool hasSideEffectOn(Value *value);
 };
 class AllocaInst : public Instruction {
 public:
@@ -428,6 +435,7 @@ public:
     void print(std::ostream &os) const override;
     void printRef(std::ostream &os) const override;
 };
+
 class Module {
 public:
     Function* getInt;
@@ -447,9 +455,9 @@ public:
     void preprocess();
     void arrangeBlocks();
     void setAllocas();
-    void calcSideEffects();
 };
     bool isPtrAlias(Value *l, Value *r);
+    Value *unpackPtr(Value *ptr);
 } // thm
 
 #endif //LLVM_H

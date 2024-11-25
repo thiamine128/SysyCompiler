@@ -6,7 +6,8 @@
 
 #include <functional>
 #include <functional>
-#include <functional>
+#include <algorithm>
+#include <any>
 #include <iostream>
 
 namespace thm {
@@ -49,13 +50,6 @@ namespace thm {
             }
         }
         vis.clear();
-        for (auto arg : function->args) {
-            for (auto user : arg->usedBys) {
-                if (Instruction *i = dynamic_cast<Instruction *>(user)) {
-                    scheduleLate(function, i);
-                }
-            }
-        }
         for (auto bb : function->blocks) {
             for (auto inst : bb->insts) {
                 if (inst->pinned) {
@@ -65,6 +59,16 @@ namespace thm {
                             scheduleLate(function, i);
                         }
                     }
+                } else {
+                    bool valid = true;
+                    for (auto use : inst->usings) {
+                        if (dynamic_cast<Instruction *>(*use) != nullptr) {
+                            valid = false;
+                            break;
+                        }
+                    }
+                    if (valid)
+                        scheduleLate(function, inst);
                 }
             }
         }
@@ -73,7 +77,7 @@ namespace thm {
                 if ((*iter)->block != bb) {
                     auto inst = *iter;
                     iter = bb->insts.erase(iter);
-                    inst->block->addInstLastSecond(inst);
+                    insert(inst, inst->block);
                 } else {
                     ++iter;
                 }
@@ -114,7 +118,7 @@ namespace thm {
             }
         }
         if (lca == nullptr) {
-            lca = inst->block;
+            lca = originalBlock[inst];
         }
         BasicBlock *best = lca;
         while (lca != nullptr && lca->domDepth >= inst->block->domDepth) {
@@ -139,5 +143,23 @@ namespace thm {
             bb2 = bb2->iDom;
         }
         return bb1;
+    }
+
+    void GCM::insert(Instruction *inst, BasicBlock *bb) {
+        auto minIter = bb->insts.begin();
+        auto maxIter = bb->insts.end() - 1;
+        for (auto use : inst->usings) {
+            auto iter = std::find(bb->insts.begin(), bb->insts.end(), *use);
+            if (iter - bb->insts.begin() > minIter - bb->insts.begin()) {
+                minIter = iter;
+            }
+        }
+        for (auto user : inst->usedBys) {
+            auto iter = std::find(bb->insts.begin(), bb->insts.end(), user);
+            if (iter - bb->insts.begin() < maxIter - bb->insts.begin()) {
+                maxIter = iter;
+            }
+        }
+        bb->insts.insert(maxIter, inst);
     }
 } // thm

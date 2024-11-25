@@ -69,8 +69,12 @@ add_executable(Compiler main.cpp
         pass/PassManager.h
         pass/AnalyzeDominance.cpp
         pass/AnalyzeDominance.h
-        pass/AnalyzeMemDep.cpp
-        pass/AnalyzeMemDep.h
+        pass/MemorySSA.cpp
+        pass/MemorySSA.h
+        llvm/Memory.cpp
+        llvm/Memory.h
+        pass/GVN.cpp
+        pass/GVN.h
 )
 
 add_definitions(-DPRINT_LEXER)

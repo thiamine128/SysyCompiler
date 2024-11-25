@@ -9,6 +9,8 @@
 #include <iostream>
 #include <ostream>
 #include <algorithm>
+#include <functional>
+#include <functional>
 
 #include "../pass/AllocateRegisters.h"
 #include "../pass/DeadCode.h"
@@ -19,6 +21,8 @@
 #include "../pass/AnalyzeSideEffect.h"
 #include "../mips/Frame.h"
 #include "../pass/AnalyzeDominance.h"
+#include "../pass/GVN.h"
+#include "../pass/MemorySSA.h"
 
 namespace thm {
     ValueType::Type ValueType::type() const {
@@ -531,6 +535,25 @@ namespace thm {
         }
     }
 
+    std::vector<BasicBlock *> Function::calcRPO() {
+        std::unordered_map<BasicBlock *, bool> vis;
+        std::vector<BasicBlock *> rpo;
+        buildPO(vis, rpo, root);
+        std::reverse(rpo.begin(), rpo.end());
+        return rpo;
+    }
+
+    void Function::buildPO(std::unordered_map<BasicBlock *, bool> &vis, std::vector<BasicBlock *> &rpo,
+                           BasicBlock *bb) {
+        if (!vis[bb]) {
+            vis[bb] = true;
+            for (auto to : bb->tos) {
+                buildPO(vis, rpo, to);
+            }
+            rpo.push_back(bb);
+        }
+    }
+
     LLVMType GlobalVariable::type() const {
         return LLVMType::GLOBAL_VARIABLE;
     }
@@ -586,6 +609,22 @@ namespace thm {
     void Instruction::onRemove() {
         for (auto use : usings) {
             (*use)->usedBys.erase(std::find((*use)->usedBys.begin(), (*use)->usedBys.end(), this));
+        }
+    }
+
+    void Instruction::replaceUse(Value *src, Value *dst) {
+        for (auto v : usings) {
+            if (*v == src) {
+                *v = dst;
+                dst->usedBys.push_back(this);
+                for (auto it = src->usedBys.begin(); it != src->usedBys.end();) {
+                    if (*it == this) {
+                        src->usedBys.erase(it);
+                        break;
+                    }
+                    it++;
+                }
+            }
         }
     }
 
@@ -729,6 +768,23 @@ namespace thm {
 
     bool CallInst::needsColor() const {
         return slot >= 0;
+    }
+
+    bool CallInst::hasSideEffectOn(Value *value) {
+        for (int i = 0; i < args.size(); i++) {
+            auto callee = args[i];
+            if (isPtrAlias(callee, value)) {
+                if (function->argSideEffects.find(function->args[i]) != function->argSideEffects.end()) {
+                    return true;
+                }
+            }
+        }
+        if (GlobalVariable *globalVar = dynamic_cast<GlobalVariable *>(value)) {
+            if (function->globalVarSideEffects.find(globalVar) != function->globalVarSideEffects.end()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     AllocaInst::AllocaInst(VariableType& variableType) {
@@ -1246,10 +1302,16 @@ namespace thm {
         AnalyzeSideEffect sideEffectAnalyzer(this);
         sideEffectAnalyzer.process();
 
+        MemorySSA memDepAnalyzer(this);
+        memDepAnalyzer.process();
+
         //DeadCode deadCode(this);
         //deadCode.process();
         GCM gcm(this);
         gcm.process();
+
+        GVN gvn(this);
+        gvn.process();
 
         EliminatePhis eliminatePhis(this);
         eliminatePhis.process();
@@ -1285,20 +1347,23 @@ namespace thm {
         main->setAllocas();
     }
 
-    void Module::calcSideEffects() {
-
-    }
-
     bool isPtrAlias(Value *l, Value *r) {
         if (l->valueType->type() != ValueType::PTR || r->valueType->type() != ValueType::PTR) {
             return false;
         }
         if (GetElementPtr *lGEP = dynamic_cast<GetElementPtr*>(l)) {
-            return isPtrAlias(lGEP->ptr, r);
+            return isPtrAlias(unpackPtr(l), r);
         }
         if (GetElementPtr *rGEP = dynamic_cast<GetElementPtr *>(r)) {
-            return isPtrAlias(l, rGEP->ptr);
+            return isPtrAlias(l, unpackPtr(r));
         }
         return l == r;
+    }
+
+    Value *unpackPtr(Value *ptr) {
+        while (GetElementPtr *gep = dynamic_cast<GetElementPtr *>(ptr)) {
+            ptr = gep->ptr;
+        }
+        return ptr;
     }
 } // thm
