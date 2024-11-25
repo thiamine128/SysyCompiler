@@ -19,7 +19,6 @@ public:
     void scheduleEarly(Function *func, Instruction *inst);
     void scheduleLate(Function *func, Instruction *inst);
     BasicBlock *findLCA(BasicBlock *bb1, BasicBlock *bb2);
-    void insert(Instruction *inst, BasicBlock *bb);
 };
 
 } // thm

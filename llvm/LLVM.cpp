@@ -277,6 +277,68 @@ namespace thm {
         insts.insert(insts.end() - 1, inst);
     }
 
+    void BasicBlock::rearrangeInsts() {
+        std::unordered_map<Instruction*, int> useCnt;
+        std::unordered_map<Instruction*, int> pos;
+        for (int i = 0; i < insts.size(); ++i) {
+            if (!insts[i]->pinned) {
+                useCnt[insts[i]] = 0;
+                pos[insts[i]] = i;
+            }
+        }
+        for (auto inst : insts) {
+            if (inst->pinned) {
+                continue;
+            }
+            for (auto use : inst->usings) {
+                auto iter = std::find(insts.begin(), insts.end(), *use);
+                if (iter != insts.end() && !(*iter)->pinned) {
+                    useCnt[inst]++;
+                }
+            }
+        }
+        for (auto iter = insts.begin(); iter != insts.end(); ) {
+            if (!(*iter)->pinned) {
+                iter = insts.erase(iter);
+            } else {
+                ++iter;
+            }
+        }
+        std::vector<Instruction*> q;
+        for (auto ent : useCnt) {
+            if (ent.second == 0) {
+                q.push_back(ent.first);
+            }
+        }
+        while (!q.empty()) {
+            auto inst = *q.begin();
+            q.erase(q.begin());
+
+            auto minIt = insts.begin();
+            while ((*minIt)->type() == LLVMType::PHI_INST) {
+                ++minIt;
+            }
+            for (auto use : inst->usings) {
+                auto it = std::find(insts.begin(), insts.end(), *use);
+                if (it != insts.end() && it - insts.begin() + 1 > minIt - insts.begin()) {
+                    minIt = it + 1;
+                }
+            }
+            insts.insert(minIt, inst);
+
+            for (auto user : inst->usedBys) {
+                if (Instruction *useInst = dynamic_cast<Instruction *>(user)) {
+                    if (useCnt.find(useInst) != useCnt.end()) {
+                        useCnt[useInst]--;
+                        if (useCnt[useInst] == 0) {
+                            q.push_back(useInst);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     LLVMType Constant::type() const {
         return LLVMType::CONSTANT;
     }
@@ -1307,30 +1369,31 @@ namespace thm {
 
         //DeadCode deadCode(this);
         //deadCode.process();
+
         GCM gcm(this);
         gcm.process();
 
         GVN gvn(this);
         gvn.process();
 
-        EliminatePhis eliminatePhis(this);
-        eliminatePhis.process();
+         EliminatePhis eliminatePhis(this);
+         eliminatePhis.process();
 
-        SaveArgument saveArgument(this);
-        saveArgument.process();
+         SaveArgument saveArgument(this);
+         saveArgument.process();
 
-        for (Function *function : functions) {
-            function->rebuildCFG();
-        }
-        main->rebuildCFG();
+         for (Function *function : functions) {
+             function->rebuildCFG();
+         }
+         main->rebuildCFG();
 
-        for (Function* function : functions) {
-            function->fillSlot();
-        }
-        main->fillSlot();
+         for (Function* function : functions) {
+             function->fillSlot();
+         }
+         main->fillSlot();
 
-        AllocateRegisters allocateRegister(this);
-        allocateRegister.process();
+         AllocateRegisters allocateRegister(this);
+         allocateRegister.process();
     }
 
     void Module::arrangeBlocks() {

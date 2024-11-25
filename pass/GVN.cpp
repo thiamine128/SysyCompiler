@@ -17,7 +17,6 @@ namespace thm {
         bool changed = true;
         while (changed) {
             changed = false;
-
             for (auto bb : rpo) {
                 for (auto it = bb->insts.begin(); it != bb->insts.end(); ) {
                     // try fold
@@ -28,6 +27,7 @@ namespace thm {
                                 (*it1).replaceUse(*it, folded);
                             }
                         }
+                        (*it)->onRemove();
                         it = bb->insts.erase(it);
                     } else {
                         ++it;
@@ -82,6 +82,42 @@ namespace thm {
                     case BinaryInst::SLT:
                         return new NumericLiteral(lNum->value < rNum->value, BasicValueType::I32);
                         break;
+                }
+            }
+            if (bin->op == BinaryInst::ADD) {
+                if (NumericLiteral *lNum = dynamic_cast<NumericLiteral *>(bin->l)) {
+                    if (lNum->value == 0) {
+                        return bin->r;
+                    }
+                } else if (NumericLiteral *rNum = dynamic_cast<NumericLiteral *>(bin->r)) {
+                    if (rNum->value == 0) {
+                        return bin->l;
+                    }
+                }
+            }
+            if (bin->op == BinaryInst::MUL) {
+                if (NumericLiteral *lNum = dynamic_cast<NumericLiteral *>(bin->l)) {
+                    if (lNum->value == 1) {
+                        return bin->r;
+                    }
+                } else if (NumericLiteral *rNum = dynamic_cast<NumericLiteral *>(bin->r)) {
+                    if (rNum->value == 1) {
+                        return bin->l;
+                    }
+                }
+            }
+            if (bin->op == BinaryInst::SUB) {
+                if (NumericLiteral *rNum = dynamic_cast<NumericLiteral *>(bin->r)) {
+                    if (rNum->value == 0) {
+                        return bin->l;
+                    }
+                }
+            }
+            if (bin->op == BinaryInst::SDIV) {
+                if (NumericLiteral *rNum = dynamic_cast<NumericLiteral *>(bin->r)) {
+                    if (rNum->value == 1) {
+                        return bin->l;
+                    }
                 }
             }
         }

@@ -49,39 +49,42 @@ namespace thm {
                 }
             }
         }
-        vis.clear();
-        for (auto bb : function->blocks) {
-            for (auto inst : bb->insts) {
-                if (inst->pinned) {
-                    vis[inst] = true;
-                    for (auto user : inst->usedBys) {
-                        if (Instruction *i = dynamic_cast<Instruction *>(user)) {
-                            scheduleLate(function, i);
-                        }
-                    }
-                } else {
-                    bool valid = true;
-                    for (auto use : inst->usings) {
-                        if (dynamic_cast<Instruction *>(*use) != nullptr) {
-                            valid = false;
-                            break;
-                        }
-                    }
-                    if (valid)
-                        scheduleLate(function, inst);
-                }
-            }
-        }
+        // vis.clear();
+        // for (auto bb : function->blocks) {
+        //     for (auto inst : bb->insts) {
+        //         if (inst->pinned) {
+        //             vis[inst] = true;
+        //             for (auto user : inst->usedBys) {
+        //                 if (Instruction *i = dynamic_cast<Instruction *>(user)) {
+        //                     scheduleLate(function, i);
+        //                 }
+        //             }
+        //         } else {
+        //             bool valid = true;
+        //             for (auto use : inst->usings) {
+        //                 if (dynamic_cast<Instruction *>(*use) != nullptr) {
+        //                     valid = false;
+        //                     break;
+        //                 }
+        //             }
+        //             if (valid)
+        //                 scheduleLate(function, inst);
+        //         }
+        //     }
+        // }
         for (auto bb : function->blocks) {
             for (auto iter = bb->insts.begin(); iter != bb->insts.end();) {
                 if ((*iter)->block != bb) {
                     auto inst = *iter;
                     iter = bb->insts.erase(iter);
-                    insert(inst, inst->block);
+                    inst->block->addInstLastSecond(inst);
                 } else {
                     ++iter;
                 }
             }
+        }
+        for (auto bb : function->blocks) {
+            bb->rearrangeInsts();
         }
     }
 
@@ -143,23 +146,5 @@ namespace thm {
             bb2 = bb2->iDom;
         }
         return bb1;
-    }
-
-    void GCM::insert(Instruction *inst, BasicBlock *bb) {
-        auto minIter = bb->insts.begin();
-        auto maxIter = bb->insts.end() - 1;
-        for (auto use : inst->usings) {
-            auto iter = std::find(bb->insts.begin(), bb->insts.end(), *use);
-            if (iter - bb->insts.begin() > minIter - bb->insts.begin()) {
-                minIter = iter;
-            }
-        }
-        for (auto user : inst->usedBys) {
-            auto iter = std::find(bb->insts.begin(), bb->insts.end(), user);
-            if (iter - bb->insts.begin() < maxIter - bb->insts.begin()) {
-                maxIter = iter;
-            }
-        }
-        bb->insts.insert(maxIter, inst);
     }
 } // thm

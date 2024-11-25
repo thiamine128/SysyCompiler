@@ -161,6 +161,7 @@ public:
     void merge(BasicBlock *block);
     void fillSlot();
     void addInstLastSecond(Instruction *inst);
+    void rearrangeInsts();
 };
 class Constant : public Value {
 public:
