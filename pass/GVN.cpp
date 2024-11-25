@@ -65,22 +65,22 @@ namespace thm {
                         return new NumericLiteral(lNum->value | rNum->value, BasicValueType::I32);
                         break;
                     case BinaryInst::EQ:
-                        return new NumericLiteral(lNum->value == rNum->value, BasicValueType::I32);
+                        return new NumericLiteral(lNum->value == rNum->value, BasicValueType::I1);
                         break;
                     case BinaryInst::NE:
-                        return new NumericLiteral(lNum->value != rNum->value, BasicValueType::I32);
+                        return new NumericLiteral(lNum->value != rNum->value, BasicValueType::I1);
                         break;
                     case BinaryInst::SGE:
-                        return new NumericLiteral(lNum->value >= rNum->value, BasicValueType::I32);
+                        return new NumericLiteral(lNum->value >= rNum->value, BasicValueType::I1);
                         break;
                     case BinaryInst::SGT:
-                        return new NumericLiteral(lNum->value > rNum->value, BasicValueType::I32);
+                        return new NumericLiteral(lNum->value > rNum->value, BasicValueType::I1);
                         break;
                     case BinaryInst::SLE:
-                        return new NumericLiteral(lNum->value <= rNum->value, BasicValueType::I32);
+                        return new NumericLiteral(lNum->value <= rNum->value, BasicValueType::I1);
                         break;
                     case BinaryInst::SLT:
-                        return new NumericLiteral(lNum->value < rNum->value, BasicValueType::I32);
+                        return new NumericLiteral(lNum->value < rNum->value, BasicValueType::I1);
                         break;
                 }
             }
