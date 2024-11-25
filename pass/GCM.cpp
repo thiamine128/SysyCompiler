@@ -49,29 +49,29 @@ namespace thm {
                 }
             }
         }
-        // vis.clear();
-        // for (auto bb : function->blocks) {
-        //     for (auto inst : bb->insts) {
-        //         if (inst->pinned) {
-        //             vis[inst] = true;
-        //             for (auto user : inst->usedBys) {
-        //                 if (Instruction *i = dynamic_cast<Instruction *>(user)) {
-        //                     scheduleLate(function, i);
-        //                 }
-        //             }
-        //         } else {
-        //             bool valid = true;
-        //             for (auto use : inst->usings) {
-        //                 if (dynamic_cast<Instruction *>(*use) != nullptr) {
-        //                     valid = false;
-        //                     break;
-        //                 }
-        //             }
-        //             if (valid)
-        //                 scheduleLate(function, inst);
-        //         }
-        //     }
-        // }
+        vis.clear();
+        for (auto bb : function->blocks) {
+            for (auto inst : bb->insts) {
+                if (inst->pinned) {
+                    vis[inst] = true;
+                    for (auto user : inst->usedBys) {
+                        if (Instruction *i = dynamic_cast<Instruction *>(user)) {
+                            scheduleLate(function, i);
+                        }
+                    }
+                } else {
+                    bool valid = true;
+                    for (auto use : inst->usings) {
+                        if (dynamic_cast<Instruction *>(*use) != nullptr) {
+                            valid = false;
+                            break;
+                        }
+                    }
+                    if (valid)
+                        scheduleLate(function, inst);
+                }
+            }
+        }
         for (auto bb : function->blocks) {
             for (auto iter = bb->insts.begin(); iter != bb->insts.end();) {
                 if ((*iter)->block != bb) {

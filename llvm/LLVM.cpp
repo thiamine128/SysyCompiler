@@ -279,11 +279,9 @@ namespace thm {
 
     void BasicBlock::rearrangeInsts() {
         std::unordered_map<Instruction*, int> useCnt;
-        std::unordered_map<Instruction*, int> pos;
         for (int i = 0; i < insts.size(); ++i) {
             if (!insts[i]->pinned) {
                 useCnt[insts[i]] = 0;
-                pos[insts[i]] = i;
             }
         }
         for (auto inst : insts) {
@@ -1375,25 +1373,25 @@ namespace thm {
 
         GVN gvn(this);
         gvn.process();
+        //
+        // EliminatePhis eliminatePhis(this);
+        // eliminatePhis.process();
+        //
+        // SaveArgument saveArgument(this);
+        // saveArgument.process();
 
-         EliminatePhis eliminatePhis(this);
-         eliminatePhis.process();
+        for (Function *function : functions) {
+            function->rebuildCFG();
+        }
+        main->rebuildCFG();
 
-         SaveArgument saveArgument(this);
-         saveArgument.process();
-
-         for (Function *function : functions) {
-             function->rebuildCFG();
-         }
-         main->rebuildCFG();
-
-         for (Function* function : functions) {
-             function->fillSlot();
-         }
-         main->fillSlot();
-
-         AllocateRegisters allocateRegister(this);
-         allocateRegister.process();
+        for (Function* function : functions) {
+            function->fillSlot();
+        }
+        main->fillSlot();
+        //
+        // AllocateRegisters allocateRegister(this);
+        // allocateRegister.process();
     }
 
     void Module::arrangeBlocks() {
