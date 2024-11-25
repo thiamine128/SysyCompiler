@@ -4,7 +4,7 @@
 
 #ifndef PASS_H
 #define PASS_H
-#include "LLVM.h"
+#include "../llvm/LLVM.h"
 
 namespace thm {
 

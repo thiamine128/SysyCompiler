@@ -6,7 +6,7 @@
 #define MIPSBUILDER_H
 #include "MIPS.h"
 #include "../llvm/LLVM.h"
-#include "../llvm/Pass.h"
+#include "../pass/Pass.h"
 namespace thm {
 
 class MIPSBuilder : public Pass {

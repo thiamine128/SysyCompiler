@@ -10,6 +10,7 @@ namespace thm {
 
 class GCM : public Pass {
 public:
+    std::unordered_map<Instruction *, BasicBlock *> originalBlock;
     std::unordered_map<Instruction *, bool> vis;
     GCM(Module *module) : Pass(module) {}
 

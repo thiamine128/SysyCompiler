@@ -6,7 +6,7 @@
 #define REGALLOCATOR_H
 #include <set>
 
-#include "LLVM.h"
+#include "../llvm/LLVM.h"
 
 namespace thm {
 

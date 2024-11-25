@@ -29,6 +29,12 @@ namespace thm {
                 q.insert(ch);
             }
         }
+        for (auto bb : function->blocks) {
+            for (auto inst : bb->insts) {
+                originalBlock[inst] = bb;
+            }
+        }
+
         vis.clear();
         for (auto bb : function->blocks) {
             for (auto inst : bb->insts) {
@@ -43,6 +49,13 @@ namespace thm {
             }
         }
         vis.clear();
+        for (auto arg : function->args) {
+            for (auto user : arg->usedBys) {
+                if (Instruction *i = dynamic_cast<Instruction *>(user)) {
+                    scheduleLate(function, i);
+                }
+            }
+        }
         for (auto bb : function->blocks) {
             for (auto inst : bb->insts) {
                 if (inst->pinned) {
@@ -100,16 +113,17 @@ namespace thm {
                 lca = findLCA(lca, use);
             }
         }
-        if (lca != nullptr) {
-            BasicBlock *best = lca;
-            while (lca != nullptr && lca->domDepth >= inst->block->domDepth) {
-                if (lca->loopNest < best->loopNest) {
-                    best = lca;
-                }
-                lca = lca->iDom;
-            }
-            inst->block = best;
+        if (lca == nullptr) {
+            lca = inst->block;
         }
+        BasicBlock *best = lca;
+        while (lca != nullptr && lca->domDepth >= inst->block->domDepth) {
+            if (lca->loopNest < best->loopNest) {
+                best = lca;
+            }
+            lca = lca->iDom;
+        }
+        inst->block = best;
     }
 
     BasicBlock * GCM::findLCA(BasicBlock *bb1, BasicBlock *bb2) {

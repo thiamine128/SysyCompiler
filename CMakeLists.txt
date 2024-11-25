@@ -46,22 +46,31 @@ add_executable(Compiler main.cpp
         mips/MIPS.h
         mips/Frame.cpp
         mips/Frame.h
-        llvm/Pass.cpp
-        llvm/Pass.h
-        llvm/Mem2Reg.cpp
-        llvm/Mem2Reg.h
-        llvm/GCM.cpp
-        llvm/GCM.h
-        llvm/DeadCode.cpp
-        llvm/DeadCode.h
-        llvm/EliminatePhis.cpp
-        llvm/EliminatePhis.h
-        llvm/AllocateRegisters.cpp
-        llvm/AllocateRegisters.h
-        llvm/RegAllocator.cpp
-        llvm/RegAllocator.h
-        llvm/SaveArgument.cpp
-        llvm/SaveArgument.h
+        pass/Pass.cpp
+        pass/Pass.h
+        pass/Mem2Reg.cpp
+        pass/Mem2Reg.h
+        pass/GCM.cpp
+        pass/GCM.h
+        pass/DeadCode.cpp
+        pass/DeadCode.h
+        pass/EliminatePhis.cpp
+        pass/EliminatePhis.h
+        pass/AllocateRegisters.cpp
+        pass/AllocateRegisters.h
+        pass/RegAllocator.cpp
+        pass/RegAllocator.h
+        pass/SaveArgument.cpp
+        pass/SaveArgument.h
+        pass/AnalyzeSideEffect.cpp
+        pass/AnalyzeSideEffect.h
+        pass/AnalyzeSideEffect.h
+        pass/PassManager.cpp
+        pass/PassManager.h
+        pass/AnalyzeDominance.cpp
+        pass/AnalyzeDominance.h
+        pass/AnalyzeMemDep.cpp
+        pass/AnalyzeMemDep.h
 )
 
 add_definitions(-DPRINT_LEXER)

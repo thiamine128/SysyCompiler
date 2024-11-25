@@ -8,15 +8,17 @@
 #include <functional>
 #include <iostream>
 #include <ostream>
-#include <bits/locale_facets_nonio.h>
+#include <algorithm>
 
-#include "AllocateRegisters.h"
-#include "DeadCode.h"
-#include "EliminatePhis.h"
-#include "GCM.h"
-#include "Mem2Reg.h"
-#include "SaveArgument.h"
+#include "../pass/AllocateRegisters.h"
+#include "../pass/DeadCode.h"
+#include "../pass/EliminatePhis.h"
+#include "../pass/GCM.h"
+#include "../pass/Mem2Reg.h"
+#include "../pass/SaveArgument.h"
+#include "../pass/AnalyzeSideEffect.h"
 #include "../mips/Frame.h"
+#include "../pass/AnalyzeDominance.h"
 
 namespace thm {
     ValueType::Type ValueType::type() const {
@@ -441,75 +443,6 @@ namespace thm {
         root = blocks[0];
     }
 
-    void Function::calcDominators() {
-        std::unordered_set<BasicBlock *> all;
-        for (auto bb : blocks) {
-            all.insert(bb);
-        }
-        for (auto bb : blocks) {
-            if (bb != blocks[0])
-                bb->doms = all;
-        }
-        blocks[0]->doms.insert(blocks[0]);
-        bool changed = true;
-        while (changed) {
-            changed = false;
-            for (int i = 1; i < blocks.size(); i++) {
-                std::unordered_set<BasicBlock *> newDom;
-                newDom.insert(blocks[i]);
-                if (blocks[i]->froms.empty()) continue;
-                for (auto candidate : blocks[i]->froms[0]->doms) {
-                    bool valid = true;
-                    for (auto from : blocks[i]->froms) {
-                        if (from->doms.find(candidate) == from->doms.end()) {
-                            valid = false;
-                            break;
-                        }
-                    }
-                    if (valid) {
-                        newDom.insert(candidate);
-                    }
-                }
-                if (newDom != blocks[i]->doms) {
-                    changed = true;
-                    blocks[i]->doms = newDom;
-                }
-            }
-        }
-        for (int i = 1; i < blocks.size(); ++i) {
-            for (auto dom : blocks[i]->doms) {
-                // dom is strict dom of i
-                if (dom != blocks[i]) {
-                    bool valid = true;
-                    for (auto d : blocks[i]->doms) {
-                        // d is strict dom of i
-                        if (d != blocks[i] && d != dom) {
-                            if (d->doms.find(dom) != d->doms.end()) {
-                                valid = false;
-                                break;
-                            }
-                        }
-                    }
-                    if (valid) {
-                        blocks[i]->iDom = dom;
-                        dom->iDomChildren.push_back(blocks[i]);
-                        break;
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < blocks.size(); ++i) {
-            for (auto to : blocks[i]->tos) {
-                BasicBlock *x = blocks[i];
-                while (!(x != to && to->doms.find(x) != to->doms.end())) {
-                    x->df.insert(to);
-                    x = x->iDom;
-                    if (x == nullptr) break;
-                }
-            }
-        }
-    }
-
     void Function::setAllocas() {
         for (BasicBlock* block : blocks) {
             for (auto inst = block->insts.begin(); inst != block->insts.end();) {
@@ -648,6 +581,12 @@ namespace thm {
     }
 
     void Instruction::getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use) {
+    }
+
+    void Instruction::onRemove() {
+        for (auto use : usings) {
+            (*use)->usedBys.erase(std::find((*use)->usedBys.begin(), (*use)->usedBys.end(), this));
+        }
     }
 
     BinaryInst::BinaryInst(Op op, Value *l, Value *r) : op(op), l(l), r(r) {
@@ -1295,20 +1234,22 @@ namespace thm {
     }
 
     void Module::preprocess() {
-        for (Function* function : functions) {
-            function->arrangeBlocks();
-            function->calcDominators();
-            function->setAllocas();
-        }
-        main->arrangeBlocks();
-        main->calcDominators();
-        main->setAllocas();
+        setAllocas();
+        arrangeBlocks();
+
+        AnalyzeDominance dominaceAnalyzer(this);
+        dominaceAnalyzer.process();
+
         Mem2Reg mem2Reg(this);
         mem2Reg.process();
+
+        AnalyzeSideEffect sideEffectAnalyzer(this);
+        sideEffectAnalyzer.process();
+
         //DeadCode deadCode(this);
         //deadCode.process();
-        // GCM gcm(this);
-        // gcm.process();
+        GCM gcm(this);
+        gcm.process();
 
         EliminatePhis eliminatePhis(this);
         eliminatePhis.process();
@@ -1326,8 +1267,38 @@ namespace thm {
         }
         main->fillSlot();
 
-
         AllocateRegisters allocateRegister(this);
         allocateRegister.process();
+    }
+
+    void Module::arrangeBlocks() {
+        for (Function* function : functions) {
+            function->arrangeBlocks();
+        }
+        main->arrangeBlocks();
+    }
+
+    void Module::setAllocas() {
+        for (Function* function : functions) {
+            function->setAllocas();
+        }
+        main->setAllocas();
+    }
+
+    void Module::calcSideEffects() {
+
+    }
+
+    bool isPtrAlias(Value *l, Value *r) {
+        if (l->valueType->type() != ValueType::PTR || r->valueType->type() != ValueType::PTR) {
+            return false;
+        }
+        if (GetElementPtr *lGEP = dynamic_cast<GetElementPtr*>(l)) {
+            return isPtrAlias(lGEP->ptr, r);
+        }
+        if (GetElementPtr *rGEP = dynamic_cast<GetElementPtr *>(r)) {
+            return isPtrAlias(l, rGEP->ptr);
+        }
+        return l == r;
     }
 } // thm

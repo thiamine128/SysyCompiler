@@ -206,6 +206,9 @@ public:
     BasicBlock *root;
     SlotTracker slotTracker;
     Frame *frame;
+    std::unordered_set<Argument *> argSideEffects;
+    std::unordered_set<GlobalVariable *> globalVarSideEffects;
+    bool ioSideEffects = false;
 
     Function(std::string const &name, BasicValueType::BasicType retType);
 
@@ -213,7 +216,6 @@ public:
     void print(std::ostream &os) const override;
     void removeUnreachableBlocks();
     void arrangeBlocks();
-    void calcDominators();
     void setAllocas();
     void livenessAnalysis();
     void fillSlot();
@@ -243,6 +245,7 @@ public:
 
     LLVMType type() const override;
     virtual void getDefUse(std::unordered_set<int> &def, std::unordered_set<int> &use);
+    void onRemove();
 };
 class BinaryInst : public Instruction {
 public:
@@ -436,14 +439,17 @@ public:
     std::vector<StringLiteral*> strings;
     std::vector<Function*> functions;
 
-    Function* main;
+    Function* main = nullptr;
 
     Module();
     void print(std::ostream& os) const;
     StringLiteral* addStringLiteral(std::string const& string);
     void preprocess();
+    void arrangeBlocks();
+    void setAllocas();
+    void calcSideEffects();
 };
-
+    bool isPtrAlias(Value *l, Value *r);
 } // thm
 
 #endif //LLVM_H

@@ -80,6 +80,7 @@ namespace thm {
                 }
                 if (shouldRemove) {
                     iter = bb->insts.erase(iter);
+                    inst->onRemove();
                 } else {
                     ++iter;
                 }
@@ -184,6 +185,8 @@ namespace thm {
         for (auto bb : function->blocks) {
             for (auto iter = bb->insts.begin(); iter != bb->insts.end();) {
                 if (toRemove.find(static_cast<PhiInst *>(*iter)) != toRemove.end()) {
+                    Instruction *inst = static_cast<Instruction *>(*iter);
+                    inst->onRemove();
                     iter = bb->insts.erase(iter);
                 } else {
                     ++iter;
